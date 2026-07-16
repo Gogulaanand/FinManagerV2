@@ -31,7 +31,7 @@ None. The working tree is clean and committed. See `phases/briefing/phase-0.md` 
 - **`nodeLinker: hoisted` lives in `pnpm-workspace.yaml`, never `.npmrc`** - pnpm 11 ignores the `.npmrc` key silently and Metro then breaks (D-010).
 - Port 3000 was occupied by an unrelated process, so `next dev` fell back to 3002. Not a repo problem.
 - No Supabase, PowerSync, Vercel, EAS, or Resend accounts wired yet; none needed until Phase 3.
-- CI has not yet run on GitHub (the workflow is committed; the initial push is its first execution). Check the first Actions run.
+- CI is verified green on GitHub (two runs, ~1m10s, no annotations). Repo: https://github.com/Gogulaanand/FinManagerV2 (private).
 
 ---
 
