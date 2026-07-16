@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "FinManager",
+    "slug": "finmanager",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "scheme": "finmanager",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.finmanager.app"
+    },
+    "android": {
+      "package": "com.finmanager.app",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

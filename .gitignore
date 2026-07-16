@@ -1,0 +1,39 @@
+node_modules/
+dist/
+.turbo/
+coverage/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Expo
+.expo/
+expo-env.d.ts
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+android/
+ios/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Editors / OS
+.DS_Store
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# tsc build info
+*.tsbuildinfo
+
+# OMC agent state (operational artifacts)
+.omc/
