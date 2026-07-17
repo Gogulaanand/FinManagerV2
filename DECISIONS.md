@@ -122,3 +122,26 @@ Revisit when NativeWind 5 reaches stable.
 `cn()` in apps/web uses `extendTailwindMerge`, fed the token names from `@finmanager/tokens`.
 Why: tailwind-merge only knows Tailwind's stock scales. Given a custom scale it read `text-display-lg` and `text-foreground` as two members of one `text-*` group and silently dropped the font size, rendering every currency figure at 16px instead of 40px. Nothing caught it - types, lint, and tests were all green; it was only visible on screen.
 Consequence: any new `--text-*` or `--font-*` token is picked up automatically because the config reads the token objects rather than restating the scale. A stray `text-*` utility being dropped is the signature of this bug returning.
+
+## D-018: the tax engine ships FY 2026-27 only, under the Income-tax Act, 2025 (2026-07-17)
+
+PRODUCTION_PLAN.md scoped Phase 2 to FY 2025-26 and FY 2024-25. Both were researched and confirmed, then dropped: the project owner chose to carry only the live year, FY 2026-27.
+Why: a personal finance app computing an in-hand salary is answering "what do I take home now". Two historical years would have been dead weight with a maintenance cost and no reader.
+This surfaced a fact the plan predates: **FY 2026-27 is the first year governed by the Income-tax Act, 2025 (Act 30 of 2025), which repealed the 1961 Act on 1 April 2026.** Section numbers therefore differ from every pre-2026 reference: the new regime is s.202 (was 115BAC), the rebate is s.156 (was 87A), and "assessment year" no longer exists - the Act uses a single "tax year".
+Consequence: any future session adding an older year must add it as a _1961 Act_ rule set, not by copying the 2026-27 table backwards. `FinancialYearRules.statute` exists to carry that distinction and `rules.test.ts` pins it.
+Rejected: also shipping 2025-26 and 2024-25 (researched and confirmed this session; the numbers are in the session history if ever wanted).
+
+## D-019: tax rules are data with per-rule citations, sourced only from the statute (2026-07-17)
+
+`packages/core/src/tax/rules.ts` holds every slab, threshold and cap as a data table with a source comment. The engine in compute.ts names no financial year at all; a new year is a new entry in `RULES`.
+The FY 2026-27 values were taken from the Finance Bill 2026 text (First Schedule Part I-B and Paragraph F, read directly from the PDF on indiabudget.gov.in) and from incometax.gov.in - not from any third-party calculator.
+Why: an existing open-source calculator was offered as a shortcut for the maths. It was checked and rejected - it carried a 50,000 standard deduction (the new-regime figure has been 75,000 since the Finance (No.2) Act 2024), pre-2024 capital gains rates of 15%/10%, and 1961 Act section numbers, all while being labelled FY 2026-27. Every one of those errors is invisible in a green pipeline and surfaces only on a filed return.
+Two errors were also found in _official_ material, which is why two sources are the minimum here: incometax.gov.in's AY 2025-26 page renders the new-regime 87A rebate as 20,000 (it is 25,000) and its new-regime surcharge cap as 37% (it is 25%); the "New vs Old Regime FAQs" PDF still states a 50,000 standard deduction for both regimes. The Act text wins.
+Consequence: rules.test.ts asserts the headline values against their sources, so a careless edit has to argue with a test. compute.test.ts's expected numbers were hand-computed from the statute before the engine was trusted - two failed on first run and both turned out to be arithmetic errors in the test, not the engine, which is exactly what deriving them independently is for.
+
+## D-020: mobile scenarios persist via AsyncStorage until Phase 3 (2026-07-17)
+
+`@react-native-async-storage/async-storage` 2.2.0 was added to apps/mobile (via `npx expo install`, so SDK 57 chooses the compatible version) to persist tax scenarios. Web uses localStorage.
+Why: Phase 2 requires scenarios to survive a relaunch and to work offline and before login, but Phase 3 owns the real data layer. AsyncStorage is the standard Expo key-value store and is a few lines to remove.
+Both `lib/tax-scenario.ts` copies (web and mobile) are deliberate duplication, like `sample-data.ts` before them, and both die in Phase 3 when packages/sync owns local storage and scenarios attach to an account. Persistence sits behind a small module boundary in each app precisely so that swap does not touch a component.
+Rejected: expo-sqlite (Phase 3 brings it via PowerSync; standing up a schema now would conflict with that design); in-memory only (fails the phase requirement).

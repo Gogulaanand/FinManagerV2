@@ -5,38 +5,37 @@ This file carries mid-phase state between sessions; completed phases live in pha
 
 ---
 
-## Latest Handoff: 2026-07-17 (Phase 1 complete)
+## Latest Handoff: 2026-07-17 (Phase 2 complete)
 
 ### Where we are
 
-Phase 1 is complete and committed; nothing is half-done.
-The "Calm Teal" design system is authored in Stitch and extracted into `packages/tokens`, which is now the single source of truth for both platforms: it emits Tailwind v4 CSS for web and a Tailwind v3 input plus theme for mobile, so neither app restates a token value.
-Both apps render a navigable six-module shell (dashboard, tax, expenses, portfolio, goals, settings) in light and dark mode, and both were verified by eye, not just by a green pipeline.
-The Phase 0 mobile gap is closed: the app has now run in Expo Go on an iOS 26.3 simulator.
+Phase 2 is complete and committed; nothing is half-done.
+The tax calculator is a fully offline old-vs-new-regime tool for **FY 2026-27**, with the engine as pure, tested functions in `packages/core/src/tax` (rules as data, no per-year branches) and identical UI on web and mobile.
+The scope changed from the plan mid-session (D-018): **FY 2026-27 only**, which turned out to be the first year under the **Income-tax Act, 2025** (new regime = s.202, rebate = s.156, no more "assessment year"). Every FY 2026-27 number was confirmed against the Finance Bill 2026 text and incometax.gov.in, not a third-party calculator.
+Core is now 87 tests (was 20), all hand-computed from the statute. A real 24L salary was computed by eye on both platforms and matches the tests exactly.
 
 ### Exact next action
 
-Start Phase 2 (Tax Calculator): read `phases/briefing/phase-1.md`, then begin with `packages/core/tax` - the FY 2025-26 and 2024-25 rule sets as data, with hand-verified unit tests written before any UI.
-The shell already has a Tax route on both platforms (`apps/web/src/app/tax/page.tsx`, `apps/mobile/app/(tabs)/tax.tsx`); both currently render `ModulePlaceholder` and are meant to be replaced wholesale.
+Start Phase 3 (Auth + Offline-First Data Layer): read `phases/briefing/phase-2.md`, then stand up the Supabase project and `packages/sync` (PowerSync). Part of this phase is migrating the tax scenarios out of localStorage/AsyncStorage (`apps/*/lib/tax-scenario.ts`) into the synced store so they attach to an account while still working before login.
 
 ### Files in flight
 
-None. The working tree is clean and committed. See `phases/briefing/phase-1.md` for the full list.
+None. The working tree is clean and committed. See `phases/briefing/phase-2.md` for the full list.
 
 ### Open items / warnings
 
-- **packages/tokens is the source of truth, not Stitch.** Two values deliberately diverge (D-015): light-mode `gain` is emerald-700 `#047857`, not the `#059669` the Stitch asset names, because 600 fails WCAG AA on white. Do not "correct" tokens back to match Stitch.
-- **Never signal gain/loss by color alone.** The two hues sit ~1.17:1 apart in luminance - indistinguishable in greyscale and to a red-green colorblind user. The sign and the ▲/▼ glyph carry the meaning. `Amount`/`Delta` on both platforms already enforce this; any new money UI must too.
-- **Two Tailwind majors coexist** (D-016): web on v4, mobile on v3 + NativeWind 4. This is deliberate - NativeWind's only v4-capable line is a preview whose releases lag its own stable line. Mobile's `global.css` must import `@finmanager/tokens/dist/nativewind.css` (path form); Tailwind v3's postcss-import ignores the `exports` field.
-- **A silently-dropped `text-*` utility means tailwind-merge lost the token scale** (D-017). It once rendered every currency figure at 16px instead of 40px with types, lint, and tests all green. `cn()` is configured from the token objects; keep it that way.
-- **Tailwind v4: never nest `@theme` inside `@media`.** It does not error - it merges into the base theme and kills light mode. `packages/tokens/src/css.test.ts` now pins the correct shape as an executable guard.
-- **`expo start --ios` cannot work in this environment.** AppleScript is blocked (`osascript` -> `-609`), so it always dies in `isSimulatorAppRunningAsync`. Working recipe is in the briefing, pitfall 4: boot via `simctl`, start Metro **without** `--ios` from `apps/mobile`, then `xcrun simctl openurl <udid> "exp://127.0.0.1:8081"`. Expo Go must be the SDK-57 build (`sdkVersions['57.0.0'].iosClientUrl`), not the legacy `iosUrl`, which has no arm64 slice.
-- **Do not run `pnpm add` while a dev server is up.** A concurrent install silently killed Metro mid-download this session. Phase 0's lesson held again: verify artifacts, not exit codes.
-- **Money is float rupees with mandatory `roundToPaise` after every aggregation** - see D-014 before writing the tax math. `formatInr` in packages/core already rounds before display.
-- **Do not "upgrade to latest" reflexively.** Pinned: TS 6.0.3, ESLint 9.39.5, React 19.2.3 (D-009, D-011, D-013). Expo also reports 57.0.6 -> 57.0.7 available; not taken this session, and `npx expo install --check` is the authority before any bump.
-- `sample-data.ts` is duplicated in both apps on purpose. It is Phase 1 scaffolding; both copies die in Phase 3 when the sync layer lands.
-- shadcn/ui and react-native-reusables were not installed via their CLIs - the reasoning is in the briefing. The web foundation (radix Slot, CVA, clsx, tailwind-merge) is in place, so `npx shadcn add <component>` can still be used later if its output is pointed at the tokens.
-- No Supabase, PowerSync, Vercel, EAS, or Resend accounts wired yet; none needed until Phase 3.
+- **The tax engine ships FY 2026-27 only, under the Income-tax Act, 2025** (D-018). Any _older_ year added later must be modelled as a **1961 Act** rule set (different section numbers, "assessment year"), not by copying the 2026-27 table backwards. `FinancialYearRules.statute` and `rules.test.ts` carry this distinction.
+- **Tax rules are data with per-rule citations; the statute is the only source** (D-019). `packages/core/src/tax/rules.ts`. A reference calculator the owner linked carried stale maths (50k standard deduction, pre-2024 CG rates, 1961 section numbers) while labelled FY 2026-27 - its UX idea was reused, none of its numbers. WebFetch's summariser also misread two _official_ values; always read the primary First Schedule table.
+- **Government rate PDFs 403 on WebFetch.** Download with `curl -A "<browser UA>"`, extract with a Python venv + `pypdf` (`poppler`/`pdftotext` absent). Individual rates: Finance Bill First Schedule **Part I-B** (2025 Act) + **Paragraph F** (surcharge Tables 1 and 2).
+- **`exactOptionalPropertyTypes` is on.** A UI prop typed `hint?: string` rejects a caller passing `undefined`. Type forwarded optionals `?: T | undefined`. Bit both platforms' field components this phase.
+- **`react-hooks/set-state-in-effect` is enforced.** Do not load client-only state (localStorage) via `useEffect(() => setState(...))`. Web scenarios use `useSyncExternalStore` with a stable empty server snapshot - the SSR-correct shape.
+- **Metro serves a stale cached bundle after code changes.** `simctl openurl exp://.../--/route` only navigates the running (old) bundle. To load new code: `simctl terminate host.exp.Exponent`, reopen the base `exp://` URL, and watch for a fresh `iOS Bundled` line before trusting the screen.
+- **No touch input to the simulator here.** No `idb`; `simctl` has no tap/swipe; System Events UI scripting lacks assistive access (though plain `osascript` now runs, unlike the Phase 1 `-609` block). To verify below-the-fold RN screens, temporarily set a `ScrollView contentOffset` or a default state, screenshot, then revert - and grep to prove the revert landed before committing.
+- **Money is float rupees with mandatory `roundToPaise`** (D-014). Every aggregation and rate calc in the tax engine passes through it. Still the rule for Phase 3+.
+- **packages/tokens is the source of truth, not Stitch** (D-015); **never signal gain/loss by colour alone** (▲/▼ + sign); the "Best" regime badge follows this too. **Two Tailwind majors coexist** (D-016). **A dropped `text-*` utility = tailwind-merge lost the token scale** (D-017) - verified absent on the new web components this phase.
+- **Do not "upgrade to latest" reflexively.** Pinned: TS 6.0.3, ESLint 9.39.5, React 19.2.3, Expo 57 (D-009, D-011, D-013). `@react-native-async-storage/async-storage@2.2.0` was added via `npx expo install` so SDK 57 picked the compatible version (D-020).
+- `sample-data.ts` and both `lib/tax-scenario.ts` copies are deliberate duplication; all die in Phase 3 when `packages/sync` lands.
+- No Supabase, PowerSync, Vercel, EAS, or Resend accounts wired yet; Phase 3 is where they land.
 
 ---
 

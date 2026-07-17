@@ -1,14 +1,10 @@
-import { Landmark } from 'lucide-react';
+import { TaxCalculator } from '@/components/tax/tax-calculator';
 
-import { ModulePlaceholder } from '@/components/module-placeholder';
+export const metadata = {
+  title: 'Tax | FinManager',
+  description: 'Old vs new regime comparison and monthly in-hand salary for India.',
+};
 
 export default function TaxPage() {
-  return (
-    <ModulePlaceholder
-      title="Tax"
-      phase={2}
-      icon={Landmark}
-      summary="Old vs new regime comparison, slab-by-slab breakdown, and deductions under 80C, 80D, and HRA."
-    />
-  );
+  return <TaxCalculator />;
 }
