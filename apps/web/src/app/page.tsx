@@ -1,22 +1,106 @@
-import { roundToPaise } from '@finmanager/core';
-import { MoneySchema } from '@finmanager/schema';
-import { spacing } from '@finmanager/tokens';
+import { Amount, Delta } from '@/components/amount';
+import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
+import {
+  fireCurrent,
+  fireProgress,
+  fireTarget,
+  invested,
+  monthSpend,
+  monthSpendDelta,
+  netWorth,
+  netWorthDelta,
+  taxLiability,
+  transactions,
+} from '@/lib/sample-data';
 
-// Phase 0 placeholder: renders values pulled through every shared package so the
-// workspace wiring is proven in the running app, not just in unit tests.
-const sample = MoneySchema.parse({ amount: roundToPaise(123456.789) });
-
-export default function HomePage() {
+function StatTile({ label, value, delta }: { label: string; value: number; delta?: number }) {
   return (
-    <main
-      className="flex min-h-screen flex-col items-center justify-center"
-      style={{ gap: spacing.md }}
-    >
-      <h1 className="text-3xl font-semibold tracking-tight">FinManager</h1>
-      <p className="text-sm opacity-70">Phase 0 - monorepo foundation</p>
-      <p className="font-mono text-lg">
-        {sample.currency} {sample.amount.toLocaleString('en-IN')}
-      </p>
-    </main>
+    <Card className="flex flex-col gap-1">
+      <CardLabel>{label}</CardLabel>
+      <Amount value={value} size="section" />
+      {delta !== undefined && <Delta ratio={delta} />}
+    </Card>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <div className="flex flex-col gap-4">
+      <h1 className="font-display text-headline-lg text-foreground">Dashboard</h1>
+
+      <Card className="flex flex-col gap-2">
+        <CardLabel>Total net worth</CardLabel>
+        <Amount value={netWorth} size="hero" />
+        <div className="flex items-center gap-2">
+          <Delta ratio={netWorthDelta} />
+          <span className="font-body text-label text-foreground-muted">this month</span>
+        </div>
+      </Card>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatTile label="This month spend" value={monthSpend} delta={monthSpendDelta} />
+        <StatTile label="Invested" value={invested} />
+        <StatTile label="Tax liability" value={taxLiability} />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>FIRE progress</CardTitle>
+          <span className="tabular font-display text-headline-md text-primary">
+            {Math.round(fireProgress * 100)}%
+          </span>
+        </CardHeader>
+
+        <div
+          className="h-2 w-full overflow-hidden rounded-full bg-surface-muted"
+          role="progressbar"
+          aria-valuenow={Math.round(fireProgress * 100)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="FIRE progress"
+        >
+          <div
+            className="h-full rounded-full bg-primary"
+            style={{ width: `${fireProgress * 100}%` }}
+          />
+        </div>
+
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex flex-col gap-0.5">
+            <CardLabel>Current</CardLabel>
+            <Amount value={fireCurrent} />
+          </div>
+          <div className="flex flex-col items-end gap-0.5">
+            <CardLabel>Target</CardLabel>
+            <Amount value={fireTarget} />
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent transactions</CardTitle>
+        </CardHeader>
+
+        <ul className="flex flex-col">
+          {transactions.map((tx) => (
+            <li
+              key={tx.id}
+              className="flex items-center justify-between gap-4 border-b border-border/60 py-3 first:pt-0 last:border-0 last:pb-0"
+            >
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <span className="truncate font-body text-body-md text-foreground">
+                  {tx.merchant}
+                </span>
+                <span className="font-body text-caption text-foreground-muted">
+                  {tx.category} · {tx.when}
+                </span>
+              </div>
+              <Amount value={tx.amount} signed />
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </div>
   );
 }

@@ -1,0 +1,9 @@
+/* The design system, generated from packages/tokens. It carries the @tailwind
+   directives plus the light/dark color variables, so this file stays a
+   one-line re-export and no token value is ever restated here.
+
+   The path reaches into dist/ rather than using the package's './nativewind.css'
+   export: Tailwind v3 resolves @import through postcss-import, which does plain
+   path lookup and ignores the exports field. Tailwind v4 on web honours exports,
+   which is why apps/web can import the tidier specifier. */
+@import '@finmanager/tokens/dist/nativewind.css';

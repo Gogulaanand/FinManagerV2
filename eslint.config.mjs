@@ -35,7 +35,8 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.config.{ts,mts,mjs}'],
+    // Config files and build scripts run in Node, not in a browser or on device.
+    files: ['**/*.config.{ts,mts,mjs}', '**/scripts/**/*.{mjs,js}'],
     languageOptions: {
       globals: globals.node,
     },

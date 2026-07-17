@@ -3,6 +3,7 @@
 // app's and the root's node_modules (deps are hoisted via nodeLinker in
 // pnpm-workspace.yaml, see D-010).
 const { getDefaultConfig } = require('expo/metro-config');
+const { withNativeWind } = require('nativewind/metro');
 const path = require('node:path');
 
 const projectRoot = __dirname;
@@ -17,4 +18,6 @@ config.resolver.nodeModulesPaths = [
 ];
 config.resolver.disableHierarchicalLookup = true;
 
-module.exports = config;
+// global.css re-exports the generated stylesheet from packages/tokens, so the
+// design system reaches NativeWind without this app restating any token.
+module.exports = withNativeWind(config, { input: './global.css' });

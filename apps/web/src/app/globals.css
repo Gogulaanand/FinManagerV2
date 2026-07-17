@@ -1,21 +1,27 @@
 @import 'tailwindcss';
 
-@theme {
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.15 0 0);
-}
+/* The design system. Generated from packages/tokens - never restate a token
+   value here, change it in packages/tokens/src and rebuild.
 
-/* Tailwind v4 must not see @theme inside @media: it silently merges the block
-   into the base theme, making dark the only theme. Override the plain CSS
-   variables instead. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: oklch(0.15 0 0);
-    --color-foreground: oklch(0.98 0 0);
-  }
-}
+   That file keeps @theme at the top level with light values and overrides dark
+   on plain CSS variables. Tailwind v4 silently merges a @theme nested inside
+   @media into the base theme, which kills light mode; packages/tokens has a
+   test that pins the correct shape. */
+@import '@finmanager/tokens/tokens.css';
+
+/* Dark mode is driven by prefers-color-scheme, with an explicit .dark/.light
+   class on <html> winning when the user picks a mode. `@custom-variant` teaches
+   the `dark:` utility that same rule. */
+@custom-variant dark (&:where(.dark, .dark *), @media (prefers-color-scheme: dark) { &:where(:root:not(.light), :root:not(.light) *) });
 
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Currency figures must align down a column of transactions. */
+.tabular {
+  font-variant-numeric: tabular-nums lining-nums;
 }

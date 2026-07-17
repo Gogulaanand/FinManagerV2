@@ -5,35 +5,38 @@ This file carries mid-phase state between sessions; completed phases live in pha
 
 ---
 
-## Latest Handoff: 2026-07-17 (Phase 0 review session)
+## Latest Handoff: 2026-07-17 (Phase 1 complete)
 
 ### Where we are
 
-Phase 0 is complete, committed, and independently reviewed; nothing is half-done.
-The review re-verified every Phase 0 claim hands-on (cold 17/17 turbo tasks, 11 tests, format clean, CI green on GitHub, hoisting effective with a single React 19.2.3 copy, `expo export` re-run producing a clean 2.8MB Hermes bundle).
-Three review findings were fixed in this session: the web dark-mode CSS bug (see warning below), a stale `.npmrc` comment in `apps/mobile/metro.config.js`, and the money representation is now an explicit decision (D-014).
+Phase 1 is complete and committed; nothing is half-done.
+The "Calm Teal" design system is authored in Stitch and extracted into `packages/tokens`, which is now the single source of truth for both platforms: it emits Tailwind v4 CSS for web and a Tailwind v3 input plus theme for mobile, so neither app restates a token value.
+Both apps render a navigable six-module shell (dashboard, tax, expenses, portfolio, goals, settings) in light and dark mode, and both were verified by eye, not just by a green pipeline.
+The Phase 0 mobile gap is closed: the app has now run in Expo Go on an iOS 26.3 simulator.
 
 ### Exact next action
 
-Start Phase 1 (Design System): read `phases/briefing/phase-0.md`, then begin with Stitch MCP - create the project and generate the design system.
-Before building on it, spend two minutes booting the Expo app on a device/simulator (`pnpm mobile`) - see the warning below.
+Start Phase 2 (Tax Calculator): read `phases/briefing/phase-1.md`, then begin with `packages/core/tax` - the FY 2025-26 and 2024-25 rule sets as data, with hand-verified unit tests written before any UI.
+The shell already has a Tax route on both platforms (`apps/web/src/app/tax/page.tsx`, `apps/mobile/app/(tabs)/tax.tsx`); both currently render `ModulePlaceholder` and are meant to be replaced wholesale.
 
 ### Files in flight
 
-None. The working tree is clean and committed. See `phases/briefing/phase-0.md` for the full list of files created.
-
-`packages/tokens` currently holds only a placeholder spacing scale. Phase 1 is expected to replace its contents wholesale, not extend them.
+None. The working tree is clean and committed. See `phases/briefing/phase-1.md` for the full list.
 
 ### Open items / warnings
 
-- **Tailwind v4: never nest `@theme` inside `@media`.** It does not error - it silently merges the nested block into the base theme, which made the web app permanently dark in Phase 0. Correct pattern (now in `apps/web/src/app/globals.css`): light values in a top-level `@theme`, dark overrides on the plain CSS variables in `@media (prefers-color-scheme: dark) { :root { ... } }`. Phase 1 must carry this pattern into the design system.
-- **Expo Go on a real device was not verified.** Metro serves the correct bundle over HTTP and `expo export` bundles clean, but no phone or simulator has been attached (the dev machine has no iOS simulators installed). Confirm this early in Phase 1 before layering a design system on top.
-- **Money is float rupees with mandatory `roundToPaise` after every aggregation** - see D-014 before writing any Phase 2+ math.
-- **Do not "upgrade to latest" reflexively.** TypeScript 7 and ESLint 10 are published but break typescript-eslint; React 19.2.7 conflicts with Expo. Pinned: TS 6.0.3, ESLint 9.39.5, React 19.2.3. See D-009, D-011, D-013.
-- **`nodeLinker: hoisted` lives in `pnpm-workspace.yaml`, never `.npmrc`** - pnpm 11 ignores the `.npmrc` key silently and Metro then breaks (D-010).
-- Port 3000 was occupied by an unrelated process, so `next dev` fell back to 3002. Not a repo problem.
+- **packages/tokens is the source of truth, not Stitch.** Two values deliberately diverge (D-015): light-mode `gain` is emerald-700 `#047857`, not the `#059669` the Stitch asset names, because 600 fails WCAG AA on white. Do not "correct" tokens back to match Stitch.
+- **Never signal gain/loss by color alone.** The two hues sit ~1.17:1 apart in luminance - indistinguishable in greyscale and to a red-green colorblind user. The sign and the ▲/▼ glyph carry the meaning. `Amount`/`Delta` on both platforms already enforce this; any new money UI must too.
+- **Two Tailwind majors coexist** (D-016): web on v4, mobile on v3 + NativeWind 4. This is deliberate - NativeWind's only v4-capable line is a preview whose releases lag its own stable line. Mobile's `global.css` must import `@finmanager/tokens/dist/nativewind.css` (path form); Tailwind v3's postcss-import ignores the `exports` field.
+- **A silently-dropped `text-*` utility means tailwind-merge lost the token scale** (D-017). It once rendered every currency figure at 16px instead of 40px with types, lint, and tests all green. `cn()` is configured from the token objects; keep it that way.
+- **Tailwind v4: never nest `@theme` inside `@media`.** It does not error - it merges into the base theme and kills light mode. `packages/tokens/src/css.test.ts` now pins the correct shape as an executable guard.
+- **`expo start --ios` cannot work in this environment.** AppleScript is blocked (`osascript` -> `-609`), so it always dies in `isSimulatorAppRunningAsync`. Working recipe is in the briefing, pitfall 4: boot via `simctl`, start Metro **without** `--ios` from `apps/mobile`, then `xcrun simctl openurl <udid> "exp://127.0.0.1:8081"`. Expo Go must be the SDK-57 build (`sdkVersions['57.0.0'].iosClientUrl`), not the legacy `iosUrl`, which has no arm64 slice.
+- **Do not run `pnpm add` while a dev server is up.** A concurrent install silently killed Metro mid-download this session. Phase 0's lesson held again: verify artifacts, not exit codes.
+- **Money is float rupees with mandatory `roundToPaise` after every aggregation** - see D-014 before writing the tax math. `formatInr` in packages/core already rounds before display.
+- **Do not "upgrade to latest" reflexively.** Pinned: TS 6.0.3, ESLint 9.39.5, React 19.2.3 (D-009, D-011, D-013). Expo also reports 57.0.6 -> 57.0.7 available; not taken this session, and `npx expo install --check` is the authority before any bump.
+- `sample-data.ts` is duplicated in both apps on purpose. It is Phase 1 scaffolding; both copies die in Phase 3 when the sync layer lands.
+- shadcn/ui and react-native-reusables were not installed via their CLIs - the reasoning is in the briefing. The web foundation (radix Slot, CVA, clsx, tailwind-merge) is in place, so `npx shadcn add <component>` can still be used later if its output is pointed at the tokens.
 - No Supabase, PowerSync, Vercel, EAS, or Resend accounts wired yet; none needed until Phase 3.
-- CI is verified green on GitHub. Repo: https://github.com/Gogulaanand/FinManagerV2 (private).
 
 ---
 

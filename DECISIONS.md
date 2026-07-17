@@ -101,3 +101,24 @@ Rule: every aggregation or rate calculation (sums, interest, tax slab math, XIRR
 Why: decimal rupees keep rate math and display conversion simple, and with the rounding rule the drift risk is contained; XIRR and projections are approximate by nature anyway.
 Rejected: integer paise (safer against drift, but makes every percentage calculation and display conversion noisier). Revisit only if Phase 5 aggregation tests show real drift.
 Consequence: `roundToPaise` is paise-accurate up to about 1e10 rupees (1,000 crore) due to its `toPrecision(12)` float correction; fine for personal finance.
+
+## D-015: gain is emerald-700, not the emerald-600 the design system names (2026-07-17)
+
+`color.light.gain` in packages/tokens is `#047857` (emerald-700), though the Stitch design system and its generated screens both specify `#059669` (emerald-600).
+Why: emerald-600 scores 3.77:1 on white and fails WCAG AA for text. Gain and loss are not decorative - they encode whether money came in or went out - so they are held to the 4.5:1 text threshold, not the 3:1 non-text threshold. The contrast suite in `packages/tokens/src/color.test.ts` computes the real WCAG ratio and caught this before any screen was built.
+Consequence: the token value deliberately diverges from the Stitch asset. packages/tokens is the source of truth for the apps; Stitch remains the design reference. Do not "correct" the token back to match Stitch.
+Related: gain (#047857) and loss (#E11D48) sit ~1.17:1 apart in luminance, so they are indistinguishable in greyscale and to a red-green colorblind user. That is not fixable in the palette, and is why the design system requires a sign or a ▲/▼ glyph on every amount. The `Amount` and `Delta` components on both platforms enforce it.
+
+## D-016: mobile uses Tailwind v3 + NativeWind 4, web uses Tailwind v4 (2026-07-17)
+
+apps/web is on Tailwind 4.3.3; apps/mobile is on Tailwind 3.4.19 with NativeWind 4.2.6. Two Tailwind majors coexist in the workspace.
+Why: stable NativeWind (4.2.6, published 2026-06-22) targets Tailwind v3. The only line supporting Tailwind v4 is NativeWind 5.0.0-preview - and its most recent preview predates the stable 4.2.6 release, so the preview line is moving slower than stable. Putting a preview dependency under a nine-phase app contradicts [D-009]/[D-011]/[D-013].
+This is a build-tooling split, not a design split: both apps generate their theme from packages/tokens, so they cannot drift visually. Web imports `@finmanager/tokens/tokens.css` (v4 `@theme`); mobile imports the generated `nativewind.css` plus `nativewind-theme.cjs`.
+Consequence: pnpm resolves Tailwind 3 at the workspace root and nests 4.3.3 under apps/web. A few v4-only utilities do not exist on mobile. `apps/mobile/global.css` must import via `@finmanager/tokens/dist/...`, not the package's export subpath: Tailwind v3 resolves `@import` through postcss-import, which ignores the `exports` field. Tailwind v4 honours exports, so web uses the tidier specifier.
+Revisit when NativeWind 5 reaches stable.
+
+## D-017: tailwind-merge is configured with the token type scale (2026-07-17)
+
+`cn()` in apps/web uses `extendTailwindMerge`, fed the token names from `@finmanager/tokens`.
+Why: tailwind-merge only knows Tailwind's stock scales. Given a custom scale it read `text-display-lg` and `text-foreground` as two members of one `text-*` group and silently dropped the font size, rendering every currency figure at 16px instead of 40px. Nothing caught it - types, lint, and tests were all green; it was only visible on screen.
+Consequence: any new `--text-*` or `--font-*` token is picked up automatically because the config reads the token objects rather than restating the scale. A stray `text-*` utility being dropped is the signature of this bug returning.
