@@ -1,6 +1,7 @@
 // Metro config for a pnpm monorepo: Metro must watch the workspace root so
 // changes in packages/* trigger reloads, and must resolve modules from both the
-// app's and the root's node_modules (deps are hoisted, see .npmrc).
+// app's and the root's node_modules (deps are hoisted via nodeLinker in
+// pnpm-workspace.yaml, see D-010).
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('node:path');
 

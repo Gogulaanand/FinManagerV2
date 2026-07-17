@@ -5,8 +5,11 @@
   --color-foreground: oklch(0.15 0 0);
 }
 
+/* Tailwind v4 must not see @theme inside @media: it silently merges the block
+   into the base theme, making dark the only theme. Override the plain CSS
+   variables instead. */
 @media (prefers-color-scheme: dark) {
-  @theme {
+  :root {
     --color-background: oklch(0.15 0 0);
     --color-foreground: oklch(0.98 0 0);
   }

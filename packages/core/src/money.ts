@@ -3,6 +3,9 @@
  *
  * Uses half-up rounding on the absolute value so that -1.005 and 1.005 round
  * symmetrically; JavaScript's Math.round would bias negatives toward zero.
+ *
+ * Paise-accurate up to ~1e10 rupees (1,000 crore): beyond that the
+ * toPrecision(12) float correction starts rounding into the integer part.
  */
 export function roundToPaise(amount: number): number {
   if (!Number.isFinite(amount)) {

@@ -92,3 +92,12 @@ Revisit in Phase 2, when packages/core carries the tax engine and type-aware rul
 React and react-dom are pinned to 19.2.3 in apps/web and apps/mobile, though 19.2.7 is published.
 Why: Expo SDK 57 expects exactly 19.2.3, and 19.2.3 satisfies Next 16's `^19.0.0` peer range, so one version serves both. Under the hoisted linker (D-010) both apps share a single physical React copy, so they cannot disagree - React must be a workspace-wide decision, not a per-app one.
 Consequence: any future React bump has to clear Expo first. `npx expo install --check` in apps/mobile is the authority.
+
+## D-014: Money is a floating-point number of rupees, with mandatory rounding (2026-07-17)
+
+Monetary amounts are JS `number` values in major units (rupees), validated by `MoneySchema` (packages/schema) and rounded to whole paise by `roundToPaise` (packages/core).
+This was implicit in the Phase 0 placeholder code; recorded here explicitly because the tax engine (Phase 2) and XIRR/aggregations (Phase 5) bake the representation in deeply.
+Rule: every aggregation or rate calculation (sums, interest, tax slab math, XIRR cash flows) must pass through `roundToPaise` before being stored or displayed; never store unrounded intermediate results.
+Why: decimal rupees keep rate math and display conversion simple, and with the rounding rule the drift risk is contained; XIRR and projections are approximate by nature anyway.
+Rejected: integer paise (safer against drift, but makes every percentage calculation and display conversion noisier). Revisit only if Phase 5 aggregation tests show real drift.
+Consequence: `roundToPaise` is paise-accurate up to about 1e10 rupees (1,000 crore) due to its `toPrecision(12)` float correction; fine for personal finance.
