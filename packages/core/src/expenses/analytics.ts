@@ -20,6 +20,7 @@ export interface CategoryBreakdown {
 export type BudgetStatus = 'under' | 'nearLimit' | 'overspent';
 
 export interface BudgetProgress {
+  readonly budgetId: string | null;
   readonly categoryId: string | null;
   readonly label: string;
   readonly color: string;
@@ -136,6 +137,7 @@ export function calculateBudgetProgress(
       const ratio = actual / budget.amount;
       const status: BudgetStatus = ratio >= 1 ? 'overspent' : ratio >= 0.8 ? 'nearLimit' : 'under';
       return {
+        budgetId: budget.id ?? null,
         categoryId: budget.categoryId,
         label: category?.name ?? 'Uncategorised',
         color: category?.color ?? '#64748b',
