@@ -145,3 +145,30 @@ Consequence: rules.test.ts asserts the headline values against their sources, so
 Why: Phase 2 requires scenarios to survive a relaunch and to work offline and before login, but Phase 3 owns the real data layer. AsyncStorage is the standard Expo key-value store and is a few lines to remove.
 Both `lib/tax-scenario.ts` copies (web and mobile) are deliberate duplication, like `sample-data.ts` before them, and both die in Phase 3 when packages/sync owns local storage and scenarios attach to an account. Persistence sits behind a small module boundary in each app precisely so that swap does not touch a component.
 Rejected: expo-sqlite (Phase 3 brings it via PowerSync; standing up a schema now would conflict with that design); in-memory only (fails the phase requirement).
+
+## D-021: mobile PowerSync uses the SQL.js adapter to stay in Expo Go (2026-07-18)
+
+Phase 3 wires PowerSync on mobile with `@powersync/adapter-sql-js` (`SQLJSOpenFactory`), not the recommended native `@powersync/op-sqlite`.
+Why: the native adapters are native modules and **cannot run in Expo Go** - they need a custom dev build (`expo prebuild` + `expo run:ios`/EAS). Every prior phase, and this environment's verification loop, runs on Expo Go. The owner chose (after a concept walkthrough) to keep the Expo Go loop now and defer the production adapter. At personal/family scale the perf gap is imperceptible.
+`packages/sync` is adapter-agnostic (the app injects the DB factory), so the swap to OP-SQLite is localized to `apps/mobile/lib/powersync.ts`.
+Caveat: the sql-js adapter is **in-memory by default** (alpha, dev-only) - mobile local data re-syncs from Supabase rather than persisting across relaunch, and has no crash-durability. Acceptable for the dev loop; the OP-SQLite swap (with SQLCipher at-rest encryption) is the Phase 9 hardening task, at which point the `Constants.executionEnvironment` adapter-switch pattern lets Expo Go and dev builds coexist.
+Rejected: OP-SQLite dev build now (abandons Expo Go for every future mobile phase, and is unverifiable in this no-touch simulator).
+
+## D-022: PowerSync client schema is data-typed for SQLite, and its tables are views (2026-07-18)
+
+`packages/sync/src/schema.ts` mirrors the 13 Postgres tables with three forced mappings: Postgres `boolean` -> `column.integer` (0/1), `timestamptz`/`date`/`jsonb` -> `column.text`, and `double precision` (money, D-014) -> `column.real`. The `id` (uuid) is never declared - the SDK creates it as text.
+Two gotchas cost time and are pinned by `schema.test.ts` and the connector:
+
+1. **PowerSync exposes each table as a SQLite view**, so `INSERT ... ON CONFLICT` (UPSERT) fails with "cannot UPSERT a view". `saveScenario` does UPDATE-then-INSERT instead. This only surfaced in the browser E2E, not in typecheck/lint.
+2. **jsonb columns round-trip as text on the client**, so the connector's `uploadData` must `JSON.parse` them before writing back or PostgREST rejects a JSON string where it wants an object. `JSON_COLUMNS` lists them (`tax_scenarios.input`, `activity_log.metadata`, `holdings.metadata`, `goals.linked_holding_ids`).
+
+## D-023: synced scenarios require sign-in; the offline calculator does not (2026-07-18)
+
+The tax calculator runs fully signed-out (compute is offline, the plan's hard requirement). But **saving a named scenario now requires an account**: every `tax_scenarios` row is RLS-scoped to a `user_id`, so there is no anonymous owner to attach one to. The UI gates the save controls on `canSave` (signed-in) with an inline prompt.
+The old localStorage/AsyncStorage scenario stores are deleted (both `lib/tax-scenario.ts` copies now just bind the shared `@finmanager/sync` model to a reactive `useQuery`). No runtime migration of pre-existing local scenarios was written - at family scale the data is negligible, and carrying a one-off importer forward is not worth the maintenance.
+Rejected: PowerSync local-only tables that promote to synced on login (real offline-anonymous persistence, but materially more complex; revisit if anonymous scenario-saving is ever wanted).
+
+## D-024: RLS proven at the PostgREST layer; email confirmation is unresolved (2026-07-18)
+
+RLS isolation is verified by the real enforcement path, not by reading the policy: as the non-privileged `authenticated` role with a second user's JWT claims, a user reads 0 of another's rows and is blocked by the WITH CHECK policy from forging a row as them. Supabase security advisors are clean (function `search_path` pinned, the `handle_new_user` trigger's RPC EXECUTE revoked).
+Open item for Phase 9: **Supabase email confirmation is still ON and the built-in mailer is rate-limited**, so real signups cannot complete (the built-in mailer 429s, and the owner's "Confirm email" toggle did not take effect). Phase 3's web E2E confirmed the one test account via a direct `email_confirmed_at` update. Production needs a real SMTP/Resend sender (Resend is already the planned email provider) or a deliberate decision to disable confirmation.

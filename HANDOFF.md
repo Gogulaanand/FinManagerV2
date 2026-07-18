@@ -5,37 +5,32 @@ This file carries mid-phase state between sessions; completed phases live in pha
 
 ---
 
-## Latest Handoff: 2026-07-17 (Phase 2 complete)
+## Latest Handoff: 2026-07-18 (Phase 3 complete)
 
 ### Where we are
 
-Phase 2 is complete and committed; nothing is half-done.
-The tax calculator is a fully offline old-vs-new-regime tool for **FY 2026-27**, with the engine as pure, tested functions in `packages/core/src/tax` (rules as data, no per-year branches) and identical UI on web and mobile.
-The scope changed from the plan mid-session (D-018): **FY 2026-27 only**, which turned out to be the first year under the **Income-tax Act, 2025** (new regime = s.202, rebate = s.156, no more "assessment year"). Every FY 2026-27 number was confirmed against the Finance Bill 2026 text and incometax.gov.in, not a third-party calculator.
-Core is now 87 tests (was 20), all hand-computed from the statute. A real 24L salary was computed by eye on both platforms and matches the tests exactly.
+Phase 3 is complete and committed in three parts (`4b5152b`, `d4d8fc5`, `cce2011`); nothing is half-done.
+The app now has real auth (Supabase email+password, plus Google on web) and a working offline-first data layer (PowerSync) on both platforms, backed by the full 13-table data model with per-table RLS. Tax scenarios were migrated off localStorage/AsyncStorage onto the synced `tax_scenarios` table; the calculator still runs signed-out, and saving is gated to signed-in.
+Web was verified end to end against the live backend, including the offline-write-then-sync round trip and two-user RLS isolation. Mobile bundles and boots in Expo Go with the full stack and no runtime errors, but interactive sign-in/sync could not be driven in this no-touch simulator.
 
 ### Exact next action
 
-Start Phase 3 (Auth + Offline-First Data Layer): read `phases/briefing/phase-2.md`, then stand up the Supabase project and `packages/sync` (PowerSync). Part of this phase is migrating the tax scenarios out of localStorage/AsyncStorage (`apps/*/lib/tax-scenario.ts`) into the synced store so they attach to an account while still working before login.
+Start Phase 4 (Expenses + Budgeting): read `phases/briefing/phase-3.md`. The `accounts`, `categories`, `transactions`, and `budgets` tables already exist with RLS and are in `packages/sync`'s `AppSchema`, so Phase 4 is domain logic (in `packages/core`) + UI over the established `useQuery` + repository pattern (see `useScenarios`).
 
 ### Files in flight
 
-None. The working tree is clean and committed. See `phases/briefing/phase-2.md` for the full list.
+None. The working tree is clean and committed. See `phases/briefing/phase-3.md` for the full list.
 
 ### Open items / warnings
 
-- **The tax engine ships FY 2026-27 only, under the Income-tax Act, 2025** (D-018). Any _older_ year added later must be modelled as a **1961 Act** rule set (different section numbers, "assessment year"), not by copying the 2026-27 table backwards. `FinancialYearRules.statute` and `rules.test.ts` carry this distinction.
-- **Tax rules are data with per-rule citations; the statute is the only source** (D-019). `packages/core/src/tax/rules.ts`. A reference calculator the owner linked carried stale maths (50k standard deduction, pre-2024 CG rates, 1961 section numbers) while labelled FY 2026-27 - its UX idea was reused, none of its numbers. WebFetch's summariser also misread two _official_ values; always read the primary First Schedule table.
-- **Government rate PDFs 403 on WebFetch.** Download with `curl -A "<browser UA>"`, extract with a Python venv + `pypdf` (`poppler`/`pdftotext` absent). Individual rates: Finance Bill First Schedule **Part I-B** (2025 Act) + **Paragraph F** (surcharge Tables 1 and 2).
-- **`exactOptionalPropertyTypes` is on.** A UI prop typed `hint?: string` rejects a caller passing `undefined`. Type forwarded optionals `?: T | undefined`. Bit both platforms' field components this phase.
-- **`react-hooks/set-state-in-effect` is enforced.** Do not load client-only state (localStorage) via `useEffect(() => setState(...))`. Web scenarios use `useSyncExternalStore` with a stable empty server snapshot - the SSR-correct shape.
-- **Metro serves a stale cached bundle after code changes.** `simctl openurl exp://.../--/route` only navigates the running (old) bundle. To load new code: `simctl terminate host.exp.Exponent`, reopen the base `exp://` URL, and watch for a fresh `iOS Bundled` line before trusting the screen.
-- **No touch input to the simulator here.** No `idb`; `simctl` has no tap/swipe; System Events UI scripting lacks assistive access (though plain `osascript` now runs, unlike the Phase 1 `-609` block). To verify below-the-fold RN screens, temporarily set a `ScrollView contentOffset` or a default state, screenshot, then revert - and grep to prove the revert landed before committing.
-- **Money is float rupees with mandatory `roundToPaise`** (D-014). Every aggregation and rate calc in the tax engine passes through it. Still the rule for Phase 3+.
-- **packages/tokens is the source of truth, not Stitch** (D-015); **never signal gain/loss by colour alone** (▲/▼ + sign); the "Best" regime badge follows this too. **Two Tailwind majors coexist** (D-016). **A dropped `text-*` utility = tailwind-merge lost the token scale** (D-017) - verified absent on the new web components this phase.
-- **Do not "upgrade to latest" reflexively.** Pinned: TS 6.0.3, ESLint 9.39.5, React 19.2.3, Expo 57 (D-009, D-011, D-013). `@react-native-async-storage/async-storage@2.2.0` was added via `npx expo install` so SDK 57 picked the compatible version (D-020).
-- `sample-data.ts` and both `lib/tax-scenario.ts` copies are deliberate duplication; all die in Phase 3 when `packages/sync` lands.
-- No Supabase, PowerSync, Vercel, EAS, or Resend accounts wired yet; Phase 3 is where they land.
+- **Supabase email confirmation is ON and the built-in mailer is rate-limited**, so real signups can't complete. The Phase 3 web E2E confirmed its test account via a direct `email_confirmed_at` SQL update. Fix with SMTP/Resend (the planned email provider) or a deliberate toggle at Phase 9 (D-024).
+- **A web test account `gogulaanand02+webtest@gmail.com` (password `Test-Passw0rd-1`) with two synced scenarios is left in Supabase.** Sign in with it on a real device/sim to watch cross-platform sync-down, then delete it from the dashboard. It is test pollution otherwise.
+- **Google sign-in is web-only.** Mobile needs the expo-web-browser + deep-link OAuth flow; deferred (email/password works on mobile).
+- **PowerSync tables are SQLite views: no UPSERT.** Use UPDATE-then-INSERT (see `saveScenario`). Any new jsonb column must be added to `JSON_COLUMNS` in `packages/sync/src/schema.ts` or its writes fail at PostgREST (D-022).
+- **Mobile uses the sql-js PowerSync adapter to stay in Expo Go (D-021), which is in-memory** - local data re-syncs from Supabase rather than persisting across relaunch. The OP-SQLite swap (native, encrypted, persistent) is a Phase 9 task and is localized to `apps/mobile/lib/powersync.ts`.
+- **Do not `pnpm add` native mobile deps or install while a dev server runs** (D-020). Web PowerSync workers are copied into `apps/web/public/@powersync/` by a `postinstall`; that dir is gitignored and regenerated.
+- Dev servers (Next on some port, Metro on 8081) may still be running from this session; they are disposable.
+- Money stays float rupees through `roundToPaise` (D-014); in the PowerSync client schema money is `column.real`, booleans are `column.integer`, timestamps/jsonb are `column.text`.
 
 ---
 
