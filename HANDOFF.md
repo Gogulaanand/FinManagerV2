@@ -32,6 +32,7 @@ The Phase 5 implementation files are listed in `phases/briefing/phase-5.md`. The
 - **Mobile uses the sql-js PowerSync adapter to stay in Expo Go (D-021), which is in-memory** - local data re-syncs from Supabase rather than persisting across relaunch. The OP-SQLite swap (native, encrypted, persistent) is a Phase 9 task and is localized to `apps/mobile/lib/powersync.ts`.
 - **Phase 5 interactive verification remains outstanding:** the combined prompt below must be run in a real Chrome session and on a real Expo Go device. The no-touch simulator and unavailable Chrome connector prevented claiming this manual pass.
 - **Phase 5 FX and quote rules:** non-INR events and valuations require dated `fxRateToInr`; manual value/price overrides win over automatic quotes; quote refresh is online-only and persists provenance without replacing manual fields.
+- **Reusable review workflow:** `docs/workflows/sol-read-only-review-worker.toml` defines the SOL read-only reviewer, its responsibilities, and the exactly-two-review cadence used in this session.
 - **Do not `pnpm add` native mobile deps or install while a dev server runs** (D-020). Web PowerSync workers are copied into `apps/web/public/@powersync/` by a `postinstall`; that dir is gitignored and regenerated.
 - Dev servers (Next on some port, Metro on 8081) may still be running from this session; they are disposable.
 - Money stays float rupees through `roundToPaise` (D-014); in the PowerSync client schema money is `column.real`, booleans are `column.integer`, timestamps/jsonb are `column.text`.

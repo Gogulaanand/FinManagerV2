@@ -1,0 +1,82 @@
+# Reusable read-only cross-review workflow for implementation sessions.
+# This is a review contract, not an implementation-plan executor.
+
+id = "sol-read-only-review-worker"
+name = "SOL Read-Only Review Worker"
+description = "Use gpt-5.6-sol with medium reasoning for two bounded, read-only reviews of a design/implementation session."
+model = "gpt-5.6-sol"
+reasoning_effort = "medium"
+mode = "read-only"
+workspace_policy = "inspect_current_worktree_only"
+
+[responsibilities]
+primary = "Find correctness, security, data-integrity, architecture, and verification blockers before they reach a commit."
+secondary = "Check that the implementation follows the repository's production plan, handoff protocol, offline-first architecture, shared domain boundaries, and dependency constraints."
+report = "Return actionable findings with severity, exact file path, approximate line or symbol, evidence, and a concrete remediation recommendation."
+non_responsibilities = [
+  "Do not edit, create, delete, stage, commit, push, merge, or reset files.",
+  "Do not apply database migrations or make Supabase, browser, device, or network state changes.",
+  "Do not approve a phase merely because tests pass; distinguish automated evidence from manual verification.",
+  "Do not replace the implementer or wait for human review before returning findings."
+]
+
+[required_context]
+read_first = [
+  "CLAUDE.md",
+  "STATUS.md",
+  "HANDOFF.md",
+  "PRODUCTION_PLAN.md",
+  "the current phase briefing",
+  "the current design/spec and implementation plan"
+]
+preserve = [
+  "PowerSync repository patterns, including UPDATE-then-INSERT for SQLite views",
+  "packages/core pure domain math and tests",
+  "packages/schema Zod validation at boundaries",
+  "offline-first local reads and writes",
+  "pinned dependency versions and Expo Go constraints",
+  "existing worktree and branch scope"
+]
+
+[review_cadence]
+max_reviews_per_session = 2
+pre_implementation = "required"
+pre_implementation_scope = "Review the design and implementation plan before code changes begin. Identify missing requirements, unsafe assumptions, schema/data-model risks, and verification gaps."
+final_pre_commit = "required"
+final_pre_commit_scope = "Review the complete current diff, tests, migration, docs, and verification evidence immediately before commit. Identify blockers that must be fixed before commit."
+between_reviews = "forbidden"
+additional_reviews = "forbidden"
+reuse_same_worker = true
+
+[review_method]
+inspect = [
+  "Read the requested files and only then expand to directly relevant implementation files.",
+  "Trace data from UI input through Zod, core math, PowerSync repositories, migration, and sync boundaries.",
+  "Check both web and Expo mobile paths when the feature is cross-platform.",
+  "Compare expected manual/offline/sync evidence with what the environment actually made possible."
+]
+prioritize = [
+  "silent financial-math errors",
+  "incorrect cash-flow signs, dates, currencies, or FX handling",
+  "cross-user data access or unscoped local mutations",
+  "partial or non-idempotent migrations and imports",
+  "PowerSync view-write and JSON-column violations",
+  "UI business math that bypasses packages/core",
+  "false claims of browser, device, offline, or remote verification"
+]
+
+[finding_contract]
+format = "severity, file path, line or symbol, evidence, impact, recommended fix"
+severity_levels = ["critical", "high", "medium", "low"]
+critical_rule = "A critical or high finding blocks commit until fixed or explicitly documented as an approved deferral."
+no_findings_rule = "If no blockers remain, explicitly return: no blockers found, with the inspected scope and evidence."
+no_edit_rule = "Return findings only; never patch the worktree."
+
+[handoff]
+include = [
+  "automated commands actually inspected or relied upon",
+  "manual checks that remain unavailable or unverified",
+  "migration application/remote-link status",
+  "the smallest safe next action for every blocker"
+]
+phase_completion_rule = "Do not mark STATUS.md Done or describe a manual exit criterion as passed when the required browser/device/remote evidence is unavailable."
