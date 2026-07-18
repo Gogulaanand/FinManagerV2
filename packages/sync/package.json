@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@finmanager/core": "workspace:*",
+    "@finmanager/schema": "workspace:*",
     "@powersync/common": "1.57.2",
     "@supabase/supabase-js": "2.110.7"
   },

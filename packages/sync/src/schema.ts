@@ -25,6 +25,7 @@ const profiles = new Table({
   preferred_regime: column.text,
   currency: column.text,
   onboarded: column.integer,
+  csv_mappings: column.text,
   created_at: column.text,
   updated_at: column.text,
 });
@@ -114,6 +115,11 @@ const transactions = new Table(
     merchant: column.text,
     is_recurring: column.integer,
     recurring_id: column.text,
+    recurrence_frequency: column.text,
+    recurrence_interval: column.integer,
+    recurrence_end_on: column.text,
+    recurrence_generated_through: column.text,
+    occurrence_key: column.text,
     import_hash: column.text,
     created_at: column.text,
     updated_at: column.text,
@@ -240,6 +246,7 @@ export type Database = (typeof AppSchema)['types'];
  * PostgREST rejects a JSON string where it expects an object/array.
  */
 export const JSON_COLUMNS: Readonly<Record<string, readonly string[]>> = {
+  profiles: ['csv_mappings'],
   tax_scenarios: ['input'],
   activity_log: ['metadata'],
   holdings: ['metadata'],

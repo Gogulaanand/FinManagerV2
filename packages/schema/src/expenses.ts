@@ -54,6 +54,10 @@ export const TransactionSchema = z.object({
   merchant: z.string().nullable().default(null),
   isRecurring: z.boolean().default(false),
   recurringId: z.string().uuid().nullable().default(null),
+  recurrenceFrequency: RecurrenceFrequencySchema.nullable().default(null),
+  recurrenceInterval: z.number().int().positive().default(1),
+  recurrenceEndOn: z.iso.date().nullable().default(null),
+  recurrenceGeneratedThrough: z.iso.date().nullable().default(null),
   importHash: z.string().nullable().default(null),
   occurrenceKey: z.string().nullable().default(null),
 });

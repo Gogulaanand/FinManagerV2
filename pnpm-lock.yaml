@@ -258,6 +258,9 @@ importers:
       '@finmanager/core':
         specifier: workspace:*
         version: link:../core
+      '@finmanager/schema':
+        specifier: workspace:*
+        version: link:../schema
       '@powersync/common':
         specifier: 1.57.2
         version: 1.57.2

@@ -34,18 +34,27 @@ export type {
 
 export {
   DEFAULT_CATEGORIES,
+  canonicalImportHash,
   buildBudgetVsActual,
   buildMonthlyTrend,
   calculateBudgetProgress,
   calculateCategoryBreakdown,
   calculateMonthlySummary,
+  expandOccurrences,
+  parseCsv,
+  previewCsv,
 } from './expenses/index.js';
 export type {
   BudgetChartPoint,
   BudgetProgress,
   BudgetStatus,
   CategoryBreakdown,
+  CsvDocument,
+  CsvImportPreview,
+  CsvPreviewError,
   DefaultCategory,
+  ExpandedOccurrence,
   MonthlySummary,
   MonthlyTrendPoint,
+  RecurrenceExpansionInput,
 } from './expenses/index.js';

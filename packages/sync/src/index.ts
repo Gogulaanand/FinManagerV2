@@ -22,3 +22,26 @@ export {
 export type { Scenario, ScenarioInput } from './scenarios';
 export { logActivity } from './activity';
 export type { ActivityKind, Platform } from './activity';
+export {
+  ACCOUNTS_QUERY,
+  BUDGETS_QUERY,
+  CATEGORIES_QUERY,
+  PROFILE_MAPPINGS_QUERY,
+  TRANSACTIONS_QUERY,
+  deleteAccount,
+  deleteBudget,
+  deleteCategory,
+  deleteTransaction,
+  mapAccountRows,
+  mapBudgetRows,
+  mapCategoryRows,
+  mapTransactionRows,
+  materializeRecurringTransactions,
+  readCsvMappings,
+  saveAccount,
+  saveBudget,
+  saveCategory,
+  saveCsvMappings,
+  saveTransaction,
+  seedDefaultCategories,
+} from './expenses';
