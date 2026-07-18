@@ -24,3 +24,25 @@ export type {
 } from './expenses';
 export { CsvFieldSchema, CsvImportRowSchema, CsvMappingSchema, CsvMappingSetSchema } from './csv';
 export type { CsvField, CsvImportRow, CsvMapping, CsvMappingSet } from './csv';
+export {
+  HoldingEventKindSchema,
+  HoldingEventSchema,
+  HoldingMetadataSchema,
+  HoldingSchema,
+  HoldingTypeSchema,
+  PortfolioImportRowSchema,
+  PortfolioImportSourceSchema,
+  QuoteSchema,
+  ValuationSchema,
+} from './portfolio';
+export type {
+  Holding,
+  HoldingEvent,
+  HoldingEventKind,
+  HoldingMetadata,
+  HoldingType,
+  PortfolioImportRow,
+  PortfolioImportSource,
+  Quote,
+  Valuation,
+} from './portfolio';

@@ -179,6 +179,30 @@ Open item for Phase 9: **Supabase email confirmation is still ON and the built-i
 Why: the amount-first keypad, bank CSV imports, budget ratios, and signed display all have one unambiguous representation. Negative amounts would make debit/credit imports and overspend math easy to invert.
 Consequence: UI displays can show signed debit values, but persisted rows and domain inputs never do.
 
+## D-026: Portfolio events use signed cash flows and dated FX (2026-07-18)
+
+Portfolio event amounts are signed cash flows: buy, contribution, and exercise are negative; sell, dividend, interest, and withdrawal are positive; vest is a non-cash event with zero or positive informational amount. Every non-INR event and valuation carries its own dated `fxRateToInr` rather than using a current or static conversion.
+Why: XIRR must measure the user's actual cash movement, while foreign holdings and RSUs need historical conversion at the event/valuation date. A single sign convention and explicit missing-FX state prevent plausible-looking but wrong returns.
+Rejected: deriving signs from UI labels, treating vest as an investment outflow, and applying one current FX rate to all history.
+
+## D-027: Manual portfolio values always outrank automatic quotes (2026-07-18)
+
+Portfolio display precedence is latest valuation, manual total override, manual price override, automatic quote, then legacy current value/price. Automatic quote refresh writes only automatic price/provenance fields and never replaces manual fields.
+Why: manual valuations are authoritative for assets without reliable market prices and must remain stable after an online refresh.
+Rejected: replacing manual values with the latest provider response or making quote refresh a no-op.
+
+## D-028: Portfolio completeness is explicit and net worth includes account balances (2026-07-18)
+
+The portfolio summary includes synced account balances, treats credit-card balances as liabilities, excludes an account already represented by a cash holding to avoid double counting, and reports missing valuation/FX as incomplete rather than silently coercing them to zero.
+Why: the Phase 5 headline is net worth, not just securities value, and users need to know when it is only a partial view.
+Rejected: showing a falsely precise total or counting a linked cash balance twice.
+
+## D-029: Import deduplication is semantic and transactional (2026-07-18)
+
+Zerodha, CAMS, and KFintech parsers live in `packages/core`; import identity hashes normalize provider, account, instrument, date, kind, quantity, price, amount, and currency. Repository commit resolves IDs and performs updates/inserts in one local PowerSync transaction.
+Why: row position and presentation formatting are not stable identity, and partial imports leave financial history difficult to repair.
+Rejected: UI-only parsing, row-index hashes, and independent per-row writes.
+
 ## D-026: Recurring transactions materialize as concrete deterministic rows (2026-07-18)
 
 The saved recurring transaction is the source row. Future occurrences are concrete child rows keyed by `${recurringId}:${YYYY-MM-DD}` in `occurrence_key`; materialization skips keys already present and advances `recurrence_generated_through`.

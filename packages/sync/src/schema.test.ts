@@ -48,3 +48,17 @@ describe('JSON_COLUMNS', () => {
     }
   });
 });
+
+describe('Phase 5 portfolio columns', () => {
+  it('exposes FX, import, and quote provenance fields locally', () => {
+    const columns = (name: string) => {
+      const table = AppSchema.tables.find((item) => item.name === name);
+      return new Set(table?.columns.map((column) => column.name));
+    };
+    expect(columns('holdings').has('manual_price_override')).toBe(true);
+    expect(columns('holdings').has('automatic_price_provider')).toBe(true);
+    expect(columns('holding_events').has('fx_rate_to_inr')).toBe(true);
+    expect(columns('holding_events').has('import_hash')).toBe(true);
+    expect(columns('valuations').has('fx_rate_to_inr')).toBe(true);
+  });
+});

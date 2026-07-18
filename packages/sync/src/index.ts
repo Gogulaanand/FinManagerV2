@@ -23,6 +23,22 @@ export type { Scenario, ScenarioInput } from './scenarios';
 export { logActivity } from './activity';
 export type { ActivityKind, Platform } from './activity';
 export {
+  HOLDING_EVENTS_QUERY,
+  HOLDINGS_QUERY,
+  VALUATIONS_QUERY,
+  commitPortfolioImport,
+  deleteHolding,
+  deleteHoldingEvent,
+  deleteValuation,
+  mapHoldingEventRows,
+  mapHoldingRows,
+  mapValuationRows,
+  saveHolding,
+  saveAutomaticQuote,
+  saveHoldingEvent,
+  saveValuation,
+} from './portfolio';
+export {
   ACCOUNTS_QUERY,
   BUDGETS_QUERY,
   CATEGORIES_QUERY,

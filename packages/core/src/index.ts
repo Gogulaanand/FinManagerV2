@@ -61,3 +61,34 @@ export type {
   RecurrenceExpansionInput,
 } from './expenses/index.js';
 export type { KeypadAction } from './expenses/index.js';
+export {
+  assetClassForType,
+  buildHoldingCashFlows,
+  calculatePortfolioSummary,
+  calculateXirr,
+  canonicalPortfolioImportHash,
+  effectiveHoldingValue,
+  latestValuation,
+  normalizeCashFlowsToInr,
+  valuationValueInr,
+  parsePortfolioCsv,
+  YahooFinanceQuoteProvider,
+} from './portfolio/index.js';
+export type {
+  AllocationRow,
+  AssetClass,
+  EffectiveValue,
+  HoldingCashFlow,
+  HoldingXirr,
+  NormalizedCashFlows,
+  PortfolioSummary,
+  XirrCashFlow,
+  XirrOptions,
+  XirrResult,
+  PortfolioImportPreview,
+  PortfolioImportPreviewError,
+  PortfolioImportPreviewRow,
+  PriceQuoteProvider,
+  QuoteRefreshResult,
+  QuoteRefreshStatus,
+} from './portfolio/index.js';
