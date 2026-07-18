@@ -1,20 +1,14 @@
 import type { AgeBand, CityClass } from '@finmanager/core';
 import { AVAILABLE_FYS, computeTax, formatInr, rulesFor } from '@finmanager/core';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card, CardTitle } from '../../components/card';
 import { CheckField, CurrencyField, PercentField, Segmented } from '../../components/field';
 import { RegimeCard } from '../../components/tax/regime-card';
-import type { Scenario, ScenarioInput } from '../../lib/tax-scenario';
-import {
-  DEFAULT_SCENARIO_INPUT,
-  loadScenarios,
-  newScenarioId,
-  saveScenarios,
-  toTaxInput,
-} from '../../lib/tax-scenario';
+import type { ScenarioInput } from '../../lib/tax-scenario';
+import { DEFAULT_SCENARIO_INPUT, toTaxInput, useScenarios } from '../../lib/tax-scenario';
 
 const AGE_OPTIONS: readonly { value: AgeBand; label: string }[] = [
   { value: 'below60', label: '< 60' },
@@ -35,21 +29,12 @@ const MODE_OPTIONS = [
 export default function TaxScreen() {
   const [mode, setMode] = useState<'easy' | 'advanced'>('easy');
   const [input, setInput] = useState<ScenarioInput>(DEFAULT_SCENARIO_INPUT);
-  const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [name, setName] = useState('');
 
-  // AsyncStorage is async and there is no SSR here, so the list simply arrives
-  // a tick after first paint. The calculator renders fully without it: it must
-  // work offline and before login.
-  useEffect(() => {
-    let alive = true;
-    void loadScenarios().then((saved) => {
-      if (alive) setScenarios(saved);
-    });
-    return () => {
-      alive = false;
-    };
-  }, []);
+  // Scenarios live in the synced local DB and stay reactive across local edits
+  // and incoming syncs. The calculator renders fully without them: it must work
+  // offline and before login. Saving needs an account (canSave).
+  const { scenarios, canSave, saveScenario, deleteScenario } = useScenarios();
 
   const caps = rulesFor(input.fy).caps;
   const result = useMemo(() => computeTax(toTaxInput(input)), [input]);
@@ -58,15 +43,10 @@ export default function TaxScreen() {
     setInput((prev) => ({ ...prev, [key]: value }));
   }
 
-  function persist(next: Scenario[]) {
-    setScenarios(next);
-    void saveScenarios(next);
-  }
-
   function addScenario() {
     const trimmed = name.trim();
-    if (!trimmed) return;
-    persist([...scenarios, { id: newScenarioId(), name: trimmed, input }]);
+    if (!trimmed || !canSave) return;
+    void saveScenario(trimmed, input);
     setName('');
   }
 
@@ -278,25 +258,28 @@ export default function TaxScreen() {
         <Card className="gap-3">
           <CardTitle>Scenarios</CardTitle>
           <Text className="font-body text-caption text-foreground-muted">
-            Saved on this device. They survive a relaunch and work offline.
+            {canSave
+              ? 'Saved to your account and synced across your devices. They work offline.'
+              : 'Sign in to save scenarios to your account and sync them across devices.'}
           </Text>
 
           <View className="flex-row gap-2">
             <TextInput
               value={name}
               onChangeText={setName}
+              editable={canSave}
               placeholder="Name it, e.g. Offer B"
               className="h-11 flex-1 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
               onSubmitEditing={addScenario}
             />
             <Pressable
               onPress={addScenario}
-              disabled={!name.trim()}
+              disabled={!name.trim() || !canSave}
               accessibilityRole="button"
-              className={`h-11 justify-center rounded-md px-4 ${name.trim() ? 'bg-primary' : 'bg-surface-muted'}`}
+              className={`h-11 justify-center rounded-md px-4 ${name.trim() && canSave ? 'bg-primary' : 'bg-surface-muted'}`}
             >
               <Text
-                className={`font-body text-body-md ${name.trim() ? 'text-primary-foreground' : 'text-foreground-muted'}`}
+                className={`font-body text-body-md ${name.trim() && canSave ? 'text-primary-foreground' : 'text-foreground-muted'}`}
               >
                 Save
               </Text>
@@ -330,7 +313,7 @@ export default function TaxScreen() {
                 </Pressable>
                 <Pressable
                   onPress={() => {
-                    persist(scenarios.filter((x) => x.id !== s.id));
+                    void deleteScenario(s.id);
                   }}
                   accessibilityRole="button"
                   className="rounded-md px-3 py-2"

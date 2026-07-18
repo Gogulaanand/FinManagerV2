@@ -1,3 +1,7 @@
+// Polyfills first: crypto.getRandomValues backs the UUID generator used for
+// synced row ids, and must be installed before any crypto call.
+import 'react-native-get-random-values';
+
 import { Inter_400Regular, Inter_500Medium, useFonts as useInter } from '@expo-google-fonts/inter';
 import {
   Manrope_600SemiBold,
@@ -9,6 +13,9 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 import { View } from 'react-native';
+
+import { AppLock } from '../components/app-lock';
+import { AppProviders } from '../components/providers';
 
 import '../global.css';
 
@@ -32,9 +39,11 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <Stack screenOptions={{ headerShown: false }} />
+    <AppProviders>
+      <AppLock>
+        <Stack screenOptions={{ headerShown: false }} />
+      </AppLock>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-    </>
+    </AppProviders>
   );
 }

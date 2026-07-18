@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { color } from '@finmanager/tokens';
+import { useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card, CardLabel, CardTitle } from '../../components/card';
+import { useAuth } from '../../components/providers';
 
 type Choice = 'light' | 'system' | 'dark';
 
@@ -29,6 +31,8 @@ const choices: ReadonlyArray<{
 export default function SettingsScreen() {
   const { colorScheme, setColorScheme } = useColorScheme();
   const scheme = color[colorScheme === 'dark' ? 'dark' : 'light'];
+  const router = useRouter();
+  const { session, signOut } = useAuth();
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -76,8 +80,36 @@ export default function SettingsScreen() {
           </View>
         </Card>
 
-        <Card>
-          <CardLabel>Account, sync status, and data export arrive in Phase 3.</CardLabel>
+        <Card className="gap-3">
+          <CardTitle>Account</CardTitle>
+          {session ? (
+            <>
+              <Text className="font-body text-body-md text-foreground" numberOfLines={1}>
+                {session.user.email}
+              </Text>
+              <CardLabel>Signed in. Your data syncs across your devices.</CardLabel>
+              <Pressable
+                onPress={() => void signOut()}
+                accessibilityRole="button"
+                className="h-11 justify-center rounded-md bg-surface-muted px-4"
+              >
+                <Text className="text-center font-body text-body-md text-foreground">Sign out</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <CardLabel>Sign in to sync your finances across web and mobile.</CardLabel>
+              <Pressable
+                onPress={() => router.push('/login')}
+                accessibilityRole="button"
+                className="h-11 justify-center rounded-md bg-primary px-4"
+              >
+                <Text className="text-center font-body text-body-md text-primary-foreground">
+                  Sign in
+                </Text>
+              </Pressable>
+            </>
+          )}
         </Card>
       </View>
     </SafeAreaView>
