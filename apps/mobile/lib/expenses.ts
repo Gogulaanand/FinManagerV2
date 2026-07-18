@@ -1,5 +1,3 @@
-'use client';
-
 import {
   buildBudgetVsActual,
   buildMonthlyTrend,
@@ -43,7 +41,7 @@ import {
 import { usePowerSync, useQuery } from '@powersync/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useAuth } from '@/components/providers';
+import { useAuth } from '../components/providers';
 
 interface ProfileRow {
   readonly csv_mappings: string | null;
@@ -113,7 +111,6 @@ export function useExpenses(): ExpensesApi {
   const transactionsResult = useQuery<Transaction>(TRANSACTIONS_QUERY);
   const budgetsResult = useQuery<Budget>(BUDGETS_QUERY);
   const mappingsResult = useQuery<ProfileRow>(PROFILE_MAPPINGS_QUERY);
-
   const accounts = useMemo(
     () => mapAccountRows(rowRecords(accountsResult.data ?? [])),
     [accountsResult.data],
@@ -157,7 +154,6 @@ export function useExpenses(): ExpensesApi {
     [categories, month, transactions],
   );
   const budgetChart = useMemo(() => buildBudgetVsActual(budgetProgress), [budgetProgress]);
-
   const saveAccount = useCallback(
     async (account: Account) => {
       if (userId) await repoSaveAccount(db, userId, account);

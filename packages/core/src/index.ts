@@ -43,6 +43,7 @@ export {
   expandOccurrences,
   parseCsv,
   previewCsv,
+  reduceKeypad,
 } from './expenses/index.js';
 export type {
   BudgetChartPoint,
@@ -58,3 +59,4 @@ export type {
   MonthlyTrendPoint,
   RecurrenceExpansionInput,
 } from './expenses/index.js';
+export type { KeypadAction } from './expenses/index.js';

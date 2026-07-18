@@ -65,10 +65,14 @@ function fieldHeader(mapping: CsvMapping, field: CsvField): string | undefined {
   return Object.entries(mapping.columns).find(([, mappedField]) => mappedField === field)?.[0];
 }
 
-function valueAt(headers: readonly string[], row: readonly string[], header: string | undefined): string {
+function valueAt(
+  headers: readonly string[],
+  row: readonly string[],
+  header: string | undefined,
+): string {
   if (!header) return '';
   const index = headers.findIndex((value) => value.toLowerCase() === header.toLowerCase());
-  return index < 0 ? '' : row[index] ?? '';
+  return index < 0 ? '' : (row[index] ?? '');
 }
 
 function parseAmount(value: string): number | null {
@@ -82,7 +86,9 @@ function parseDate(value: string): string | null {
   const normalized = value.trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return null;
   const date = new Date(`${normalized}T00:00:00.000Z`);
-  return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== normalized ? null : normalized;
+  return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== normalized
+    ? null
+    : normalized;
 }
 
 function directionAndAmount(
@@ -99,13 +105,27 @@ function directionAndAmount(
   return amount === null ? null : { amount, direction: 'debit' };
 }
 
-export function canonicalImportHash(accountId: string, row: Pick<CsvImportRow, 'occurredOn' | 'note' | 'merchant' | 'amount' | 'direction'>): string {
-  return [accountId, row.occurredOn, row.note ?? '', row.merchant ?? '', row.amount.toFixed(2), row.direction]
+export function canonicalImportHash(
+  accountId: string,
+  row: Pick<CsvImportRow, 'occurredOn' | 'note' | 'merchant' | 'amount' | 'direction'>,
+): string {
+  return [
+    accountId,
+    row.occurredOn,
+    row.note ?? '',
+    row.merchant ?? '',
+    row.amount.toFixed(2),
+    row.direction,
+  ]
     .map((value) => value.trim().toLowerCase())
     .join('\u001f');
 }
 
-export function previewCsv(document: CsvDocument, mapping: CsvMapping, accountId: string): CsvImportPreview {
+export function previewCsv(
+  document: CsvDocument,
+  mapping: CsvMapping,
+  accountId: string,
+): CsvImportPreview {
   const rows: CsvImportRow[] = [];
   const errors: CsvPreviewError[] = [];
   const dateHeader = fieldHeader(mapping, 'date');

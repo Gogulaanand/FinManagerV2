@@ -108,10 +108,20 @@ describe('expense analytics', () => {
     ];
     const breakdown = calculateCategoryBreakdown(transactions, categories, '2026-07');
     expect(breakdown).toEqual([
-      { categoryId: 'food', label: 'Food & Dining', color: '#f97316', amount: 100, percentage: 100 },
+      {
+        categoryId: 'food',
+        label: 'Food & Dining',
+        color: '#f97316',
+        amount: 100,
+        percentage: 100,
+      },
     ]);
     expect(buildMonthlyTrend(transactions, categories, '2026-07', 2)).toHaveLength(2);
-    expect(buildBudgetVsActual([calculateBudgetProgress([budget()], transactions, categories, '2026-07')[0]!])).toEqual([
+    expect(
+      buildBudgetVsActual([
+        calculateBudgetProgress([budget()], transactions, categories, '2026-07')[0]!,
+      ]),
+    ).toEqual([
       { categoryId: 'food', label: 'Food & Dining', budget: 100, actual: 100, range: 100 },
     ]);
   });

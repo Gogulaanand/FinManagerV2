@@ -40,10 +40,16 @@ export function TransactionForm({
 }: TransactionFormProps) {
   const firstExpense = categories.find((category) => category.kind === 'expense');
   const [amount, setAmount] = useState(initialTransaction?.amount ?? 0);
-  const [direction, setDirection] = useState<'debit' | 'credit'>(initialTransaction?.direction ?? 'debit');
+  const [direction, setDirection] = useState<'debit' | 'credit'>(
+    initialTransaction?.direction ?? 'debit',
+  );
   const [accountId, setAccountId] = useState(initialTransaction?.accountId ?? '');
-  const [categoryId, setCategoryId] = useState(initialTransaction?.categoryId ?? firstExpense?.id ?? '');
-  const [occurredOn, setOccurredOn] = useState(initialTransaction?.occurredOn ?? new Date().toISOString().slice(0, 10));
+  const [categoryId, setCategoryId] = useState(
+    initialTransaction?.categoryId ?? firstExpense?.id ?? '',
+  );
+  const [occurredOn, setOccurredOn] = useState(
+    initialTransaction?.occurredOn ?? new Date().toISOString().slice(0, 10),
+  );
   const [merchant, setMerchant] = useState(initialTransaction?.merchant ?? '');
   const [note, setNote] = useState(initialTransaction?.note ?? '');
   const [isRecurring, setIsRecurring] = useState(initialTransaction?.isRecurring ?? false);
@@ -86,42 +92,84 @@ export function TransactionForm({
       <CardTitle>{initialTransaction ? 'Edit transaction' : 'Add transaction'}</CardTitle>
       <div className="grid gap-4 sm:grid-cols-2">
         <CurrencyField label="Amount" value={amount} onChange={setAmount} />
-        <SelectField label="Type" value={direction} options={directionOptions} onChange={setDirection} />
+        <SelectField
+          label="Type"
+          value={direction}
+          options={directionOptions}
+          onChange={setDirection}
+        />
         <SelectField
           label="Account"
           value={accountId}
-          options={[{ value: '', label: 'No account' }, ...accounts.map((account) => ({ value: account.id!, label: account.name }))]}
+          options={[
+            { value: '', label: 'No account' },
+            ...accounts.map((account) => ({ value: account.id!, label: account.name })),
+          ]}
           onChange={setAccountId}
         />
         <SelectField
           label="Category"
           value={categoryId}
-          options={[{ value: '', label: 'Uncategorised' }, ...categories.filter((category) => category.kind === (direction === 'debit' ? 'expense' : 'income')).map((category) => ({ value: category.id!, label: category.name }))]}
+          options={[
+            { value: '', label: 'Uncategorised' },
+            ...categories
+              .filter(
+                (category) => category.kind === (direction === 'debit' ? 'expense' : 'income'),
+              )
+              .map((category) => ({ value: category.id!, label: category.name })),
+          ]}
           onChange={setCategoryId}
         />
         <label className="flex flex-col gap-1.5 font-body text-label text-foreground-muted">
           Date
-          <Input type="date" value={occurredOn} onChange={(event) => setOccurredOn(event.target.value)} />
+          <Input
+            type="date"
+            value={occurredOn}
+            onChange={(event) => setOccurredOn(event.target.value)}
+          />
         </label>
         <label className="flex flex-col gap-1.5 font-body text-label text-foreground-muted">
           Merchant
-          <Input value={merchant} onChange={(event) => setMerchant(event.target.value)} placeholder="e.g. Swiggy" />
+          <Input
+            value={merchant}
+            onChange={(event) => setMerchant(event.target.value)}
+            placeholder="e.g. Swiggy"
+          />
         </label>
       </div>
       <label className="flex flex-col gap-1.5 font-body text-label text-foreground-muted">
         Note
-        <Input value={note} onChange={(event) => setNote(event.target.value)} placeholder="Optional note" />
+        <Input
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          placeholder="Optional note"
+        />
       </label>
       <label className="flex items-center gap-2 font-body text-body-md text-foreground">
-        <input type="checkbox" checked={isRecurring} onChange={(event) => setIsRecurring(event.target.checked)} />
+        <input
+          type="checkbox"
+          checked={isRecurring}
+          onChange={(event) => setIsRecurring(event.target.checked)}
+        />
         Repeat this transaction
       </label>
       {isRecurring ? (
         <div className="grid gap-4 sm:grid-cols-3">
-          <SelectField label="Repeats" value={frequency} options={frequencyOptions} onChange={setFrequency} />
+          <SelectField
+            label="Repeats"
+            value={frequency}
+            options={frequencyOptions}
+            onChange={setFrequency}
+          />
           <label className="flex flex-col gap-1.5 font-body text-label text-foreground-muted">
             Every
-            <Input type="number" min={1} step={1} value={interval} onChange={(event) => setInterval(Number(event.target.value))} />
+            <Input
+              type="number"
+              min={1}
+              step={1}
+              value={interval}
+              onChange={(event) => setInterval(Number(event.target.value))}
+            />
           </label>
           <label className="flex flex-col gap-1.5 font-body text-label text-foreground-muted">
             Ends on
@@ -131,8 +179,14 @@ export function TransactionForm({
       ) : null}
       {error ? <p className="font-body text-caption text-loss">{error}</p> : null}
       <div className="flex justify-end gap-2">
-        {onCancel ? <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button> : null}
-        <Button type="button" onClick={() => void submit()} disabled={amount <= 0}>Save transaction</Button>
+        {onCancel ? (
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+        ) : null}
+        <Button type="button" onClick={() => void submit()} disabled={amount <= 0}>
+          Save transaction
+        </Button>
       </div>
     </Card>
   );

@@ -3,19 +3,17 @@ import {
   AccountSchema,
   BudgetSchema,
   CategorySchema,
+  CsvImportRowSchema,
   CsvMappingSetSchema,
   TransactionSchema,
   type Account,
   type Budget,
   type Category,
+  type CsvImportRow,
   type CsvMappingSet,
   type Transaction,
 } from '@finmanager/schema';
-import {
-  DEFAULT_CATEGORIES,
-  expandOccurrences,
-  type ExpandedOccurrence,
-} from '@finmanager/core';
+import { DEFAULT_CATEGORIES, expandOccurrences, type ExpandedOccurrence } from '@finmanager/core';
 
 import { uuidv4 } from './ids';
 
@@ -168,14 +166,34 @@ export async function saveAccount(
 ): Promise<void> {
   const id = idFor(account.id);
   const now = new Date().toISOString();
-  const values = [account.name, account.type, account.institution, account.currency, account.currentBalance, account.isActive ? 1 : 0, now, id];
+  const values = [
+    account.name,
+    account.type,
+    account.institution,
+    account.currency,
+    account.currentBalance,
+    account.isActive ? 1 : 0,
+    now,
+    id,
+  ];
   await updateThenInsert(
     db,
     `UPDATE accounts SET name = ?, type = ?, institution = ?, currency = ?, current_balance = ?, is_active = ?, updated_at = ? WHERE id = ?`,
     values,
     `INSERT INTO accounts (id, user_id, name, type, institution, currency, current_balance, is_active, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, userId, account.name, account.type, account.institution, account.currency, account.currentBalance, account.isActive ? 1 : 0, now, now],
+    [
+      id,
+      userId,
+      account.name,
+      account.type,
+      account.institution,
+      account.currency,
+      account.currentBalance,
+      account.isActive ? 1 : 0,
+      now,
+      now,
+    ],
   );
 }
 
@@ -197,7 +215,18 @@ export async function seedDefaultCategories(
     await db.execute(
       `INSERT INTO categories (id, user_id, name, kind, icon, color, is_system, sort_order, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [uuidv4(), userId, category.name, category.kind, category.icon, category.color, 1, category.sortOrder, now, now],
+      [
+        uuidv4(),
+        userId,
+        category.name,
+        category.kind,
+        category.icon,
+        category.color,
+        1,
+        category.sortOrder,
+        now,
+        now,
+      ],
     );
   }
 }
@@ -212,10 +241,32 @@ export async function saveCategory(
   await updateThenInsert(
     db,
     `UPDATE categories SET name = ?, kind = ?, icon = ?, color = ?, parent_id = ?, is_system = ?, sort_order = ?, updated_at = ? WHERE id = ?`,
-    [category.name, category.kind, category.icon, category.color, category.parentId, category.isSystem ? 1 : 0, category.sortOrder, now, id],
+    [
+      category.name,
+      category.kind,
+      category.icon,
+      category.color,
+      category.parentId,
+      category.isSystem ? 1 : 0,
+      category.sortOrder,
+      now,
+      id,
+    ],
     `INSERT INTO categories (id, user_id, name, kind, icon, color, parent_id, is_system, sort_order, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, userId, category.name, category.kind, category.icon, category.color, category.parentId, category.isSystem ? 1 : 0, category.sortOrder, now, now],
+    [
+      id,
+      userId,
+      category.name,
+      category.kind,
+      category.icon,
+      category.color,
+      category.parentId,
+      category.isSystem ? 1 : 0,
+      category.sortOrder,
+      now,
+      now,
+    ],
   );
 }
 
@@ -289,6 +340,52 @@ export async function deleteTransaction(db: AbstractPowerSyncDatabase, id: strin
   await db.execute('DELETE FROM transactions WHERE id = ?', [id]);
 }
 
+export async function commitCsvImport(
+  db: AbstractPowerSyncDatabase,
+  userId: string,
+  rows: readonly CsvImportRow[],
+): Promise<{ readonly created: number; readonly skipped: number }> {
+  let created = 0;
+  let skipped = 0;
+  const seenHashes = new Set<string>();
+  for (const input of rows) {
+    const row = CsvImportRowSchema.parse(input);
+    if (!row.importHash || seenHashes.has(row.importHash)) {
+      skipped += 1;
+      continue;
+    }
+    seenHashes.add(row.importHash);
+    const existing = (await db.execute(
+      'SELECT id FROM transactions WHERE user_id = ? AND import_hash = ? LIMIT 1',
+      [userId, row.importHash],
+    )) as unknown as SqlResult;
+    if (rowsOf(existing).length > 0) {
+      skipped += 1;
+      continue;
+    }
+    await saveTransaction(db, userId, {
+      accountId: row.accountId,
+      categoryId: row.categoryId,
+      amount: row.amount,
+      direction: row.direction,
+      currency: row.currency,
+      occurredOn: row.occurredOn,
+      note: row.note,
+      merchant: row.merchant,
+      isRecurring: false,
+      recurringId: null,
+      recurrenceFrequency: null,
+      recurrenceInterval: 1,
+      recurrenceEndOn: null,
+      recurrenceGeneratedThrough: null,
+      importHash: row.importHash,
+      occurrenceKey: null,
+    });
+    created += 1;
+  }
+  return { created, skipped };
+}
+
 export async function saveBudget(
   db: AbstractPowerSyncDatabase,
   userId: string,
@@ -354,16 +451,24 @@ export async function materializeRecurringTransactions(
   source: Transaction,
   throughMonth: string,
 ): Promise<{ readonly created: number }> {
-  if (!source.isRecurring || !source.recurringId || !source.recurrenceFrequency) return { created: 0 };
+  if (!source.isRecurring || !source.recurringId || !source.recurrenceFrequency)
+    return { created: 0 };
   const through = dateAtStartOfMonth(throughMonth);
-  if (source.recurrenceGeneratedThrough && isAtOrAfter(source.recurrenceGeneratedThrough, through)) {
+  if (
+    source.recurrenceGeneratedThrough &&
+    isAtOrAfter(source.recurrenceGeneratedThrough, through)
+  ) {
     return { created: 0 };
   }
   const result = (await db.execute(
     'SELECT occurrence_key FROM transactions WHERE user_id = ? AND recurring_id = ?',
     [userId, source.recurringId],
   )) as unknown as SqlResult;
-  const existing = new Set(rowsOf(result).map((row) => stringValue(row.occurrence_key)).filter((key): key is string => key !== null));
+  const existing = new Set(
+    rowsOf(result)
+      .map((row) => stringValue(row.occurrence_key))
+      .filter((key): key is string => key !== null),
+  );
   const occurrences = expandOccurrences({
     recurringId: source.recurringId,
     amount: source.amount,
@@ -380,11 +485,18 @@ export async function materializeRecurringTransactions(
     await saveTransaction(db, userId, occurrenceTransaction(source, occurrence, through));
     created += 1;
   }
-  await db.execute('UPDATE transactions SET recurrence_generated_through = ?, updated_at = ? WHERE id = ?', [through, new Date().toISOString(), source.id]);
+  await db.execute(
+    'UPDATE transactions SET recurrence_generated_through = ?, updated_at = ? WHERE id = ?',
+    [through, new Date().toISOString(), source.id],
+  );
   return { created };
 }
 
-function occurrenceTransaction(source: Transaction, occurrence: ExpandedOccurrence, through: string): Transaction {
+function occurrenceTransaction(
+  source: Transaction,
+  occurrence: ExpandedOccurrence,
+  through: string,
+): Transaction {
   return {
     ...source,
     id: uuidv4(),

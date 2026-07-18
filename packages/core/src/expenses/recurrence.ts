@@ -37,7 +37,12 @@ function endOfMonth(month: string): Date {
   return new Date(Date.UTC(year, monthNumber, 0));
 }
 
-function occurrenceDate(source: Date, index: number, frequency: RecurrenceFrequency, interval: number): Date {
+function occurrenceDate(
+  source: Date,
+  index: number,
+  frequency: RecurrenceFrequency,
+  interval: number,
+): Date {
   if (frequency === 'daily') {
     const date = new Date(source);
     date.setUTCDate(date.getUTCDate() + index * interval);

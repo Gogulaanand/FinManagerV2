@@ -29,6 +29,7 @@
 ### Task 1: Shared expense contracts and validation
 
 **Files:**
+
 - Create: `packages/schema/src/expenses.ts`
 - Create: `packages/schema/src/csv.ts`
 - Create: `packages/schema/src/expenses.test.ts`
@@ -36,6 +37,7 @@
 - Modify: `packages/core/package.json`
 
 **Interfaces:**
+
 - Produces `DirectionSchema`, `AccountTypeSchema`, `CategoryKindSchema`, `RecurrenceFrequencySchema`, `AccountSchema`, `CategorySchema`, `TransactionSchema`, `BudgetSchema`, `RecurrenceRuleSchema`, and their inferred types.
 - Produces `CsvFieldSchema`, `CsvMappingSchema`, `CsvMappingSetSchema`, and import-row types.
 - `@finmanager/core` may import types from `@finmanager/schema`; the schema package must not import core.
@@ -48,20 +50,33 @@ import { BudgetSchema, TransactionSchema } from './index';
 
 describe('expense contracts', () => {
   it('accepts positive debit amounts and defaults currency to INR', () => {
-    expect(TransactionSchema.parse({
-      amount: 125.5,
-      direction: 'debit',
-      occurredOn: '2026-07-18',
-    }).currency).toBe('INR');
+    expect(
+      TransactionSchema.parse({
+        amount: 125.5,
+        direction: 'debit',
+        occurredOn: '2026-07-18',
+      }).currency,
+    ).toBe('INR');
   });
 
   it('rejects zero or negative money', () => {
-    expect(() => TransactionSchema.parse({ amount: 0, direction: 'debit', occurredOn: '2026-07-18' })).toThrow();
-    expect(() => BudgetSchema.parse({ categoryId: 'cat', period: 'monthly', periodStart: '2026-07-01', amount: -1 })).toThrow();
+    expect(() =>
+      TransactionSchema.parse({ amount: 0, direction: 'debit', occurredOn: '2026-07-18' }),
+    ).toThrow();
+    expect(() =>
+      BudgetSchema.parse({
+        categoryId: 'cat',
+        period: 'monthly',
+        periodStart: '2026-07-01',
+        amount: -1,
+      }),
+    ).toThrow();
   });
 
   it('rejects directions outside debit and credit', () => {
-    expect(() => TransactionSchema.parse({ amount: 1, direction: 'transfer', occurredOn: '2026-07-18' })).toThrow();
+    expect(() =>
+      TransactionSchema.parse({ amount: 1, direction: 'transfer', occurredOn: '2026-07-18' }),
+    ).toThrow();
   });
 });
 ```
@@ -84,14 +99,20 @@ export const CategoryKindSchema = z.enum(['expense', 'income', 'transfer']);
 export const RecurrenceFrequencySchema = z.enum(['daily', 'weekly', 'monthly', 'yearly']);
 
 export const TransactionSchema = z.object({
-  id: z.string().uuid().optional(), userId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
   accountId: z.string().uuid().nullable().default(null),
   categoryId: z.string().uuid().nullable().default(null),
-  amount: PositiveMoneySchema, direction: DirectionSchema,
-  currency: CurrencyCodeSchema.default('INR'), occurredOn: z.iso.date(),
-  note: z.string().nullable().default(null), merchant: z.string().nullable().default(null),
-  isRecurring: z.boolean().default(false), recurringId: z.string().uuid().nullable().default(null),
-  importHash: z.string().nullable().default(null), occurrenceKey: z.string().nullable().default(null),
+  amount: PositiveMoneySchema,
+  direction: DirectionSchema,
+  currency: CurrencyCodeSchema.default('INR'),
+  occurredOn: z.iso.date(),
+  note: z.string().nullable().default(null),
+  merchant: z.string().nullable().default(null),
+  isRecurring: z.boolean().default(false),
+  recurringId: z.string().uuid().nullable().default(null),
+  importHash: z.string().nullable().default(null),
+  occurrenceKey: z.string().nullable().default(null),
 });
 ```
 
@@ -113,6 +134,7 @@ git commit -m "feat: add shared expense contracts"
 ### Task 2: Core categories, analytics, budgets, and chart series
 
 **Files:**
+
 - Create: `packages/core/src/expenses/categories.ts`
 - Create: `packages/core/src/expenses/analytics.ts`
 - Create: `packages/core/src/expenses/analytics.test.ts`
@@ -120,6 +142,7 @@ git commit -m "feat: add shared expense contracts"
 - Modify: `packages/core/src/index.ts`
 
 **Interfaces:**
+
 - `DEFAULT_CATEGORIES: readonly DefaultCategory[]` contains stable keys and seeded Indian expense/income categories.
 - `calculateMonthlySummary(transactions, categories, month): MonthlySummary` returns rounded debit, credit, net, and transaction count.
 - `calculateCategoryBreakdown(transactions, categories, month): CategoryBreakdown[]` returns renderer-neutral `{ categoryId, label, color, amount, percentage }`.
@@ -130,11 +153,15 @@ git commit -m "feat: add shared expense contracts"
 
 ```ts
 it('counts only debit transactions as monthly spending and rounds paise', () => {
-  const result = calculateMonthlySummary([
-    tx({ amount: 100.005, direction: 'debit', occurredOn: '2026-07-02' }),
-    tx({ amount: 50, direction: 'credit', occurredOn: '2026-07-03' }),
-    tx({ amount: 80, direction: 'debit', occurredOn: '2026-06-30' }),
-  ], categories, '2026-07');
+  const result = calculateMonthlySummary(
+    [
+      tx({ amount: 100.005, direction: 'debit', occurredOn: '2026-07-02' }),
+      tx({ amount: 50, direction: 'credit', occurredOn: '2026-07-03' }),
+      tx({ amount: 80, direction: 'debit', occurredOn: '2026-06-30' }),
+    ],
+    categories,
+    '2026-07',
+  );
   expect(result).toMatchObject({ debit: 100.01, credit: 50, net: -50.01, transactionCount: 2 });
 });
 
@@ -142,7 +169,8 @@ it('marks a category overspent without clamping the ratio', () => {
   const [progress] = calculateBudgetProgress(
     [{ categoryId: 'food', amount: 100, periodStart: '2026-07-01', period: 'monthly' }],
     [tx({ categoryId: 'food', amount: 125, direction: 'debit', occurredOn: '2026-07-10' })],
-    categories, '2026-07',
+    categories,
+    '2026-07',
   );
   expect(progress).toMatchObject({ actual: 125, remaining: -25, ratio: 1.25, status: 'overspent' });
 });
@@ -174,6 +202,7 @@ git commit -m "feat: add expense analytics and budget math"
 ### Task 3: Core recurrence and CSV transformation
 
 **Files:**
+
 - Create: `packages/core/src/expenses/recurrence.ts`
 - Create: `packages/core/src/expenses/recurrence.test.ts`
 - Create: `packages/core/src/expenses/csv.ts`
@@ -181,6 +210,7 @@ git commit -m "feat: add expense analytics and budget math"
 - Modify: `packages/core/src/expenses/index.ts`
 
 **Interfaces:**
+
 - `expandOccurrences(input: RecurrenceExpansionInput): readonly ExpandedOccurrence[]` expands from the source date through a requested month, respecting interval/end date and producing `occurrenceKey`.
 - `parseCsv(text: string): CsvDocument` handles quoted commas, escaped quotes, and line endings.
 - `previewCsv(document, mapping, accountId, categories): CsvImportPreview` produces valid rows, row-level errors, canonical `importHash`, positive amount, and direction.
@@ -190,14 +220,36 @@ git commit -m "feat: add expense analytics and budget math"
 
 ```ts
 it('expands monthly occurrences from a month-end source without invalid dates', () => {
-  expect(expandOccurrences({ recurringId: 'r', amount: 500, direction: 'debit', sourceDate: '2026-01-31', frequency: 'monthly', interval: 1, throughMonth: '2026-04' }).map((x) => x.occurredOn))
-    .toEqual(['2026-02-28', '2026-03-31', '2026-04-30']);
+  expect(
+    expandOccurrences({
+      recurringId: 'r',
+      amount: 500,
+      direction: 'debit',
+      sourceDate: '2026-01-31',
+      frequency: 'monthly',
+      interval: 1,
+      throughMonth: '2026-04',
+    }).map((x) => x.occurredOn),
+  ).toEqual(['2026-02-28', '2026-03-31', '2026-04-30']);
 });
 
 it('maps separate withdrawal and deposit columns into positive debit/credit rows', () => {
-  const document = parseCsv('Date,Narration,Withdrawal,Deposit\n2026-07-02,UPI food,250,\n2026-07-03,Salary,,50000');
-  const preview = previewCsv(document, { bankKey: 'demo', columns: { date: 'Date', description: 'Narration', debit: 'Withdrawal', credit: 'Deposit' } }, 'account-id', categories);
-  expect(preview.rows.map((row) => [row.amount, row.direction])).toEqual([[250, 'debit'], [50000, 'credit']]);
+  const document = parseCsv(
+    'Date,Narration,Withdrawal,Deposit\n2026-07-02,UPI food,250,\n2026-07-03,Salary,,50000',
+  );
+  const preview = previewCsv(
+    document,
+    {
+      bankKey: 'demo',
+      columns: { date: 'Date', description: 'Narration', debit: 'Withdrawal', credit: 'Deposit' },
+    },
+    'account-id',
+    categories,
+  );
+  expect(preview.rows.map((row) => [row.amount, row.direction])).toEqual([
+    [250, 'debit'],
+    [50000, 'credit'],
+  ]);
 });
 ```
 
@@ -227,6 +279,7 @@ git commit -m "feat: add recurring and csv expense logic"
 ### Task 4: Phase 4 migration, PowerSync schema, and repositories
 
 **Files:**
+
 - Create: `supabase/migrations/20260718000001_phase4_expenses.sql`
 - Modify: `packages/sync/src/schema.ts`
 - Modify: `packages/sync/src/schema.test.ts`
@@ -236,6 +289,7 @@ git commit -m "feat: add recurring and csv expense logic"
 - Modify: `supabase/powersync/sync-rules.yaml`
 
 **Interfaces:**
+
 - Queries: `ACCOUNTS_QUERY`, `CATEGORIES_QUERY`, `TRANSACTIONS_QUERY`, `BUDGETS_QUERY`, `PROFILE_MAPPINGS_QUERY`.
 - Repositories: `saveAccount`, `deleteAccount`, `seedDefaultCategories`, `saveCategory`, `deleteCategory`, `saveTransaction`, `deleteTransaction`, `saveBudget`, `deleteBudget`, `saveCsvMappings`, `readCsvMappings`, and `materializeRecurringTransactions`.
 - Row mappers: `mapAccountRows`, `mapCategoryRows`, `mapTransactionRows`, `mapBudgetRows` validate SQLite rows into shared domain types.
@@ -288,6 +342,7 @@ git commit -m "feat: add synced expense repositories"
 ### Task 5: Web reactive hook and Expenses workspace
 
 **Files:**
+
 - Create: `apps/web/src/lib/expenses.ts`
 - Create: `apps/web/src/components/expenses/expenses-workspace.tsx`
 - Create: `apps/web/src/components/expenses/transaction-form.tsx`
@@ -298,6 +353,7 @@ git commit -m "feat: add synced expense repositories"
 - Modify: `apps/web/package.json`
 
 **Interfaces:**
+
 - `useExpenses()` returns reactive accounts, categories, transactions, budgets, profile mappings, current month, summary, category breakdown, budget progress, trend, and repository callbacks.
 - `TransactionForm` accepts optional `initialTransaction` and `onSave(transactionInput)`; it never performs calculations beyond input normalization.
 - `ExpenseCharts` accepts the core-produced chart series and passes them directly to Recharts.
@@ -336,6 +392,7 @@ git commit -m "feat: add web expenses workspace"
 ### Task 6: Mobile amount-first Expenses screen and charts
 
 **Files:**
+
 - Create: `apps/mobile/lib/expenses.ts`
 - Create: `apps/mobile/components/expenses/amount-keypad.tsx`
 - Create: `apps/mobile/components/expenses/transaction-form.tsx`
@@ -348,6 +405,7 @@ git commit -m "feat: add web expenses workspace"
 - Modify: `pnpm-lock.yaml`
 
 **Interfaces:**
+
 - `useExpenses()` mirrors the web hook’s domain return shape and uses the same sync/core functions.
 - `AmountKeypad` accepts `{ value: string; onChange(value: string): void; onSubmit(): void }` and emits digit, decimal, backspace, and submit actions without negative values.
 - `MobileTransactionForm` opens with amount and direction, then category/account/date/merchant/note/recurrence.
@@ -394,6 +452,7 @@ git commit -m "feat: add mobile amount-first expenses"
 ### Task 7: Cross-platform CSV import and recurrence integration
 
 **Files:**
+
 - Modify: `apps/web/src/components/expenses/csv-import.tsx`
 - Modify: `apps/mobile/components/expenses/transaction-form.tsx`
 - Modify: `apps/web/src/lib/expenses.ts`
@@ -404,6 +463,7 @@ git commit -m "feat: add mobile amount-first expenses"
 - Create: `packages/sync/src/expenses.integration.test.ts`
 
 **Interfaces:**
+
 - `commitCsvImport(db, userId, previewRows)` skips rows whose `import_hash` already exists and returns `{ created, skipped, failed }`.
 - `ensureRecurringThrough(db, userId, month)` materializes missing rows once and preserves deletions after the source watermark.
 
@@ -451,6 +511,7 @@ git commit -m "feat: integrate recurring and csv expense flows"
 ### Task 8: Full verification, browser/mobile evidence, and phase handoff
 
 **Files:**
+
 - Modify: `STATUS.md`
 - Modify: `HANDOFF.md`
 - Modify: `DECISIONS.md`

@@ -160,4 +160,3 @@ user-scoped by RLS.
    path, confirm matching chart values, and test offline reconnect where the
    simulator permits. The no-touch iOS simulator cannot prove interactive
    flows; a real device is required for that part of the acceptance evidence.
-

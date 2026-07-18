@@ -68,8 +68,7 @@ export const BudgetSchema = z.object({
   userId: z.string().uuid().optional(),
   categoryId: z.string().uuid().nullable().default(null),
   period: z.literal('monthly').default('monthly'),
-  periodStart: z
-    .iso
+  periodStart: z.iso
     .date()
     .refine((value) => value.endsWith('-01'), 'Budget period must start on the first day'),
   amount: PositiveMoneySchema,

@@ -56,7 +56,9 @@ function inMonth(date: string, month: string): boolean {
 }
 
 function categoryMap(categories: readonly Category[]): ReadonlyMap<string, Category> {
-  return new Map(categories.flatMap((category) => (category.id ? [[category.id, category] as const] : [])));
+  return new Map(
+    categories.flatMap((category) => (category.id ? [[category.id, category] as const] : [])),
+  );
 }
 
 function sum(values: readonly number[]): number {
@@ -90,7 +92,11 @@ export function calculateCategoryBreakdown(
   const amounts = new Map<string | null, number[]>();
   for (const transaction of transactions) {
     const category = transaction.categoryId ? byId.get(transaction.categoryId) : undefined;
-    if (!inMonth(transaction.occurredOn, month) || transaction.direction !== 'debit' || category?.kind !== 'expense') {
+    if (
+      !inMonth(transaction.occurredOn, month) ||
+      transaction.direction !== 'debit' ||
+      category?.kind !== 'expense'
+    ) {
       continue;
     }
     const values = amounts.get(transaction.categoryId) ?? [];
@@ -157,12 +163,12 @@ export function buildMonthlyTrend(
   endMonth: string,
   monthCount: number,
 ): MonthlyTrendPoint[] {
-  return Array.from({ length: Math.max(0, monthCount) }, (_, index) => monthFromIndex(endMonth, monthCount - index - 1)).map(
-    (month) => {
-      const summary = calculateMonthlySummary(transactions, categories, month);
-      return { ...summary, month, range: Math.max(summary.debit, summary.credit) };
-    },
-  );
+  return Array.from({ length: Math.max(0, monthCount) }, (_, index) =>
+    monthFromIndex(endMonth, monthCount - index - 1),
+  ).map((month) => {
+    const summary = calculateMonthlySummary(transactions, categories, month);
+    return { ...summary, month, range: Math.max(summary.debit, summary.credit) };
+  });
 }
 
 export function buildBudgetVsActual(progress: readonly BudgetProgress[]): BudgetChartPoint[] {

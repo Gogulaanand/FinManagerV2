@@ -1,7 +1,13 @@
 'use client';
 
 import { parseCsv, previewCsv, type CsvImportPreview } from '@finmanager/core';
-import type { CsvField, CsvImportRow, CsvMapping, CsvMappingSet } from '@finmanager/schema';
+import type {
+  Account,
+  CsvField,
+  CsvImportRow,
+  CsvMapping,
+  CsvMappingSet,
+} from '@finmanager/schema';
 import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -19,19 +25,24 @@ const fieldOptions: readonly { value: CsvField | ''; label: string }[] = [
 ];
 
 export interface CsvImportProps {
+  readonly accounts: readonly Account[];
   readonly mappings: CsvMappingSet;
   readonly onSaveMappings: (mappings: CsvMappingSet) => Promise<void>;
   readonly onImport: (rows: readonly CsvImportRow[]) => Promise<void>;
 }
 
-export function CsvImport({ mappings, onSaveMappings, onImport }: CsvImportProps) {
+export function CsvImport({ accounts, mappings, onSaveMappings, onImport }: CsvImportProps) {
   const [bankKey, setBankKey] = useState('');
   const [csvText, setCsvText] = useState('');
   const [headers, setHeaders] = useState<readonly string[]>([]);
   const [columns, setColumns] = useState<Record<string, CsvField>>({});
   const [preview, setPreview] = useState<CsvImportPreview | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const hasSeparateAmounts = useMemo(() => Object.values(columns).some((field) => field === 'debit' || field === 'credit'), [columns]);
+  const [accountId, setAccountId] = useState('');
+  const hasSeparateAmounts = useMemo(
+    () => Object.values(columns).some((field) => field === 'debit' || field === 'credit'),
+    [columns],
+  );
 
   async function readFile(file: File | undefined) {
     if (!file) return;
@@ -42,7 +53,9 @@ export function CsvImport({ mappings, onSaveMappings, onImport }: CsvImportProps
     setColumns((current) => {
       const next = { ...current };
       for (const header of document.headers) {
-        const known = mappings.mappings.find((mapping) => mapping.bankKey === bankKey)?.columns[header];
+        const known = mappings.mappings.find((mapping) => mapping.bankKey === bankKey)?.columns[
+          header
+        ];
         if (known) next[header] = known;
       }
       return next;
@@ -54,13 +67,21 @@ export function CsvImport({ mappings, onSaveMappings, onImport }: CsvImportProps
   function mapping(): CsvMapping {
     return {
       bankKey: bankKey.trim() || 'custom-bank',
-      columns: Object.fromEntries(Object.entries(columns).filter(([, field]) => field)) as Record<string, CsvField>,
+      columns: Object.fromEntries(Object.entries(columns).filter(([, field]) => field)) as Record<
+        string,
+        CsvField
+      >,
       defaultCategoryId: null,
     };
   }
 
   function makePreview() {
-    const next = previewCsv(parseCsv(csvText), mapping(), 'selected-account');
+    const selectedAccountId = accountId || accounts[0]?.id || '';
+    if (!selectedAccountId) {
+      setMessage('Add an account before importing a statement.');
+      return;
+    }
+    const next = previewCsv(parseCsv(csvText), mapping(), selectedAccountId);
     setPreview(next);
     setMessage(`${next.rows.length} valid rows, ${next.errors.length} errors.`);
   }
@@ -75,16 +96,32 @@ export function CsvImport({ mappings, onSaveMappings, onImport }: CsvImportProps
   return (
     <Card className="flex flex-col gap-4">
       <CardTitle>Import a bank statement</CardTitle>
-      <CardLabel>Choose a CSV, map its columns once, and reuse that mapping for the same bank.</CardLabel>
+      <CardLabel>
+        Choose a CSV, map its columns once, and reuse that mapping for the same bank.
+      </CardLabel>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5 font-body text-label text-foreground-muted">
           Bank name
-          <Input value={bankKey} onChange={(event) => setBankKey(event.target.value)} placeholder="e.g. HDFC" />
+          <Input
+            value={bankKey}
+            onChange={(event) => setBankKey(event.target.value)}
+            placeholder="e.g. HDFC"
+          />
         </label>
         <label className="flex flex-col gap-1.5 font-body text-label text-foreground-muted">
           Statement CSV
-          <Input type="file" accept=".csv,text/csv" onChange={(event) => void readFile(event.target.files?.[0])} />
+          <Input
+            type="file"
+            accept=".csv,text/csv"
+            onChange={(event) => void readFile(event.target.files?.[0])}
+          />
         </label>
+        <SelectField
+          label="Import into account"
+          value={accountId || accounts[0]?.id || ''}
+          options={accounts.map((account) => ({ value: account.id!, label: account.name }))}
+          onChange={setAccountId}
+        />
       </div>
       {headers.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -94,26 +131,58 @@ export function CsvImport({ mappings, onSaveMappings, onImport }: CsvImportProps
               label={header}
               value={columns[header] ?? ''}
               options={fieldOptions}
-              onChange={(value) => setColumns((current) => {
-                const next = { ...current };
-                if (value) next[header] = value;
-                else delete next[header];
-                return next;
-              })}
+              onChange={(value) =>
+                setColumns((current) => {
+                  const next = { ...current };
+                  if (value) next[header] = value;
+                  else delete next[header];
+                  return next;
+                })
+              }
             />
           ))}
         </div>
       ) : null}
-      {hasSeparateAmounts ? <CardLabel>Withdrawals become debit expenses; deposits become credit income.</CardLabel> : null}
+      {hasSeparateAmounts ? (
+        <CardLabel>Withdrawals become debit expenses; deposits become credit income.</CardLabel>
+      ) : null}
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" disabled={!csvText} onClick={makePreview}>Preview import</Button>
-        <Button type="button" variant="ghost" disabled={!headers.length} onClick={() => void saveMapping()}>Save mapping</Button>
-        {preview && preview.rows.length > 0 ? <Button type="button" disabled={!preview.rows.length} onClick={() => void onImport(preview.rows)}>Import valid rows</Button> : null}
+        <Button
+          type="button"
+          variant="outline"
+          disabled={!csvText || accounts.length === 0}
+          onClick={makePreview}
+        >
+          Preview import
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          disabled={!headers.length}
+          onClick={() => void saveMapping()}
+        >
+          Save mapping
+        </Button>
+        {preview && preview.rows.length > 0 ? (
+          <Button
+            type="button"
+            disabled={!preview.rows.length}
+            onClick={() => void onImport(preview.rows)}
+          >
+            Import valid rows
+          </Button>
+        ) : null}
       </div>
       {preview ? (
         <div className="rounded-md bg-surface-muted p-3 font-body text-caption text-foreground-muted">
-          <p>{preview.rows.length} rows ready; {preview.errors.length} rows need attention.</p>
-          {preview.errors.map((error) => <p key={`${error.sourceRow}-${error.message}`}>Row {error.sourceRow}: {error.message}</p>)}
+          <p>
+            {preview.rows.length} rows ready; {preview.errors.length} rows need attention.
+          </p>
+          {preview.errors.map((error) => (
+            <p key={`${error.sourceRow}-${error.message}`}>
+              Row {error.sourceRow}: {error.message}
+            </p>
+          ))}
         </div>
       ) : null}
       {message ? <p className="font-body text-caption text-foreground-muted">{message}</p> : null}

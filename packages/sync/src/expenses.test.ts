@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Transaction } from '@finmanager/schema';
 
-import { materializeRecurringTransactions, saveTransaction } from './expenses';
+import { commitCsvImport, materializeRecurringTransactions, saveTransaction } from './expenses';
 
 interface Statement {
   readonly sql: string;
@@ -34,10 +34,13 @@ function transaction(overrides: Partial<Transaction> = {}): Transaction {
   };
 }
 
-function fakeDb(options: {
-  readonly updateRowsAffected?: number;
-  readonly existingOccurrenceKeys?: readonly string[];
-} = {}): AbstractPowerSyncDatabase & { readonly statements: Statement[] } {
+function fakeDb(
+  options: {
+    readonly updateRowsAffected?: number;
+    readonly existingOccurrenceKeys?: readonly string[];
+    readonly existingImportHashes?: readonly string[];
+  } = {},
+): AbstractPowerSyncDatabase & { readonly statements: Statement[] } {
   const statements: Statement[] = [];
   const db = {
     statements,
@@ -46,7 +49,17 @@ function fakeDb(options: {
       if (sql.startsWith('UPDATE')) return { rowsAffected: options.updateRowsAffected ?? 0 };
       if (sql.startsWith('SELECT occurrence_key')) {
         return {
-          rows: (options.existingOccurrenceKeys ?? []).map((occurrence_key) => ({ occurrence_key })),
+          rows: (options.existingOccurrenceKeys ?? []).map((occurrence_key) => ({
+            occurrence_key,
+          })),
+          rowsAffected: 0,
+        };
+      }
+      if (sql.startsWith('SELECT id FROM transactions')) {
+        return {
+          rows: (options.existingImportHashes ?? []).includes(String(params[1]))
+            ? [{ id: 'existing' }]
+            : [],
           rowsAffected: 0,
         };
       }
@@ -85,5 +98,32 @@ describe('expense repositories', () => {
       '2026-07',
     );
     expect(result.created).toBe(0);
+  });
+
+  it('deduplicates CSV rows by import hash before writing', async () => {
+    const db = fakeDb({ existingImportHashes: ['bank-row-2'] });
+    const row = {
+      sourceRow: 2,
+      error: null,
+      accountId: '33333333-3333-4333-8333-333333333333',
+      categoryId: '44444444-4444-4444-8444-444444444444',
+      amount: 250,
+      direction: 'debit' as const,
+      currency: 'INR' as const,
+      occurredOn: '2026-07-10',
+      note: 'Statement row',
+      merchant: 'Market',
+      importHash: 'bank-row-1',
+    };
+    const result = await commitCsvImport(db, '22222222-2222-4222-8222-222222222222', [
+      row,
+      { ...row, sourceRow: 3, importHash: 'bank-row-2' },
+      { ...row, sourceRow: 4 },
+    ]);
+    expect(result).toEqual({ created: 1, skipped: 2 });
+    expect(
+      db.statements.filter((statement) => statement.sql.startsWith('INSERT INTO transactions'))
+        .length,
+    ).toBe(1);
   });
 });

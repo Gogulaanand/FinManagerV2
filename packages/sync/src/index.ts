@@ -26,6 +26,7 @@ export {
   ACCOUNTS_QUERY,
   BUDGETS_QUERY,
   CATEGORIES_QUERY,
+  commitCsvImport,
   PROFILE_MAPPINGS_QUERY,
   TRANSACTIONS_QUERY,
   deleteAccount,
