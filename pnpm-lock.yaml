@@ -228,6 +228,10 @@ importers:
         version: 6.0.3
 
   packages/core:
+    dependencies:
+      '@finmanager/schema':
+        specifier: workspace:*
+        version: link:../schema
     devDependencies:
       typescript:
         specifier: 6.0.3
