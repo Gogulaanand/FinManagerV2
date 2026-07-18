@@ -119,10 +119,6 @@ export function effectiveHoldingValue(
   holding: Holding,
   valuation: Valuation | null,
 ): EffectiveValue {
-  if (valuation) {
-    const value = toInr(valuation.value, valuation.currency, valuation.fxRateToInr);
-    return { value, missingFx: value === null };
-  }
   if (holding.manualValueOverride !== null) {
     return resolveAmount(holding.manualValueOverride, holding, holding.manualFxRateToInr);
   }
@@ -132,6 +128,10 @@ export function effectiveHoldingValue(
       holding,
       holding.manualFxRateToInr,
     );
+  }
+  if (valuation) {
+    const value = toInr(valuation.value, valuation.currency, valuation.fxRateToInr);
+    return { value, missingFx: value === null };
   }
   if (holding.automaticPrice !== null) {
     return resolveAmount(

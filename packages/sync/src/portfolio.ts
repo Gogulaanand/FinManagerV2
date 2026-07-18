@@ -142,18 +142,8 @@ export function mapValuationRows(rows: readonly RawRow[]): Valuation[] {
   );
 }
 
-async function updateThenInsert(
-  db: SqlExecutor,
-  updateSql: string,
-  updateParams: unknown[],
-  insertSql: string,
-  insertParams: unknown[],
-): Promise<void> {
-  const updated = await db.execute(updateSql, updateParams);
-  if (!updated.rowsAffected) await db.execute(insertSql, insertParams);
-}
-
 async function saveHoldingOn(db: SqlExecutor, userId: string, input: Holding): Promise<string> {
+  const isNew = !input.id;
   const resolvedId = idFor(input.id);
   const holding = HoldingSchema.parse({ ...input, id: resolvedId, userId });
   const id = holding.id!;
@@ -181,13 +171,17 @@ async function saveHoldingOn(db: SqlExecutor, userId: string, input: Holding): P
     now,
     id,
   ];
-  await updateThenInsert(
-    db,
-    `UPDATE holdings SET name = ?, type = ?, identifier = ?, account_id = ?, currency = ?, quantity = ?, avg_cost = ?, current_price = ?, current_value = ?, manual_price_override = ?, manual_value_override = ?, manual_fx_rate_to_inr = ?, automatic_price = ?, automatic_price_as_of = ?, automatic_price_source = ?, automatic_price_provider = ?, automatic_price_fx_rate_to_inr = ?, metadata = ?, is_active = ?, updated_at = ? WHERE user_id = ? AND id = ?`,
-    [...fields.slice(0, -1), userId, id],
-    `INSERT INTO holdings (id, user_id, name, type, identifier, account_id, currency, quantity, avg_cost, current_price, current_value, manual_price_override, manual_value_override, manual_fx_rate_to_inr, automatic_price, automatic_price_as_of, automatic_price_source, automatic_price_provider, automatic_price_fx_rate_to_inr, metadata, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, userId, ...fields.slice(0, -1), now],
-  );
+  if (isNew) {
+    await db.execute(
+      `INSERT INTO holdings (id, user_id, name, type, identifier, account_id, currency, quantity, avg_cost, current_price, current_value, manual_price_override, manual_value_override, manual_fx_rate_to_inr, automatic_price, automatic_price_as_of, automatic_price_source, automatic_price_provider, automatic_price_fx_rate_to_inr, metadata, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, userId, ...fields.slice(0, -1), now],
+    );
+  } else {
+    await db.execute(
+      `UPDATE holdings SET name = ?, type = ?, identifier = ?, account_id = ?, currency = ?, quantity = ?, avg_cost = ?, current_price = ?, current_value = ?, manual_price_override = ?, manual_value_override = ?, manual_fx_rate_to_inr = ?, automatic_price = ?, automatic_price_as_of = ?, automatic_price_source = ?, automatic_price_provider = ?, automatic_price_fx_rate_to_inr = ?, metadata = ?, is_active = ?, updated_at = ? WHERE user_id = ? AND id = ?`,
+      [...fields.slice(0, -1), userId, id],
+    );
+  }
   return id;
 }
 
@@ -248,6 +242,7 @@ async function saveHoldingEventOn(
   userId: string,
   input: HoldingEvent,
 ): Promise<string> {
+  const isNew = !input.id;
   const event = HoldingEventSchema.parse({ ...input, id: idFor(input.id), userId });
   const id = event.id!;
   const now = new Date().toISOString();
@@ -265,13 +260,17 @@ async function saveHoldingEventOn(
     now,
     id,
   ];
-  await updateThenInsert(
-    db,
-    `UPDATE holding_events SET holding_id = ?, kind = ?, occurred_on = ?, quantity = ?, price = ?, amount = ?, currency = ?, fx_rate_to_inr = ?, note = ?, import_hash = ?, updated_at = ? WHERE user_id = ? AND id = ?`,
-    [...values.slice(0, -1), userId, id],
-    `INSERT INTO holding_events (id, user_id, holding_id, kind, occurred_on, quantity, price, amount, currency, fx_rate_to_inr, note, import_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, userId, ...values.slice(0, -1), now],
-  );
+  if (isNew) {
+    await db.execute(
+      `INSERT INTO holding_events (id, user_id, holding_id, kind, occurred_on, quantity, price, amount, currency, fx_rate_to_inr, note, import_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, userId, ...values.slice(0, -1), now],
+    );
+  } else {
+    await db.execute(
+      `UPDATE holding_events SET holding_id = ?, kind = ?, occurred_on = ?, quantity = ?, price = ?, amount = ?, currency = ?, fx_rate_to_inr = ?, note = ?, import_hash = ?, updated_at = ? WHERE user_id = ? AND id = ?`,
+      [...values.slice(0, -1), userId, id],
+    );
+  }
   return id;
 }
 
@@ -292,6 +291,7 @@ export async function deleteHoldingEvent(
 }
 
 async function saveValuationOn(db: SqlExecutor, userId: string, input: Valuation): Promise<string> {
+  const isNew = !input.id;
   const valuation = ValuationSchema.parse({ ...input, id: idFor(input.id), userId });
   const id = valuation.id!;
   const now = new Date().toISOString();
@@ -305,13 +305,23 @@ async function saveValuationOn(db: SqlExecutor, userId: string, input: Valuation
     now,
     id,
   ];
-  await updateThenInsert(
-    db,
-    `UPDATE valuations SET holding_id = ?, as_of = ?, value = ?, currency = ?, fx_rate_to_inr = ?, source = ?, updated_at = ? WHERE user_id = ? AND (id = ? OR (holding_id = ? AND as_of = ?))`,
-    [...values.slice(0, -1), userId, id, valuation.holdingId, valuation.asOf],
-    `INSERT INTO valuations (id, user_id, holding_id, as_of, value, currency, fx_rate_to_inr, source, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, userId, ...values.slice(0, -1), now],
-  );
+  if (isNew) {
+    const updated = await db.execute(
+      `UPDATE valuations SET holding_id = ?, as_of = ?, value = ?, currency = ?, fx_rate_to_inr = ?, source = ?, updated_at = ? WHERE user_id = ? AND holding_id = ? AND as_of = ?`,
+      [...values.slice(0, -2), userId, valuation.holdingId, valuation.asOf],
+    );
+    if (!updated.rowsAffected) {
+      await db.execute(
+        `INSERT INTO valuations (id, user_id, holding_id, as_of, value, currency, fx_rate_to_inr, source, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, userId, ...values.slice(0, -1), now],
+      );
+    }
+  } else {
+    await db.execute(
+      `UPDATE valuations SET holding_id = ?, as_of = ?, value = ?, currency = ?, fx_rate_to_inr = ?, source = ?, updated_at = ? WHERE user_id = ? AND id = ?`,
+      [...values.slice(0, -1), userId, id],
+    );
+  }
   return id;
 }
 

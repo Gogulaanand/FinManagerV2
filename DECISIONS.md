@@ -244,3 +244,20 @@ Consequence: `ensureRecurringThrough` runs from both clients through the shared 
 Accounts, categories, transactions, budgets, confirmations, and charts are available on both clients and call the same PowerSync repositories. Mobile keeps the amount-first keypad, while its setup and budget forms use the shared Zod contracts.
 Why: cross-device sync is only useful if either client can complete the real monthly ledger flow; a read-only mobile budget card would leave the feature incomplete.
 Consequence: interactive mobile verification still requires a real Expo Go device because the local simulator has no touch input, but the code path and native iOS bundle are checked in CI.
+
+## D-033: saveTransaction uses SELECT-check-then-INSERT because callers pre-assign UUIDs (2026-07-18)
+
+`useExpenses` (and analogous hooks) call `uuidv4()` before passing the transaction to `repoSaveTransaction`, so `transaction.id` is always truthy.
+The original `isNew = !transaction.id` guard was therefore always `false`, turning every new-row write into an UPDATE against a nonexistent row - a silent no-op.
+Fix: `saveTransaction` now runs `SELECT id FROM transactions WHERE id = ? LIMIT 1` first and branches on the result rather than on the presence of an id field.
+Why: the pre-assignment pattern is load-bearing (the UI needs the id before the write resolves), so the check must move to the database layer.
+Consequence: every insert path pays one extra SELECT; acceptable at personal-finance write frequency.
+The sync tests were updated: `fakeDb` gained `existingTransactionIds` and the existence-check SELECT is now differentiated from the import-hash SELECT by `WHERE id = ?` in the SQL.
+
+## D-034: PowerSync offline writes require an unexpired Supabase auth token (2026-07-18)
+
+PowerSync's `fetchCredentials` calls `supabase.auth.getSession()` to obtain a JWT for the sync endpoint.
+When the network is blocked before the token refreshes, `getSession()` cannot reach the refresh endpoint and the write path errors.
+Safe offline simulation sequence: restore network, wait for the token to auto-refresh (Supabase refreshes at roughly 60 seconds before expiry), then block the network.
+Why: PowerSync's credential fetch is on the hot path for every local write, not just for sync upload; even purely local inserts fail if the credential promise rejects.
+Consequence: offline E2E tests must allow a token-refresh window before enabling the offline block.

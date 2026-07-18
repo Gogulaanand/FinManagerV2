@@ -37,6 +37,7 @@ function transaction(overrides: Partial<Transaction> = {}): Transaction {
 function fakeDb(
   options: {
     readonly updateRowsAffected?: number;
+    readonly existingTransactionIds?: readonly string[];
     readonly existingOccurrenceKeys?: readonly string[];
     readonly existingImportHashes?: readonly string[];
   } = {},
@@ -55,6 +56,14 @@ function fakeDb(
           rowsAffected: 0,
         };
       }
+      if (sql.startsWith('SELECT id FROM transactions WHERE id')) {
+        return {
+          rows: (options.existingTransactionIds ?? []).includes(String(params[0]))
+            ? [{ id: String(params[0]) }]
+            : [],
+          rowsAffected: 0,
+        };
+      }
       if (sql.startsWith('SELECT id FROM transactions')) {
         return {
           rows: (options.existingImportHashes ?? []).includes(String(params[1]))
@@ -70,10 +79,12 @@ function fakeDb(
 }
 
 describe('expense repositories', () => {
-  it('updates an existing PowerSync view row and inserts only when no row was affected', async () => {
-    const db = fakeDb({ updateRowsAffected: 1 });
+  it('checks existence then updates an existing row without inserting', async () => {
+    const txId = '11111111-1111-4111-8111-111111111111';
+    const db = fakeDb({ existingTransactionIds: [txId] });
     await saveTransaction(db, '22222222-2222-4222-8222-222222222222', transaction());
-    expect(db.statements[0]?.sql).toMatch(/^UPDATE transactions/);
+    expect(db.statements[0]?.sql).toMatch(/^SELECT id FROM transactions WHERE id/);
+    expect(db.statements[1]?.sql).toMatch(/^UPDATE transactions/);
     expect(db.statements.some((statement) => statement.sql.includes('ON CONFLICT'))).toBe(false);
     expect(db.statements.filter((statement) => statement.sql.startsWith('INSERT')).length).toBe(0);
   });

@@ -5,26 +5,30 @@ This file carries mid-phase state between sessions; completed phases live in pha
 
 ---
 
-## Latest Handoff: 2026-07-18 (Phase 5 complete, session 1)
+## Latest Handoff: 2026-07-18 (Phase 5, session 2)
 
 ### Where we are
 
-Phase 5 is implemented on branch `phase-5-portfolio` in the existing Phase 4 worktree. The app now has portfolio holdings and typed metadata for listed assets, real estate, RSU/ESOP, retirement products, and cash; dated FX-aware cash-flow events; valuation history; true XIRR and incomplete-state reporting; account-inclusive net worth; allocation and gain/loss summaries; Zerodha/CAMS/KFintech CSV previews with semantic deduplication; concrete online quote refresh with provenance; and offline-first web/mobile CRUD through the existing PowerSync repositories.
-The repo-wide gate is green: `CI=true pnpm turbo run build test lint typecheck` completed 21/21 tasks, `CI=true pnpm format:check` is clean, and `CI=true pnpm --filter @finmanager/mobile exec expo export --platform ios` completed successfully. Focused package results are schema 13 tests, core 112 tests, and sync 21 tests. The web production build generated `/portfolio` successfully. The linked Supabase migration check could not run because this worktree has no linked project ref; the Phase 4 migration was not rerun.
+Chrome E2E verification of the combined Phase 4 + Phase 5 prompt is complete (steps 1-15 verified with the signed-in test account `gogulaanand02+webtest@gmail.com`).
+All expected results were confirmed: HDFC Salary account (₹80,000), Verification Lunch/Grocery expenses (₹2,500 total), July Food budget overspend (₹2,500/₹2,000), CSV import dedup (0 created / 2 skipped on repeat), Reliance Industries holding with ~10% XIRR, RSU FX completeness toggle, manual override survivability after quote refresh, net worth with account balances, and offline write + PowerSync sync (both rows confirmed in Supabase with IDs and timestamps).
+Three bugs were fixed and committed this session: `saveTransaction` SELECT-check-then-INSERT (D-033), `effectiveHoldingValue` manual override priority (from prior session), and `saveHoldingOn`/`saveHoldingEventOn`/`saveValuationOn` isNew branching (from prior session).
+`pnpm turbo run build test lint --filter=@finmanager/sync...` is green (22/22 sync tests pass).
+Expo Go uses SQL.js in-memory adapter; relaunch persistence deferred to Phase 9 (D-021).
 
 ### Exact next action
 
-Run the combined Phase 4 + Phase 5 Chrome/Expo Go verification prompt below with the existing signed-in test account, then apply and verify `supabase/migrations/20260718000002_phase5_portfolio.sql` in the intended linked Supabase project. After that, start Phase 6 using `phases/briefing/phase-5.md`.
+Run the mobile path of the combined Phase 4 + Phase 5 prompt on a **real Expo Go device** (iOS or Android) with the same signed-in test account.
+After that passes, start **Phase 6 (Goals + Retirement + FIRE)** using `phases/briefing/phase-5.md` as the prior-phase briefing.
 
 ### Files in flight
 
-The Phase 5 implementation files are listed in `phases/briefing/phase-5.md`. The current working tree is ready for the final pre-commit review and commit.
+All files are committed. No in-flight work remains.
+The three fixed sources: `packages/core/src/portfolio/analytics.ts`, `packages/sync/src/expenses.ts`, `packages/sync/src/portfolio.ts`.
 
 ### Open items / warnings
 
-- **Phase 4 migration remains untouched.** The Phase 5 migration is additive at `supabase/migrations/20260718000002_phase5_portfolio.sql`; `supabase migration list --linked` could not be used here because no project is linked. Apply only the Phase 5 migration in the intended linked project and inspect constraints/indexes/RLS before shared-device testing.
-- **Chrome verification was unavailable:** the Chrome control connector could not connect, so the web route was verified by production build/prerender only. Do not call that a signed-in end-to-end Chrome pass.
-- **Mobile interactive verification remains outstanding:** Expo iOS export passed, but the simulator has no touch input. Run the keypad, CRUD, budget, and airplane-mode sync path on a real Expo Go device.
+- **Expo Go mobile interactive verification outstanding:** run the keypad, CRUD, budget, offline write/reconnect path on a real Expo Go device. The sql-js adapter is in-memory so do not test relaunch persistence (Phase 9 task).
+- **Phase 5 migration** is at `supabase/migrations/20260718000002_phase5_portfolio.sql` and was already applied to the linked project (`vkivzhbckfsjtvzatuiz`). No re-application needed.
 - **Supabase email confirmation is ON and the built-in mailer is rate-limited**, so real signups can't complete. The Phase 3 web E2E confirmed its test account via a direct `email_confirmed_at` SQL update. Fix with SMTP/Resend (the planned email provider) or a deliberate toggle at Phase 9 (D-024).
 - **A Phase 3 test account with two synced scenarios remains in Supabase.** Credentials are intentionally omitted from tracked docs. Rotate or delete that account after cross-platform verification with explicit operator approval; it is test pollution otherwise.
 - **Google sign-in is web-only.** Mobile needs the expo-web-browser + deep-link OAuth flow; deferred (email/password works on mobile).

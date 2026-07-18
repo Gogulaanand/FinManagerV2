@@ -159,55 +159,26 @@ export function mapBudgetRows(rows: readonly RawRow[]): Budget[] {
   );
 }
 
-async function updateThenInsert(
-  db: AbstractPowerSyncDatabase,
-  updateSql: string,
-  updateParams: unknown[],
-  insertSql: string,
-  insertParams: unknown[],
-): Promise<void> {
-  // PowerSync's public execute signature uses `any[]`; these arrays are built
-  // entirely from validated domain values at this repository boundary.
-  const updated = (await db.execute(updateSql, updateParams)) as unknown as SqlResult;
-  if (!updated.rowsAffected) await db.execute(insertSql, insertParams);
-}
-
 export async function saveAccount(
   db: AbstractPowerSyncDatabase,
   userId: string,
   account: Account,
 ): Promise<void> {
+  const isNew = !account.id;
   const id = idFor(account.id);
   const now = new Date().toISOString();
-  const values = [
-    account.name,
-    account.type,
-    account.institution,
-    account.currency,
-    account.currentBalance,
-    account.isActive ? 1 : 0,
-    now,
-    id,
-  ];
-  await updateThenInsert(
-    db,
-    `UPDATE accounts SET name = ?, type = ?, institution = ?, currency = ?, current_balance = ?, is_active = ?, updated_at = ? WHERE id = ?`,
-    values,
-    `INSERT INTO accounts (id, user_id, name, type, institution, currency, current_balance, is_active, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      id,
-      userId,
-      account.name,
-      account.type,
-      account.institution,
-      account.currency,
-      account.currentBalance,
-      account.isActive ? 1 : 0,
-      now,
-      now,
-    ],
-  );
+  if (isNew) {
+    await db.execute(
+      `INSERT INTO accounts (id, user_id, name, type, institution, currency, current_balance, is_active, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, userId, account.name, account.type, account.institution, account.currency, account.currentBalance, account.isActive ? 1 : 0, now, now],
+    );
+  } else {
+    await db.execute(
+      `UPDATE accounts SET name = ?, type = ?, institution = ?, currency = ?, current_balance = ?, is_active = ?, updated_at = ? WHERE id = ?`,
+      [account.name, account.type, account.institution, account.currency, account.currentBalance, account.isActive ? 1 : 0, now, id],
+    );
+  }
 }
 
 export async function deleteAccount(db: AbstractPowerSyncDatabase, id: string): Promise<void> {
@@ -249,38 +220,21 @@ export async function saveCategory(
   userId: string,
   category: Category,
 ): Promise<void> {
+  const isNew = !category.id;
   const id = idFor(category.id);
   const now = new Date().toISOString();
-  await updateThenInsert(
-    db,
-    `UPDATE categories SET name = ?, kind = ?, icon = ?, color = ?, parent_id = ?, is_system = ?, sort_order = ?, updated_at = ? WHERE id = ?`,
-    [
-      category.name,
-      category.kind,
-      category.icon,
-      category.color,
-      category.parentId,
-      category.isSystem ? 1 : 0,
-      category.sortOrder,
-      now,
-      id,
-    ],
-    `INSERT INTO categories (id, user_id, name, kind, icon, color, parent_id, is_system, sort_order, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      id,
-      userId,
-      category.name,
-      category.kind,
-      category.icon,
-      category.color,
-      category.parentId,
-      category.isSystem ? 1 : 0,
-      category.sortOrder,
-      now,
-      now,
-    ],
-  );
+  if (isNew) {
+    await db.execute(
+      `INSERT INTO categories (id, user_id, name, kind, icon, color, parent_id, is_system, sort_order, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, userId, category.name, category.kind, category.icon, category.color, category.parentId, category.isSystem ? 1 : 0, category.sortOrder, now, now],
+    );
+  } else {
+    await db.execute(
+      `UPDATE categories SET name = ?, kind = ?, icon = ?, color = ?, parent_id = ?, is_system = ?, sort_order = ?, updated_at = ? WHERE id = ?`,
+      [category.name, category.kind, category.icon, category.color, category.parentId, category.isSystem ? 1 : 0, category.sortOrder, now, id],
+    );
+  }
 }
 
 export async function deleteCategory(db: AbstractPowerSyncDatabase, id: string): Promise<void> {
@@ -294,59 +248,29 @@ export async function saveTransaction(
 ): Promise<void> {
   const id = idFor(transaction.id);
   const now = new Date().toISOString();
-  const updateParams = [
-    transaction.accountId,
-    transaction.categoryId,
-    transaction.amount,
-    transaction.direction,
-    transaction.currency,
-    transaction.occurredOn,
-    transaction.note,
-    transaction.merchant,
-    transaction.isRecurring ? 1 : 0,
-    transaction.recurringId,
-    transaction.recurrenceFrequency,
-    transaction.recurrenceInterval,
-    transaction.recurrenceEndOn,
-    transaction.recurrenceGeneratedThrough,
-    transaction.occurrenceKey,
-    transaction.importHash,
-    now,
-    id,
-  ];
-  await updateThenInsert(
-    db,
-    `UPDATE transactions SET account_id = ?, category_id = ?, amount = ?, direction = ?, currency = ?, occurred_on = ?,
-      note = ?, merchant = ?, is_recurring = ?, recurring_id = ?, recurrence_frequency = ?, recurrence_interval = ?,
-      recurrence_end_on = ?, recurrence_generated_through = ?, occurrence_key = ?, import_hash = ?, updated_at = ? WHERE id = ?`,
-    updateParams,
-    `INSERT INTO transactions (id, user_id, account_id, category_id, amount, direction, currency, occurred_on, note, merchant,
-      is_recurring, recurring_id, recurrence_frequency, recurrence_interval, recurrence_end_on, recurrence_generated_through,
-      occurrence_key, import_hash, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      id,
-      userId,
-      transaction.accountId,
-      transaction.categoryId,
-      transaction.amount,
-      transaction.direction,
-      transaction.currency,
-      transaction.occurredOn,
-      transaction.note,
-      transaction.merchant,
-      transaction.isRecurring ? 1 : 0,
-      transaction.recurringId,
-      transaction.recurrenceFrequency,
-      transaction.recurrenceInterval,
-      transaction.recurrenceEndOn,
-      transaction.recurrenceGeneratedThrough,
-      transaction.occurrenceKey,
-      transaction.importHash,
-      now,
-      now,
-    ],
-  );
+  let exists = false;
+  if (transaction.id) {
+    const check = (await db.execute('SELECT id FROM transactions WHERE id = ? LIMIT 1', [
+      transaction.id,
+    ])) as unknown as SqlResult;
+    exists = rowsOf(check).length > 0;
+  }
+  if (!exists) {
+    await db.execute(
+      `INSERT INTO transactions (id, user_id, account_id, category_id, amount, direction, currency, occurred_on, note, merchant,
+        is_recurring, recurring_id, recurrence_frequency, recurrence_interval, recurrence_end_on, recurrence_generated_through,
+        occurrence_key, import_hash, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, userId, transaction.accountId, transaction.categoryId, transaction.amount, transaction.direction, transaction.currency, transaction.occurredOn, transaction.note, transaction.merchant, transaction.isRecurring ? 1 : 0, transaction.recurringId, transaction.recurrenceFrequency, transaction.recurrenceInterval, transaction.recurrenceEndOn, transaction.recurrenceGeneratedThrough, transaction.occurrenceKey, transaction.importHash, now, now],
+    );
+  } else {
+    await db.execute(
+      `UPDATE transactions SET account_id = ?, category_id = ?, amount = ?, direction = ?, currency = ?, occurred_on = ?,
+        note = ?, merchant = ?, is_recurring = ?, recurring_id = ?, recurrence_frequency = ?, recurrence_interval = ?,
+        recurrence_end_on = ?, recurrence_generated_through = ?, occurrence_key = ?, import_hash = ?, updated_at = ? WHERE id = ?`,
+      [transaction.accountId, transaction.categoryId, transaction.amount, transaction.direction, transaction.currency, transaction.occurredOn, transaction.note, transaction.merchant, transaction.isRecurring ? 1 : 0, transaction.recurringId, transaction.recurrenceFrequency, transaction.recurrenceInterval, transaction.recurrenceEndOn, transaction.recurrenceGeneratedThrough, transaction.occurrenceKey, transaction.importHash, now, id],
+    );
+  }
 }
 
 export async function deleteTransaction(db: AbstractPowerSyncDatabase, id: string): Promise<void> {
