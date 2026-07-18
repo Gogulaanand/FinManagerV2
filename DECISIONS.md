@@ -172,3 +172,33 @@ Rejected: PowerSync local-only tables that promote to synced on login (real offl
 
 RLS isolation is verified by the real enforcement path, not by reading the policy: as the non-privileged `authenticated` role with a second user's JWT claims, a user reads 0 of another's rows and is blocked by the WITH CHECK policy from forging a row as them. Supabase security advisors are clean (function `search_path` pinned, the `handle_new_user` trigger's RPC EXECUTE revoked).
 Open item for Phase 9: **Supabase email confirmation is still ON and the built-in mailer is rate-limited**, so real signups cannot complete (the built-in mailer 429s, and the owner's "Confirm email" toggle did not take effect). Phase 3's web E2E confirmed the one test account via a direct `email_confirmed_at` update. Production needs a real SMTP/Resend sender (Resend is already the planned email provider) or a deliberate decision to disable confirmation.
+
+## D-025: Expense amounts are always positive and direction carries meaning (2026-07-18)
+
+`Transaction.amount` and `Budget.amount` are strictly positive rupee values. A transaction's `direction` is `debit` or `credit`, and summaries calculate net cash flow from that direction.
+Why: the amount-first keypad, bank CSV imports, budget ratios, and signed display all have one unambiguous representation. Negative amounts would make debit/credit imports and overspend math easy to invert.
+Consequence: UI displays can show signed debit values, but persisted rows and domain inputs never do.
+
+## D-026: Recurring transactions materialize as concrete deterministic rows (2026-07-18)
+
+The saved recurring transaction is the source row. Future occurrences are concrete child rows keyed by `${recurringId}:${YYYY-MM-DD}` in `occurrence_key`; materialization skips keys already present and advances `recurrence_generated_through`.
+Why: every device can converge on the same ledger rows after offline edits and reconnects, and charts/budgets can use the ordinary transaction query without a second virtual-transaction model.
+Consequence: occurrence generation is idempotent and month-end clamped in `packages/core`; background catch-up can be extended later without changing the entity contract.
+
+## D-027: Bank CSV mappings live in synced profile JSON and imports deduplicate by canonical hash (2026-07-18)
+
+Each bank mapping stores its column-to-field map in `profiles.csv_mappings`, which is mirrored in `JSON_COLUMNS` and synced through the existing profile row. Imported rows carry a canonical account/date/description/merchant/amount/direction hash.
+Why: mappings are user preferences rather than ledger entities, while the hash is stable across repeated downloads of the same statement and across devices.
+Consequence: CSV preview requires a real account selection, and repository import reports created versus skipped duplicate rows.
+
+## D-028: Account balances remain manual snapshots in Phase 4 (2026-07-18)
+
+`accounts.current_balance` is edited as a user-provided balance and is not recalculated from transaction rows.
+Why: bank statements, pending transactions, transfers, and opening balances make a derived balance ambiguous without a reconciliation model that is outside Phase 4.
+Consequence: Phase 5/9 may add reconciliation or balance-history behavior, but Phase 4 never silently overwrites the user's account snapshot.
+
+## D-029: Web PowerSync provider is browser-only during SSR (2026-07-18)
+
+The web `AppProviders` component is loaded through `ClientProviders` with SSR disabled. The production build previously emitted repeated `a.execute is not a function` traces while PowerSync attempted to initialize its browser database during static prerender.
+Why: wa-sqlite is a browser-only runtime; an SSR no-op flag did not prevent the SDK initialization path from touching the wrong database shape.
+Consequence: the server renders static shells, while PowerSync initializes only in the browser where the existing reactive query/repository path is valid.

@@ -3,7 +3,7 @@ import { Inter, Manrope } from 'next/font/google';
 import type { ReactNode } from 'react';
 
 import { AuthStatus } from '@/components/auth-status';
-import { AppProviders } from '@/components/providers';
+import { ClientProviders } from '@/components/client-providers';
 import { Sidebar, TabBar } from '@/components/sidebar';
 import { ThemeToggle, themeScript } from '@/components/theme-toggle';
 
@@ -48,7 +48,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="antialiased">
-        <AppProviders>
+        <ClientProviders>
           <div className="flex min-h-screen">
             <Sidebar />
 
@@ -71,7 +71,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </div>
 
           <TabBar />
-        </AppProviders>
+        </ClientProviders>
       </body>
     </html>
   );

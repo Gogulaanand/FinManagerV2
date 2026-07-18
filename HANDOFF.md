@@ -5,24 +5,26 @@ This file carries mid-phase state between sessions; completed phases live in pha
 
 ---
 
-## Latest Handoff: 2026-07-18 (Phase 3 complete)
+## Latest Handoff: 2026-07-18 (Phase 4 complete)
 
 ### Where we are
 
-Phase 3 is complete and committed in three parts (`4b5152b`, `d4d8fc5`, `cce2011`); nothing is half-done.
-The app now has real auth (Supabase email+password, plus Google on web) and a working offline-first data layer (PowerSync) on both platforms, backed by the full 13-table data model with per-table RLS. Tax scenarios were migrated off localStorage/AsyncStorage onto the synced `tax_scenarios` table; the calculator still runs signed-out, and saving is gated to signed-in.
-Web was verified end to end against the live backend, including the offline-write-then-sync round trip and two-user RLS isolation. Mobile bundles and boots in Expo Go with the full stack and no runtime errors, but interactive sign-in/sync could not be driven in this no-touch simulator.
+Phase 4 is implemented and committed on branch `phase-4-expenses` (latest feature commit `62deaa3`, followed by the final provider/docs commit). The app now has real expenses and budgeting flows on both platforms: accounts, seeded categories, concrete transactions with CRUD, amount-first mobile entry, recurring materialization, monthly budget progress/overspend states, shared chart math, native/web charts, CSV mapping previews, synced profile mappings, and canonical import deduplication.
+The repo-wide gate is green: `pnpm turbo run build test lint typecheck` completed 21/21 tasks and `pnpm format:check` is clean. Core has 97 tests and sync has 14 tests. The web production build no longer emits the Phase 3 PowerSync SSR exceptions after moving the provider behind a browser-only client boundary. Expo iOS export also completed.
 
 ### Exact next action
 
-Start Phase 4 (Expenses + Budgeting): read `phases/briefing/phase-3.md`. The `accounts`, `categories`, `transactions`, and `budgets` tables already exist with RLS and are in `packages/sync`'s `AppSchema`, so Phase 4 is domain logic (in `packages/core`) + UI over the established `useQuery` + repository pattern (see `useScenarios`).
+Start Phase 5 (Portfolio + Investments): read `phases/briefing/phase-4.md` and only the files it lists. Before portfolio work, apply and verify `supabase/migrations/20260718000001_phase4_expenses.sql`; this worktree could not run `supabase migration list` because no project ref is linked.
 
 ### Files in flight
 
-None. The working tree is clean and committed. See `phases/briefing/phase-3.md` for the full list.
+None after the final handoff commit. See `phases/briefing/phase-4.md` for the full Phase 4 file list.
 
 ### Open items / warnings
 
+- **Phase 4 migration is not applied or remotely verified from this worktree.** The repository has the migration file, but `supabase migration list` reports that no project ref is linked. Link the intended project and apply it before using recurrence/import fields against Supabase.
+- **Chrome verification was unavailable:** the Chrome control connector could not connect, so the web route was verified by production build/prerender only. Do not call that a signed-in end-to-end Chrome pass.
+- **Mobile interactive verification remains outstanding:** Expo iOS export passed, but the simulator has no touch input. Run the keypad, CRUD, budget, and airplane-mode sync path on a real Expo Go device.
 - **Supabase email confirmation is ON and the built-in mailer is rate-limited**, so real signups can't complete. The Phase 3 web E2E confirmed its test account via a direct `email_confirmed_at` SQL update. Fix with SMTP/Resend (the planned email provider) or a deliberate toggle at Phase 9 (D-024).
 - **A web test account `gogulaanand02+webtest@gmail.com` (password `Test-Passw0rd-1`) with two synced scenarios is left in Supabase.** Sign in with it on a real device/sim to watch cross-platform sync-down, then delete it from the dashboard. It is test pollution otherwise.
 - **Google sign-in is web-only.** Mobile needs the expo-web-browser + deep-link OAuth flow; deferred (email/password works on mobile).
