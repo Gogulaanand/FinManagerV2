@@ -144,6 +144,10 @@ function parseScenarioInput(raw: string | null): ScenarioInput {
  * Inserts or updates a scenario for the given user. `userId` is required and
  * written into the row so the connector's upsert satisfies the RLS check
  * (auth.uid() = user_id); a null user_id would be rejected by Postgres.
+ *
+ * PowerSync exposes its tables as SQLite views, which do not support UPSERT
+ * (`INSERT ... ON CONFLICT`). So we UPDATE first and INSERT only when no row was
+ * touched - the manual upsert that works over the view's INSTEAD OF triggers.
  */
 export async function saveScenario(
   db: AbstractPowerSyncDatabase,
@@ -151,24 +155,20 @@ export async function saveScenario(
   scenario: Scenario,
 ): Promise<void> {
   const now = new Date().toISOString();
-  await db.execute(
-    `INSERT INTO tax_scenarios (id, user_id, name, fy, input, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET
-       name = excluded.name,
-       fy = excluded.fy,
-       input = excluded.input,
-       updated_at = excluded.updated_at`,
-    [
-      scenario.id,
-      userId,
-      scenario.name,
-      scenario.input.fy,
-      JSON.stringify(scenario.input),
-      now,
-      now,
-    ],
+  const inputJson = JSON.stringify(scenario.input);
+
+  const updated = await db.execute(
+    `UPDATE tax_scenarios SET name = ?, fy = ?, input = ?, updated_at = ? WHERE id = ?`,
+    [scenario.name, scenario.input.fy, inputJson, now, scenario.id],
   );
+
+  if (!updated.rowsAffected) {
+    await db.execute(
+      `INSERT INTO tax_scenarios (id, user_id, name, fy, input, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [scenario.id, userId, scenario.name, scenario.input.fy, inputJson, now, now],
+    );
+  }
 }
 
 /** Deletes a scenario by id. RLS still applies on the eventual sync. */

@@ -1,182 +1,72 @@
 /**
- * Tax scenarios: the user's saved "what if" salary configurations.
+ * Tax scenarios for web, now backed by the synced local database.
  *
- * A scenario is pure input. Nothing computed is ever stored - results are
- * derived on read via computeTax, so a rule-set correction in packages/core
- * automatically re-prices every saved scenario instead of leaving stale
- * numbers on disk.
+ * The scenario model (ScenarioInput, toTaxInput, defaults) lives in
+ * @finmanager/sync and is shared with mobile - this file is just the web
+ * binding: a reactive hook over the `tax_scenarios` PowerSync table. The old
+ * localStorage external store is gone; rows now attach to the signed-in account
+ * and sync across devices.
  *
- * Persistence is localStorage for now. It is deliberately behind this module's
- * four functions so Phase 3 can swap in the sync layer and attach scenarios to
- * an account without touching a component.
+ * The calculator still runs fully signed-out (compute is offline); saving a
+ * named scenario needs an account, since every row is RLS-scoped to a user.
  */
-import type { AgeBand, CityClass, TaxInput } from '@finmanager/core';
-import { DEFAULT_FY } from '@finmanager/core';
+'use client';
 
-/** Everything the user can configure. Mirrors TaxInput, flattened for forms. */
-export interface ScenarioInput {
-  fy: string;
-  ageBand: AgeBand;
-  ctc: number;
-  cityClass: CityClass;
-  /** Advanced: salary composition, as shares. */
-  basicRate: number;
-  hraRate: number;
-  employerPfRate: number;
-  employerNpsRate: number;
-  gratuityRate: number;
-  /** Advanced: deductions. Only the old regime uses most of these. */
-  rentPaid: number;
-  section80C: number;
-  section80CCD1B: number;
-  section80DSelf: number;
-  section80DParents: number;
-  section80DPreventive: number;
-  isSelfSenior: boolean;
-  areParentsSenior: boolean;
-  professionalTax: number;
-}
+import {
+  deleteScenario as repoDeleteScenario,
+  mapScenarioRows,
+  newScenarioId,
+  saveScenario as repoSaveScenario,
+  SCENARIOS_QUERY,
+  type Scenario,
+  type ScenarioInput,
+} from '@finmanager/sync';
+import { usePowerSync, useQuery } from '@powersync/react';
+import { useCallback, useMemo } from 'react';
 
-export interface Scenario {
+import { useAuth } from '@/components/providers';
+
+export { DEFAULT_SCENARIO_INPUT, newScenarioId, toTaxInput } from '@finmanager/sync';
+export type { Scenario, ScenarioInput } from '@finmanager/sync';
+
+interface ScenarioRow {
   id: string;
   name: string;
-  input: ScenarioInput;
+  input: string | null;
 }
 
-/**
- * A middle-class metro salary with no declared investments.
- *
- * The zeroed deductions are intentional: showing the new regime winning by
- * default is honest for someone who has not told us about their 80C yet, and
- * the Advanced tab is where that gets corrected.
- */
-export const DEFAULT_SCENARIO_INPUT: ScenarioInput = {
-  fy: DEFAULT_FY,
-  ageBand: 'below60',
-  ctc: 2_400_000,
-  cityClass: 'metro',
-  basicRate: 0.4,
-  hraRate: 0.5,
-  employerPfRate: 0.12,
-  employerNpsRate: 0,
-  gratuityRate: 0.0481,
-  rentPaid: 0,
-  section80C: 0,
-  section80CCD1B: 0,
-  section80DSelf: 0,
-  section80DParents: 0,
-  section80DPreventive: 0,
-  isSelfSenior: false,
-  areParentsSenior: false,
-  professionalTax: 2_500,
-};
+export interface ScenariosApi {
+  scenarios: Scenario[];
+  /** Whether the user can persist a scenario (i.e. is signed in). */
+  canSave: boolean;
+  saveScenario: (name: string, input: ScenarioInput) => Promise<void>;
+  deleteScenario: (id: string) => Promise<void>;
+}
 
-/** Maps the flat form shape onto the engine's input. */
-export function toTaxInput(s: ScenarioInput): TaxInput {
-  return {
-    fy: s.fy,
-    ageBand: s.ageBand,
-    salary: {
-      ctc: s.ctc,
-      basicRate: s.basicRate,
-      hraRate: s.hraRate,
-      employerPfRate: s.employerPfRate,
-      employerNpsRate: s.employerNpsRate,
-      gratuityRate: s.gratuityRate,
-      cityClass: s.cityClass,
+export function useScenarios(): ScenariosApi {
+  const db = usePowerSync();
+  const { session } = useAuth();
+  const userId = session?.user.id ?? null;
+
+  // Reactive: PowerSync re-runs this whenever the local table changes, whether
+  // from a local edit or an incoming sync, so the list stays live.
+  const { data: rows } = useQuery<ScenarioRow>(SCENARIOS_QUERY);
+  const scenarios = useMemo(() => mapScenarioRows(rows ?? []), [rows]);
+
+  const saveScenario = useCallback(
+    async (name: string, input: ScenarioInput) => {
+      if (!userId) return;
+      await repoSaveScenario(db, userId, { id: newScenarioId(), name, input });
     },
-    deductions: {
-      rentPaid: s.rentPaid,
-      section80C: s.section80C,
-      section80CCD1B: s.section80CCD1B,
-      section80DSelf: s.section80DSelf,
-      section80DParents: s.section80DParents,
-      section80DPreventive: s.section80DPreventive,
-      isSelfSenior: s.isSelfSenior,
-      areParentsSenior: s.areParentsSenior,
-      professionalTax: s.professionalTax,
+    [db, userId],
+  );
+
+  const deleteScenario = useCallback(
+    async (id: string) => {
+      await repoDeleteScenario(db, id);
     },
-  };
-}
+    [db],
+  );
 
-const STORAGE_KEY = 'finmanager.tax.scenarios.v1';
-
-/**
- * Reads saved scenarios.
- *
- * Returns [] rather than throwing on anything unexpected: a corrupt or
- * hand-edited localStorage entry must not white-screen the calculator, which
- * is meant to work before login and without a network.
- */
-export function loadScenarios(): Scenario[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isScenario).map((s) => ({
-      ...s,
-      // Merge over the defaults so a scenario saved before a field existed
-      // still opens, rather than yielding NaN through the engine.
-      input: { ...DEFAULT_SCENARIO_INPUT, ...s.input },
-    }));
-  } catch {
-    return [];
-  }
-}
-
-function isScenario(value: unknown): value is Scenario {
-  if (typeof value !== 'object' || value === null) return false;
-  const v = value as Partial<Scenario>;
-  return typeof v.id === 'string' && typeof v.name === 'string' && typeof v.input === 'object';
-}
-
-/** Writes scenarios, silently tolerating a full or disabled storage quota. */
-export function saveScenarios(scenarios: readonly Scenario[]): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(scenarios));
-  } catch {
-    // Private-browsing quota errors must not break the calculator.
-  }
-}
-
-export function newScenarioId(): string {
-  return globalThis.crypto?.randomUUID?.() ?? `s_${String(Date.now())}`;
-}
-
-/**
- * A tiny external store over localStorage, for useSyncExternalStore.
- *
- * Reading localStorage during render would break SSR, and reading it in an
- * effect causes a cascading re-render. useSyncExternalStore is the supported
- * shape for exactly this: it renders the server snapshot during hydration,
- * then swaps to the real one.
- */
-let cache: Scenario[] | null = null;
-const listeners = new Set<() => void>();
-
-/** Stable identity: getServerSnapshot must not return a fresh array each call. */
-const EMPTY: Scenario[] = [];
-
-export function subscribeScenarios(onChange: () => void): () => void {
-  listeners.add(onChange);
-  return () => listeners.delete(onChange);
-}
-
-export function getScenariosSnapshot(): Scenario[] {
-  cache ??= loadScenarios();
-  return cache;
-}
-
-export function getServerScenariosSnapshot(): Scenario[] {
-  return EMPTY;
-}
-
-/** Replaces the scenario list, persists it, and notifies subscribers. */
-export function setScenarios(next: Scenario[]): void {
-  cache = next;
-  saveScenarios(next);
-  for (const listener of listeners) listener();
+  return { scenarios, canSave: userId !== null, saveScenario, deleteScenario };
 }

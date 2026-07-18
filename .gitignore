@@ -37,3 +37,6 @@ ios/
 
 # OMC agent state (operational artifacts)
 .omc/
+
+# PowerSync worker assets copied by powersync-web copy-assets (generated)
+apps/web/public/@powersync/

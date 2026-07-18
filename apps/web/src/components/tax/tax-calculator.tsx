@@ -2,22 +2,14 @@
 
 import type { AgeBand, CityClass } from '@finmanager/core';
 import { AVAILABLE_FYS, computeTax, formatInr, rulesFor } from '@finmanager/core';
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { useMemo, useState } from 'react';
 
 import { RegimeCard } from '@/components/tax/regime-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { CheckField, CurrencyField, Input, PercentField, SelectField } from '@/components/ui/input';
 import type { ScenarioInput } from '@/lib/tax-scenario';
-import {
-  DEFAULT_SCENARIO_INPUT,
-  getScenariosSnapshot,
-  getServerScenariosSnapshot,
-  newScenarioId,
-  setScenarios,
-  subscribeScenarios,
-  toTaxInput,
-} from '@/lib/tax-scenario';
+import { DEFAULT_SCENARIO_INPUT, toTaxInput, useScenarios } from '@/lib/tax-scenario';
 import { cn } from '@/lib/utils';
 
 const AGE_OPTIONS: readonly { value: AgeBand; label: string }[] = [
@@ -68,14 +60,11 @@ export function TaxCalculator() {
   const [input, setInput] = useState<ScenarioInput>(DEFAULT_SCENARIO_INPUT);
   const [name, setName] = useState('');
 
-  // localStorage does not exist during SSR, so the server snapshot is empty and
-  // the real list arrives on hydration. The calculator renders fully without
-  // it: it must work offline and before login, so nothing waits on storage.
-  const scenarios = useSyncExternalStore(
-    subscribeScenarios,
-    getScenariosSnapshot,
-    getServerScenariosSnapshot,
-  );
+  // Scenarios live in the synced local DB and stay reactive across local edits
+  // and incoming syncs. The calculator renders fully without them: it must work
+  // offline and before login. Saving needs an account (canSave), since rows are
+  // RLS-scoped to a user.
+  const { scenarios, canSave, saveScenario, deleteScenario } = useScenarios();
 
   const caps = rulesFor(input.fy).caps;
   const result = useMemo(() => computeTax(toTaxInput(input)), [input]);
@@ -86,8 +75,8 @@ export function TaxCalculator() {
 
   function addScenario() {
     const trimmed = name.trim();
-    if (!trimmed) return;
-    setScenarios([...scenarios, { id: newScenarioId(), name: trimmed, input }]);
+    if (!trimmed || !canSave) return;
+    void saveScenario(trimmed, input);
     setName('');
   }
 
@@ -318,13 +307,16 @@ export function TaxCalculator() {
           <Card>
             <CardTitle>Scenarios</CardTitle>
             <p className="mt-1 font-body text-caption text-foreground-muted">
-              Saved on this device. They survive a reload and work offline.
+              {canSave
+                ? 'Saved to your account and synced across your devices. They work offline.'
+                : 'Sign in to save scenarios to your account and sync them across devices.'}
             </p>
 
             <div className="mt-4 flex gap-2">
               <Input
                 value={name}
                 placeholder="Name this scenario, e.g. Offer B"
+                disabled={!canSave}
                 onChange={(e) => {
                   setName(e.target.value);
                 }}
@@ -332,7 +324,7 @@ export function TaxCalculator() {
                   if (e.key === 'Enter') addScenario();
                 }}
               />
-              <Button onClick={addScenario} disabled={!name.trim()}>
+              <Button onClick={addScenario} disabled={!name.trim() || !canSave}>
                 Save
               </Button>
             </div>
@@ -382,7 +374,7 @@ export function TaxCalculator() {
                               variant="ghost"
                               size="sm"
                               onClick={() => {
-                                setScenarios(scenarios.filter((x) => x.id !== s.id));
+                                void deleteScenario(s.id);
                               }}
                             >
                               Delete

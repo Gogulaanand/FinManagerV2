@@ -19,6 +19,8 @@ export default tseslint.config(
       '**/.expo/**',
       '**/.turbo/**',
       '**/coverage/**',
+      // Pre-bundled PowerSync worker assets copied into public by copy-assets.
+      '**/public/@powersync/**',
     ],
   },
   js.configs.recommended,
