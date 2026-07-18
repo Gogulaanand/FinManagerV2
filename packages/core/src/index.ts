@@ -31,3 +31,21 @@ export type {
   SalaryStructure,
   SalaryStructureInput,
 } from './tax/salary.js';
+
+export {
+  DEFAULT_CATEGORIES,
+  buildBudgetVsActual,
+  buildMonthlyTrend,
+  calculateBudgetProgress,
+  calculateCategoryBreakdown,
+  calculateMonthlySummary,
+} from './expenses/index.js';
+export type {
+  BudgetChartPoint,
+  BudgetProgress,
+  BudgetStatus,
+  CategoryBreakdown,
+  DefaultCategory,
+  MonthlySummary,
+  MonthlyTrendPoint,
+} from './expenses/index.js';
