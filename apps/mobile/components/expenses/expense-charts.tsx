@@ -1,5 +1,6 @@
 import { Bar, CartesianChart, Line, Pie, PolarChart } from 'victory-native';
-import { Text, View } from 'react-native';
+import { dark, light } from '@finmanager/tokens';
+import { Text, useColorScheme, View } from 'react-native';
 
 import type { ExpensesApi } from '../../lib/expenses';
 import { Card, CardTitle } from '../card';
@@ -21,6 +22,8 @@ export function MobileExpenseCharts({
   categoryBreakdown,
   budgetChart,
 }: MobileExpenseChartsProps) {
+  const scheme = useColorScheme();
+  const colors = scheme === 'dark' ? dark : light;
   const categoryData = categoryBreakdown.map((item) => ({
     label: item.label,
     value: item.amount,
@@ -44,8 +47,8 @@ export function MobileExpenseCharts({
             >
               {({ points }) => (
                 <>
-                  <Line points={points.debit} color="#d85c5c" strokeWidth={3} />
-                  <Line points={points.credit} color="#2d9b72" strokeWidth={3} />
+                  <Line points={points.debit} color={colors.loss} strokeWidth={3} />
+                  <Line points={points.credit} color={colors.gain} strokeWidth={3} />
                 </>
               )}
             </CartesianChart>
@@ -115,13 +118,13 @@ export function MobileExpenseCharts({
                   <Bar
                     points={points.budget}
                     chartBounds={chartBounds}
-                    color="#5f6fb5"
+                    color={colors.primary}
                     roundedCorners={{ topLeft: 4, topRight: 4 }}
                   />
                   <Bar
                     points={points.actual}
                     chartBounds={chartBounds}
-                    color="#d85c5c"
+                    color={colors.loss}
                     roundedCorners={{ topLeft: 4, topRight: 4 }}
                   />
                 </>

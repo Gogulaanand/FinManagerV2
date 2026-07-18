@@ -1,11 +1,12 @@
 'use client';
 
+import { formatChoiceLabel, fxRateToInrForCurrency } from '@finmanager/core';
 import type { Holding, HoldingEvent, HoldingEventKind } from '@finmanager/schema';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, Input } from '@/components/ui/input';
+import { Field, Input, SelectField } from '@/components/ui/input';
 
 const KINDS: readonly HoldingEventKind[] = [
   'buy',
@@ -51,7 +52,7 @@ export function HoldingEventForm({
         price: price ? Number(price) : null,
         amount: signed,
         currency: currency as HoldingEvent['currency'],
-        fxRateToInr: Number(fxRate) || null,
+        fxRateToInr: fxRateToInrForCurrency(currency, fxRate),
         note: null,
         importHash: null,
       });
@@ -72,38 +73,18 @@ export function HoldingEventForm({
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Holding">
-              {(id) => (
-                <select
-                  id={id}
-                  className="h-10 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-                  value={holdingId}
-                  onChange={(event) => setHoldingId(event.target.value)}
-                >
-                  {holdings.map((holding) => (
-                    <option key={holding.id} value={holding.id}>
-                      {holding.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </Field>
-            <Field label="Event type">
-              {(id) => (
-                <select
-                  id={id}
-                  className="h-10 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-                  value={kind}
-                  onChange={(event) => setKind(event.target.value as HoldingEventKind)}
-                >
-                  {KINDS.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </Field>
+            <SelectField
+              label="Holding"
+              value={holdingId}
+              options={holdings.map((holding) => ({ value: holding.id!, label: holding.name }))}
+              onChange={setHoldingId}
+            />
+            <SelectField
+              label="Event type"
+              value={kind}
+              options={KINDS.map((value) => ({ value, label: formatChoiceLabel(value) }))}
+              onChange={setKind}
+            />
             <Field label="Date">
               {(id) => (
                 <Input
@@ -155,34 +136,26 @@ export function HoldingEventForm({
                 />
               )}
             </Field>
-            <Field label="Currency">
-              {(id) => (
-                <select
-                  id={id}
-                  className="h-10 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-                  value={currency}
-                  onChange={(event) => setCurrency(event.target.value)}
-                >
-                  {['INR', 'USD', 'EUR', 'GBP'].map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </Field>
-            <Field label="FX rate to INR" hint="Use the rate on the event date for non-INR">
-              {(id) => (
-                <Input
-                  id={id}
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={fxRate}
-                  onChange={(event) => setFxRate(event.target.value)}
-                />
-              )}
-            </Field>
+            <SelectField
+              label="Currency"
+              value={currency}
+              options={['INR', 'USD', 'EUR', 'GBP'].map((value) => ({ value, label: value }))}
+              onChange={setCurrency}
+            />
+            {currency !== 'INR' ? (
+              <Field label="FX rate to INR" hint="Use the rate on the event date for non-INR">
+                {(id) => (
+                  <Input
+                    id={id}
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={fxRate}
+                    onChange={(event) => setFxRate(event.target.value)}
+                  />
+                )}
+              </Field>
+            ) : null}
           </div>
           {error ? <p className="mt-3 font-body text-caption text-loss">{error}</p> : null}
           <Button className="mt-4" type="button" onClick={() => void submit()}>

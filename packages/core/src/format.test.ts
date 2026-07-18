@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { directionOf, formatDelta, formatInr } from './format';
+import { directionOf, formatChoiceLabel, formatDelta, formatInr } from './format';
+
+describe('formatChoiceLabel', () => {
+  it('turns enum values into user-facing title case labels', () => {
+    expect(formatChoiceLabel('buy')).toBe('Buy');
+    expect(formatChoiceLabel('foreign_stock')).toBe('Foreign Stock');
+  });
+});
 
 describe('formatInr', () => {
   it('groups with lakhs and crores, not thousands', () => {

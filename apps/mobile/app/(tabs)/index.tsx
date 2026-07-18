@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Amount, Delta } from '../../components/amount';
 import { Card, CardLabel, CardTitle } from '../../components/card';
+import { MotionProgress } from '../../components/motion';
 import {
   fireCurrent,
   fireProgress,
@@ -69,10 +70,7 @@ export default function DashboardScreen() {
             accessibilityRole="progressbar"
             accessibilityValue={{ min: 0, max: 100, now: Math.round(fireProgress * 100) }}
           >
-            <View
-              className="h-full rounded-full bg-primary"
-              style={{ width: `${fireProgress * 100}%` }}
-            />
+            <MotionProgress value={fireProgress} />
           </View>
 
           <View className="mt-3 flex-row items-center justify-between">

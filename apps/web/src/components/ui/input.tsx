@@ -1,9 +1,11 @@
 'use client';
 
-import type { ComponentProps, ReactNode } from 'react';
+import { Upload } from 'lucide-react';
+import type { ChangeEvent, ComponentProps, ReactNode } from 'react';
 import { useId } from 'react';
 
 import { cn } from '@/lib/utils';
+import { Select } from '@/components/ui/select';
 
 export function Input({ className, ...props }: ComponentProps<'input'>) {
   return (
@@ -12,6 +14,7 @@ export function Input({ className, ...props }: ComponentProps<'input'>) {
         'h-10 w-full rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground',
         'outline-none transition-colors placeholder:text-foreground-muted',
         'focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-focus/40',
+        '[appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none',
         className,
       )}
       {...props}
@@ -162,26 +165,38 @@ export function SelectField<T extends string>({
 }: SelectFieldProps<T>) {
   return (
     <Field label={label} hint={hint}>
-      {(id) => (
-        <select
-          id={id}
-          value={value}
-          onChange={(e) => {
-            onChange(e.target.value as T);
-          }}
-          className={cn(
-            'h-10 w-full rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground',
-            'outline-none focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-focus/40',
-          )}
-        >
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      )}
+      {(id) => <Select id={id} value={value} options={options} onChange={onChange} />}
     </Field>
+  );
+}
+
+export interface UploadButtonProps {
+  id?: string;
+  accept?: string;
+  filename?: string | undefined;
+  onFile: (file: File | undefined) => void;
+}
+
+export function UploadButton({ id, accept, filename, onFile }: UploadButtonProps) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+  function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    onFile(event.target.files?.[0]);
+  }
+  return (
+    <div className="flex h-10 w-full items-center gap-2">
+      <input id={inputId} type="file" accept={accept} className="sr-only" onChange={handleChange} />
+      <label
+        htmlFor={inputId}
+        className="inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-md border border-border bg-surface px-3 font-body text-label text-foreground transition-colors hover:bg-surface-muted focus-within:border-focus focus-within:ring-2 focus-within:ring-focus/40"
+      >
+        <Upload aria-hidden="true" className="size-4 text-primary" />
+        Upload CSV
+      </label>
+      <span className="min-w-0 truncate font-body text-caption text-foreground-muted">
+        {filename ?? 'No file selected'}
+      </span>
+    </div>
   );
 }
 

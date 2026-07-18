@@ -9,6 +9,7 @@ import { MobileHoldingEventForm } from '../../components/portfolio/holding-event
 import { MobileHoldingForm } from '../../components/portfolio/holding-form';
 import { MobilePortfolioImport } from '../../components/portfolio/portfolio-import';
 import { MobileValuationForm } from '../../components/portfolio/valuation-form';
+import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
 import { usePortfolio } from '../../lib/portfolio';
 
 function xirrText(status: string, rate: number | null): string {
@@ -23,6 +24,7 @@ function xirrText(status: string, rate: number | null): string {
 
 export default function PortfolioScreen() {
   const api = usePortfolio();
+  const initialSkeleton = useInitialSkeleton();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -33,6 +35,30 @@ export default function PortfolioScreen() {
       `${count} automatic quote${count === 1 ? '' : 's'} refreshed. Manual overrides remain authoritative.`,
     );
   }
+  if (api.loading || initialSkeleton) return <MobileWorkspaceSkeleton label="Loading portfolio" />;
+
+  if (showForm) {
+    return (
+      <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+        <ScrollView className="flex-1" contentContainerClassName="gap-4 p-4 pb-12">
+          <MobileHoldingForm
+            initial={editing}
+            onSave={async (holding) => {
+              await api.saveHolding(holding);
+              setShowForm(false);
+              setEditingId(null);
+              setNotice('Holding saved locally.');
+            }}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingId(null);
+            }}
+          />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView className="flex-1" contentContainerClassName="gap-4 p-4 pb-12">
@@ -75,35 +101,39 @@ export default function PortfolioScreen() {
         {notice ? (
           <Text className="font-body text-caption text-foreground-muted">{notice}</Text>
         ) : null}
-        <View className="flex-row gap-2">
-          <Card className="min-w-0 flex-1">
-            <CardLabel>Net worth</CardLabel>
-            <Amount value={api.summary.netWorth} size="tile" />
-            <Text className="font-body text-caption text-foreground-muted">
-              {api.summary.isComplete ? 'Complete' : `${api.summary.unvaluedHoldingCount} unvalued`}
-            </Text>
-          </Card>
-          <Card className="min-w-0 flex-1">
-            <CardLabel>Invested</CardLabel>
-            <Amount value={api.summary.investedValue} size="tile" />
-          </Card>
-          <Card className="min-w-0 flex-1">
-            <CardLabel>Current</CardLabel>
-            <Amount value={api.summary.currentValue} size="tile" />
-          </Card>
-          <Card className="min-w-0 flex-1">
-            <CardLabel>Gain/loss</CardLabel>
-            <Amount value={api.summary.gainLoss} size="tile" />
-          </Card>
-          <Card className="min-w-0 flex-1">
-            <CardLabel>XIRR</CardLabel>
-            <Text className="font-display text-headline-lg text-foreground">
-              {xirrText(api.summary.xirr.status, api.summary.xirr.rate)}
-            </Text>
-            <Text className="font-body text-caption text-foreground-muted">
-              {api.summary.missingFxCount} missing FX
-            </Text>
-          </Card>
+        <View className="gap-2">
+          <View className="flex-row gap-2">
+            <Card className="min-w-0 flex-1">
+              <CardLabel>Net worth</CardLabel>
+              <Amount value={api.summary.netWorth} size="tile" />
+              <Text className="font-body text-caption text-foreground-muted">
+                {api.summary.isComplete ? 'Complete' : `${api.summary.unvaluedHoldingCount} unvalued`}
+              </Text>
+            </Card>
+            <Card className="min-w-0 flex-1">
+              <CardLabel>Invested</CardLabel>
+              <Amount value={api.summary.investedValue} size="tile" />
+            </Card>
+            <Card className="min-w-0 flex-1">
+              <CardLabel>Current</CardLabel>
+              <Amount value={api.summary.currentValue} size="tile" />
+            </Card>
+          </View>
+          <View className="flex-row gap-2">
+            <Card className="min-w-0 flex-1">
+              <CardLabel>Gain/loss</CardLabel>
+              <Amount value={api.summary.gainLoss} size="tile" />
+            </Card>
+            <Card className="min-w-0 flex-1">
+              <CardLabel>XIRR</CardLabel>
+              <Text className="font-display text-headline-lg text-foreground" numberOfLines={1} adjustsFontSizeToFit>
+                {xirrText(api.summary.xirr.status, api.summary.xirr.rate)}
+              </Text>
+              <Text className="font-body text-caption text-foreground-muted">
+                {api.summary.missingFxCount} missing FX
+              </Text>
+            </Card>
+          </View>
         </View>
         <Card>
           <View className="mb-3 flex-row items-center justify-between">
@@ -210,16 +240,6 @@ export default function PortfolioScreen() {
             ))}
           </View>
         </Card>
-        {showForm ? (
-          <MobileHoldingForm
-            initial={editing}
-            onSave={async (holding) => {
-              await api.saveHolding(holding);
-              setShowForm(false);
-              setNotice('Holding saved locally.');
-            }}
-          />
-        ) : null}
         {api.canWrite ? (
           <>
             <MobileHoldingEventForm

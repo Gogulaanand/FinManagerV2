@@ -12,7 +12,7 @@ import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardLabel, CardTitle } from '@/components/ui/card';
-import { Input, SelectField } from '@/components/ui/input';
+import { Input, SelectField, UploadButton } from '@/components/ui/input';
 
 const fieldOptions: readonly { value: CsvField | ''; label: string }[] = [
   { value: '', label: 'Not mapped' },
@@ -34,6 +34,7 @@ export interface CsvImportProps {
 export function CsvImport({ accounts, mappings, onSaveMappings, onImport }: CsvImportProps) {
   const [bankKey, setBankKey] = useState('');
   const [csvText, setCsvText] = useState('');
+  const [filename, setFilename] = useState<string | undefined>();
   const [headers, setHeaders] = useState<readonly string[]>([]);
   const [columns, setColumns] = useState<Record<string, CsvField>>({});
   const [preview, setPreview] = useState<CsvImportPreview | null>(null);
@@ -46,6 +47,7 @@ export function CsvImport({ accounts, mappings, onSaveMappings, onImport }: CsvI
 
   async function readFile(file: File | undefined) {
     if (!file) return;
+    setFilename(file.name);
     const text = await file.text();
     const document = parseCsv(text);
     setCsvText(text);
@@ -110,10 +112,10 @@ export function CsvImport({ accounts, mappings, onSaveMappings, onImport }: CsvI
         </label>
         <label className="flex flex-col gap-1.5 font-body text-label text-foreground-muted">
           Statement CSV
-          <Input
-            type="file"
+          <UploadButton
             accept=".csv,text/csv"
-            onChange={(event) => void readFile(event.target.files?.[0])}
+            filename={filename}
+            onFile={(file) => void readFile(file)}
           />
         </label>
         <SelectField

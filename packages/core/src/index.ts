@@ -1,5 +1,5 @@
 export { roundToPaise } from './money.js';
-export { directionOf, formatDelta, formatInr } from './format.js';
+export { directionOf, formatChoiceLabel, formatDelta, formatInr } from './format.js';
 export type { Direction, FormatInrOptions } from './format.js';
 
 export { computeTax, slabTax, taxOnTaxableIncome } from './tax/compute.js';
@@ -68,6 +68,7 @@ export {
   calculateXirr,
   canonicalPortfolioImportHash,
   effectiveHoldingValue,
+  fxRateToInrForCurrency,
   latestValuation,
   normalizeCashFlowsToInr,
   valuationValueInr,

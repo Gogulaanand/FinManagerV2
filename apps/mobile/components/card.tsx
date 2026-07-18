@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
+
+import { MotionView } from './motion';
 
 export interface CardProps {
   children: ReactNode;
@@ -8,7 +10,11 @@ export interface CardProps {
 
 /** A raised surface. Mirrors apps/web's Card, down to the 16px mobile inset. */
 export function Card({ children, className = '' }: CardProps) {
-  return <View className={`rounded-lg bg-surface p-4 ${className}`}>{children}</View>;
+  return (
+    <MotionView className={`rounded-lg bg-surface p-4 ${className}`}>
+      {children}
+    </MotionView>
+  );
 }
 
 export function CardTitle({ children }: { children: ReactNode }) {

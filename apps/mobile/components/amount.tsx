@@ -1,5 +1,14 @@
 import { directionOf, formatDelta, formatInr } from '@finmanager/core';
 import { Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  runOnJS,
+  useAnimatedReaction,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { useEffect, useState } from 'react';
 
 const directionClass = {
   up: 'text-gain',
@@ -65,8 +74,26 @@ const sizeClass = {
  */
 export function Amount({ value, signed = false, paise = false, size = 'row' }: AmountProps) {
   const direction = directionOf(value);
+  const reduceMotion = useReducedMotion();
+  const animatedValue = useSharedValue(0);
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    animatedValue.value = withTiming(value, {
+      duration: reduceMotion ? 0 : 650,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [animatedValue, reduceMotion, value]);
+
+  useAnimatedReaction(
+    () => animatedValue.value,
+    (current) => {
+      runOnJS(setDisplayValue)(current);
+    },
+  );
+
   return (
-    <Text
+    <Animated.Text
       className={`${sizeClass[size]} ${signed ? directionClass[direction] : 'text-foreground'}`}
       style={{ fontVariant: ['tabular-nums'] }}
       // A currency figure must never wrap: breaking ₹8,10,000 across two lines
@@ -75,7 +102,7 @@ export function Amount({ value, signed = false, paise = false, size = 'row' }: A
       adjustsFontSizeToFit
       minimumFontScale={0.75}
     >
-      {formatInr(value, { paise, signed })}
-    </Text>
+      {formatInr(displayValue, { paise, signed })}
+    </Animated.Text>
   );
 }
