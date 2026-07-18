@@ -10,6 +10,7 @@ import {
 import { useState } from 'react';
 
 import { Amount } from '@/components/amount';
+import { useInitialSkeleton, WorkspaceSkeleton } from '@/components/motion/skeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { Field, Input, SelectField } from '@/components/ui/input';
@@ -39,6 +40,7 @@ function displayAmount(transaction: Transaction): number {
 
 export function ExpensesWorkspace() {
   const api = useExpenses();
+  const initialSkeleton = useInitialSkeleton();
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [showTransactionForm, setShowTransactionForm] = useState(false);
   const [accountName, setAccountName] = useState('');
@@ -75,6 +77,8 @@ export function ExpensesWorkspace() {
       `${result.created} CSV rows imported; ${result.skipped} duplicates skipped; ${result.failed} failed.`,
     );
   }
+
+  if (api.loading || initialSkeleton) return <WorkspaceSkeleton label="Loading expenses" />;
 
   return (
     <div className="flex flex-col gap-4">

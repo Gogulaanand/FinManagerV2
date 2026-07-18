@@ -72,6 +72,7 @@ function parseMappings(raw: string | null | undefined): CsvMappingSet {
 }
 
 export interface ExpensesApi {
+  readonly loading: boolean;
   readonly canWrite: boolean;
   readonly month: string;
   readonly setMonth: (month: string) => void;
@@ -111,6 +112,13 @@ export function useExpenses(): ExpensesApi {
   const transactionsResult = useQuery<Transaction>(TRANSACTIONS_QUERY);
   const budgetsResult = useQuery<Budget>(BUDGETS_QUERY);
   const mappingsResult = useQuery<ProfileRow>(PROFILE_MAPPINGS_QUERY);
+  const loading = [
+    accountsResult.data,
+    categoriesResult.data,
+    transactionsResult.data,
+    budgetsResult.data,
+    mappingsResult.data,
+  ].some((data) => data === undefined);
   const accounts = useMemo(
     () => mapAccountRows(rowRecords(accountsResult.data ?? [])),
     [accountsResult.data],
@@ -209,6 +217,7 @@ export function useExpenses(): ExpensesApi {
   );
 
   return {
+    loading,
     canWrite: userId !== null,
     month,
     setMonth,

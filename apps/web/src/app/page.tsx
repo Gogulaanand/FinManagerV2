@@ -61,7 +61,13 @@ export default function DashboardPage() {
         >
           <div
             className="h-full rounded-full bg-primary"
-            style={{ width: `${fireProgress * 100}%` }}
+            data-motion-progress
+            data-progress={fireProgress}
+            style={{
+              width: '100%',
+              transform: `scaleX(${fireProgress})`,
+              transformOrigin: 'left center',
+            }}
           />
         </div>
 

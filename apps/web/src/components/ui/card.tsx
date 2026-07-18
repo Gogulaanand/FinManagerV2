@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 export function Card({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
+      data-motion-card="true"
       className={cn('rounded-lg bg-surface p-4 shadow-sm ring-1 ring-border/50 md:p-6', className)}
       {...props}
     />

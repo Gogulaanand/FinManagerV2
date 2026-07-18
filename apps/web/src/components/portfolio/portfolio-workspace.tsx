@@ -10,6 +10,7 @@ import {
 import { useState } from 'react';
 
 import { Amount } from '@/components/amount';
+import { useInitialSkeleton, WorkspaceSkeleton } from '@/components/motion/skeleton';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -31,6 +32,7 @@ function xirrLabel(status: string, rate: number | null): string {
 
 export function PortfolioWorkspace() {
   const api = usePortfolio();
+  const initialSkeleton = useInitialSkeleton();
   const [editing, setEditing] = useState<string | null>(null);
   const [showHoldingForm, setShowHoldingForm] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -48,6 +50,8 @@ export function PortfolioWorkspace() {
     );
     setRefreshing(false);
   }
+
+  if (api.loading || initialSkeleton) return <WorkspaceSkeleton label="Loading portfolio" />;
 
   return (
     <div className="flex flex-col gap-5">

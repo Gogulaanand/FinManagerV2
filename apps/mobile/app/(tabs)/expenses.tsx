@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Amount } from '../../components/amount';
 import { Card, CardLabel, CardTitle } from '../../components/card';
 import { MobileExpenseCharts } from '../../components/expenses/expense-charts';
+import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
 import { MobileTransactionForm } from '../../components/expenses/transaction-form';
 import { Field, Segmented } from '../../components/field';
 import { useExpenses } from '../../lib/expenses';
@@ -169,6 +170,7 @@ function MobileBudgetForm({
 
 export default function ExpensesScreen() {
   const api = useExpenses();
+  const initialSkeleton = useInitialSkeleton();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [budgetOpen, setBudgetOpen] = useState(false);
@@ -200,6 +202,8 @@ export default function ExpensesScreen() {
     await api.saveCategory(parsed.data);
     setCategoryName('');
   }
+
+  if (api.loading || initialSkeleton) return <MobileWorkspaceSkeleton label="Loading expenses" />;
 
   if (formOpen) {
     return (

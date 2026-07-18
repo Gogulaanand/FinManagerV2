@@ -77,7 +77,7 @@ export function MobileHoldingEventForm({
             value={kind}
             options={kinds.map((value) => ({ value, label: formatChoiceLabel(value) }))}
             onChange={setKind}
-            hint={kinds.join(' · ')}
+            hint={kinds.map(formatChoiceLabel).join(' · ')}
           />
           <Field label="Amount (₹)">
             <TextInput

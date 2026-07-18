@@ -1,6 +1,13 @@
+'use client';
+
 import { directionOf, formatDelta, formatInr } from '@finmanager/core';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
+
+gsap.registerPlugin(useGSAP);
 
 const directionClass = {
   up: 'text-gain',
@@ -71,6 +78,37 @@ export function Amount({
   className,
 }: AmountProps) {
   const direction = directionOf(value);
+  const [displayValue, setDisplayValue] = useState(value);
+  const counter = useRef({ value });
+  const previousValue = useRef(0);
+
+  useGSAP(
+    () => {
+      const media = gsap.matchMedia();
+      media.add({ reduceMotion: '(prefers-reduced-motion: reduce)' }, ({ conditions }) => {
+        const start = previousValue.current;
+        previousValue.current = value;
+        if (conditions?.reduceMotion) {
+          counter.current.value = value;
+          setDisplayValue(value);
+          return;
+        }
+        gsap.fromTo(
+          counter.current,
+          { value: start },
+          {
+            value,
+            duration: 0.65,
+            ease: 'power2.out',
+            onUpdate: () => setDisplayValue(counter.current.value),
+          },
+        );
+      });
+      return () => media.revert();
+    },
+    { dependencies: [value], revertOnUpdate: true },
+  );
+
   return (
     <span
       className={cn(
@@ -80,7 +118,7 @@ export function Amount({
         className,
       )}
     >
-      {formatInr(value, { paise, signed })}
+      {formatInr(displayValue, { paise, signed })}
     </span>
   );
 }

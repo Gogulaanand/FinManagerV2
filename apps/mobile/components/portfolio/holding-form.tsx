@@ -56,9 +56,11 @@ function metadataFor(
 export function MobileHoldingForm({
   initial,
   onSave,
+  onCancel,
 }: {
   readonly initial?: Holding | null;
   readonly onSave: (holding: Holding) => Promise<void>;
+  readonly onCancel?: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
   const [type, setType] = useState(initial?.type ?? 'stock');
@@ -210,15 +212,26 @@ export function MobileHoldingForm({
           </Field>
         ) : null}
         {error ? <Text className="font-body text-caption text-loss">{error}</Text> : null}
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => void submit()}
-          className="rounded-md bg-primary px-4 py-3 active:opacity-80"
-        >
-          <Text className="text-center font-body text-label text-primary-foreground">
-            {initial ? 'Save changes' : 'Add holding'}
-          </Text>
-        </Pressable>
+        <View className="flex-row gap-2">
+          {onCancel ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={onCancel}
+              className="flex-1 rounded-md bg-surface-muted px-4 py-3"
+            >
+              <Text className="text-center font-body text-label text-foreground">Cancel</Text>
+            </Pressable>
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void submit()}
+            className="flex-1 rounded-md bg-primary px-4 py-3 active:opacity-80"
+          >
+            <Text className="text-center font-body text-label text-primary-foreground">
+              {initial ? 'Save changes' : 'Add holding'}
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </Card>
   );

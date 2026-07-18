@@ -44,6 +44,7 @@ function rowRecords<T>(rows: readonly T[]): readonly Record<string, unknown>[] {
 }
 
 export interface PortfolioApi {
+  readonly loading: boolean;
   readonly canWrite: boolean;
   readonly accounts: readonly Account[];
   readonly holdings: readonly Holding[];
@@ -72,6 +73,12 @@ export function usePortfolio(): PortfolioApi {
   const holdingsResult = useQuery<Holding>(HOLDINGS_QUERY);
   const eventsResult = useQuery<HoldingEvent>(HOLDING_EVENTS_QUERY);
   const valuationsResult = useQuery<Valuation>(VALUATIONS_QUERY);
+  const loading = [
+    accountsResult.data,
+    holdingsResult.data,
+    eventsResult.data,
+    valuationsResult.data,
+  ].some((data) => data === undefined);
   const accounts = useMemo(
     () => mapAccountRows(rowRecords(accountsResult.data ?? [])),
     [accountsResult.data],
@@ -156,6 +163,7 @@ export function usePortfolio(): PortfolioApi {
   }, [db, holdings, userId]);
 
   return {
+    loading,
     canWrite: userId !== null,
     accounts,
     holdings,
