@@ -16,7 +16,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-60 shrink-0 border-r border-border bg-surface md:flex md:flex-col">
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 self-start overflow-y-auto border-r border-border bg-surface md:flex md:flex-col">
       <div className="flex h-16 items-center px-6">
         <span className="font-display text-headline-md text-foreground">FinManager</span>
       </div>

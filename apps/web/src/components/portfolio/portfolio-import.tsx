@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field } from '@/components/ui/input';
+import { SelectField, Field } from '@/components/ui/input';
 
 export function PortfolioImport({
   onImport,
@@ -32,20 +32,16 @@ export function PortfolioImport({
         <CardTitle>Import broker statement</CardTitle>
       </CardHeader>
       <div className="grid gap-4 md:grid-cols-[12rem_1fr]">
-        <Field label="Source">
-          {(id) => (
-            <select
-              id={id}
-              className="h-10 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-              value={source}
-              onChange={(event) => setSource(event.target.value as PortfolioImportSource)}
-            >
-              <option value="zerodha">Zerodha</option>
-              <option value="cams">CAMS</option>
-              <option value="kfintech">KFintech</option>
-            </select>
-          )}
-        </Field>
+        <SelectField
+          label="Source"
+          value={source}
+          options={[
+            { value: 'zerodha', label: 'Zerodha' },
+            { value: 'cams', label: 'CAMS' },
+            { value: 'kfintech', label: 'KFintech' },
+          ]}
+          onChange={setSource}
+        />
         <Field label="CSV text" hint="Paste a CSV export for preview">
           {(id) => (
             <textarea

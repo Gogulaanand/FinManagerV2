@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { Amount } from '@/components/amount';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
-import { Input, SelectField } from '@/components/ui/input';
+import { Field, Input, SelectField } from '@/components/ui/input';
 import { useExpenses } from '@/lib/expenses';
 
 import { BudgetSection } from './budget-section';
@@ -249,25 +249,33 @@ export function ExpensesWorkspace() {
         <Card className="flex flex-col gap-4">
           <CardTitle>Accounts</CardTitle>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Input
-              aria-label="Account name"
-              value={accountName}
-              onChange={(event) => setAccountName(event.target.value)}
-              placeholder="Account name"
-            />
+            <Field label="Account name">
+              {(id) => (
+                <Input
+                  id={id}
+                  value={accountName}
+                  onChange={(event) => setAccountName(event.target.value)}
+                  placeholder="Account name"
+                />
+              )}
+            </Field>
             <SelectField
               label="Type"
               value={accountType}
               options={accountTypes}
               onChange={setAccountType}
             />
-            <Input
-              aria-label="Current balance"
-              type="number"
-              value={accountBalance || ''}
-              onChange={(event) => setAccountBalance(Number(event.target.value))}
-              placeholder="Current balance"
-            />
+            <Field label="Current balance">
+              {(id) => (
+                <Input
+                  id={id}
+                  type="number"
+                  value={accountBalance || ''}
+                  onChange={(event) => setAccountBalance(Number(event.target.value))}
+                  placeholder="Current balance"
+                />
+              )}
+            </Field>
           </div>
           <Button
             type="button"
@@ -303,12 +311,16 @@ export function ExpensesWorkspace() {
         <Card className="flex flex-col gap-4">
           <CardTitle>Categories</CardTitle>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              aria-label="Category name"
-              value={categoryName}
-              onChange={(event) => setCategoryName(event.target.value)}
-              placeholder="Category name"
-            />
+            <Field label="Category name">
+              {(id) => (
+                <Input
+                  id={id}
+                  value={categoryName}
+                  onChange={(event) => setCategoryName(event.target.value)}
+                  placeholder="Category name"
+                />
+              )}
+            </Field>
             <SelectField
               label="Kind"
               value={categoryKind}

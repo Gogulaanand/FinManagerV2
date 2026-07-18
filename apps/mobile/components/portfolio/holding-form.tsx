@@ -1,3 +1,4 @@
+import { fxRateToInrForCurrency } from '@finmanager/core';
 import {
   HoldingMetadataSchema,
   type Holding,
@@ -8,6 +9,7 @@ import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { Card, CardTitle } from '../card';
+import { Choice } from '../choice';
 import { Field } from '../field';
 
 function metadataFor(
@@ -96,7 +98,7 @@ export function MobileHoldingForm({
         currentValue: initial?.currentValue ?? null,
         manualPriceOverride: initial?.manualPriceOverride ?? null,
         manualValueOverride: value ? Number(value) : null,
-        manualFxRateToInr: fxRate ? Number(fxRate) : null,
+        manualFxRateToInr: fxRateToInrForCurrency(currency, fxRate),
         automaticPrice: initial?.automaticPrice ?? null,
         automaticPriceAsOf: initial?.automaticPriceAsOf ?? null,
         automaticPriceSource: initial?.automaticPriceSource ?? null,
@@ -122,17 +124,26 @@ export function MobileHoldingForm({
             className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
           />
         </Field>
-        <Field
+        <Choice
           label="Asset type"
-          hint="stock, mutual_fund, real_estate, epf, or another supported type"
-        >
-          <TextInput
-            value={type}
-            onChangeText={(text) => setType(text as HoldingType)}
-            autoCapitalize="none"
-            className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-          />
-        </Field>
+          value={type as HoldingType}
+          options={[
+            { value: 'stock', label: 'Indian stock' },
+            { value: 'mutual_fund', label: 'Mutual fund' },
+            { value: 'foreign_stock', label: 'Foreign stock' },
+            { value: 'rsu', label: 'RSU' },
+            { value: 'esop', label: 'ESOP' },
+            { value: 'epf', label: 'EPF' },
+            { value: 'ppf', label: 'PPF' },
+            { value: 'nps', label: 'NPS' },
+            { value: 'fd', label: 'Fixed deposit' },
+            { value: 'real_estate', label: 'Real estate' },
+            { value: 'gold', label: 'Gold' },
+            { value: 'crypto', label: 'Crypto' },
+            { value: 'cash', label: 'Cash' },
+          ]}
+          onChange={setType}
+        />
         <Field label="Identifier">
           <TextInput
             value={identifier}
@@ -148,14 +159,13 @@ export function MobileHoldingForm({
             className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
           />
         </Field>
-        <Field label="Holding currency" hint="INR, USD, EUR, or GBP">
-          <TextInput
-            value={currency}
-            onChangeText={(text) => setCurrency(text as Holding['currency'])}
-            autoCapitalize="characters"
-            className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-          />
-        </Field>
+        <Choice
+          label="Holding currency"
+          value={currency}
+          options={['INR', 'USD', 'EUR', 'GBP'].map((value) => ({ value, label: value }))}
+          onChange={(value) => setCurrency(value as Holding['currency'])}
+          hint="INR, USD, EUR, or GBP"
+        />
         <Field label="Quantity">
           <TextInput
             value={quantity}
@@ -172,14 +182,16 @@ export function MobileHoldingForm({
             className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
           />
         </Field>
-        <Field label="Manual FX to INR">
-          <TextInput
-            value={fxRate}
-            onChangeText={setFxRate}
-            keyboardType="decimal-pad"
-            className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-          />
-        </Field>
+        {currency !== 'INR' ? (
+          <Field label="Manual FX to INR">
+            <TextInput
+              value={fxRate}
+              onChangeText={setFxRate}
+              keyboardType="decimal-pad"
+              className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
+            />
+          </Field>
+        ) : null}
         {type === 'rsu' ||
         type === 'esop' ||
         type === 'real_estate' ||

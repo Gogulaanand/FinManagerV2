@@ -1,12 +1,12 @@
 'use client';
 
 import { HoldingMetadataSchema, type Holding, type HoldingType } from '@finmanager/schema';
+import { fxRateToInrForCurrency } from '@finmanager/core';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Field } from '@/components/ui/input';
+import { Field, Input, SelectField } from '@/components/ui/input';
 
 const TYPES: readonly { value: HoldingType; label: string }[] = [
   { value: 'mutual_fund', label: 'Mutual fund' },
@@ -114,7 +114,7 @@ export function HoldingForm({ initial = null, onSave, onCancel }: HoldingFormPro
         currentValue: initial?.currentValue ?? null,
         manualPriceOverride: numberOrNull(manualPrice),
         manualValueOverride: numberOrNull(manualValue),
-        manualFxRateToInr: numberOrNull(manualFx),
+        manualFxRateToInr: fxRateToInrForCurrency(currency, manualFx),
         automaticPrice: initial?.automaticPrice ?? null,
         automaticPriceAsOf: initial?.automaticPriceAsOf ?? null,
         automaticPriceSource: initial?.automaticPriceSource ?? null,
@@ -145,22 +145,7 @@ export function HoldingForm({ initial = null, onSave, onCancel }: HoldingFormPro
             />
           )}
         </Field>
-        <Field label="Asset type">
-          {(id) => (
-            <select
-              id={id}
-              className="h-10 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-              value={type}
-              onChange={(event) => setType(event.target.value as HoldingType)}
-            >
-              {TYPES.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          )}
-        </Field>
+        <SelectField label="Asset type" value={type} options={TYPES} onChange={setType} />
         <Field label="Identifier" hint="Ticker, ISIN, folio, or account label">
           {(id) => (
             <Input
@@ -180,22 +165,12 @@ export function HoldingForm({ initial = null, onSave, onCancel }: HoldingFormPro
             />
           )}
         </Field>
-        <Field label="Holding currency">
-          {(id) => (
-            <select
-              id={id}
-              className="h-10 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-              value={currency}
-              onChange={(event) => setCurrency(event.target.value as Holding['currency'])}
-            >
-              {['INR', 'USD', 'EUR', 'GBP'].map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          )}
-        </Field>
+        <SelectField
+          label="Holding currency"
+          value={currency}
+          options={['INR', 'USD', 'EUR', 'GBP'].map((value) => ({ value, label: value }))}
+          onChange={(value) => setCurrency(value as Holding['currency'])}
+        />
         <Field label="Quantity">
           {(id) => (
             <Input
@@ -244,19 +219,21 @@ export function HoldingForm({ initial = null, onSave, onCancel }: HoldingFormPro
             />
           )}
         </Field>
-        <Field label="Manual FX to INR" hint="Required for non-INR manual values">
-          {(id) => (
-            <Input
-              id={id}
-              type="number"
-              min="0"
-              step="any"
-              value={manualFx}
-              onChange={(event) => setManualFx(event.target.value)}
-              placeholder="83"
-            />
-          )}
-        </Field>
+        {currency !== 'INR' ? (
+          <Field label="Manual FX to INR" hint="Required for non-INR manual values">
+            {(id) => (
+              <Input
+                id={id}
+                type="number"
+                min="0"
+                step="any"
+                value={manualFx}
+                onChange={(event) => setManualFx(event.target.value)}
+                placeholder="83"
+              />
+            )}
+          </Field>
+        ) : null}
         {type === 'rsu' ||
         type === 'esop' ||
         type === 'real_estate' ||

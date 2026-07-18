@@ -1,8 +1,10 @@
+import { fxRateToInrForCurrency } from '@finmanager/core';
 import type { Holding, Valuation } from '@finmanager/schema';
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { Card, CardTitle } from '../card';
+import { Choice } from '../choice';
 import { Field } from '../field';
 
 export function MobileValuationForm({
@@ -24,7 +26,7 @@ export function MobileValuationForm({
         asOf: new Date().toISOString().slice(0, 10),
         value: Number(value),
         currency: currency as Valuation['currency'],
-        fxRateToInr: Number(fxRate) || null,
+        fxRateToInr: fxRateToInrForCurrency(currency, fxRate),
         source: 'manual',
       });
       setValue('');
@@ -42,13 +44,12 @@ export function MobileValuationForm({
         </Text>
       ) : (
         <View className="mt-3 gap-3">
-          <Field label="Holding ID">
-            <TextInput
-              value={holdingId}
-              onChangeText={setHoldingId}
-              className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-            />
-          </Field>
+          <Choice
+            label="Holding"
+            value={holdingId}
+            options={holdings.map((holding) => ({ value: holding.id!, label: holding.name }))}
+            onChange={setHoldingId}
+          />
           <Field label="Value (₹)">
             <TextInput
               value={value}
@@ -57,22 +58,23 @@ export function MobileValuationForm({
               className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
             />
           </Field>
-          <Field label="Currency" hint="INR, USD, EUR, or GBP">
-            <TextInput
-              value={currency}
-              onChangeText={setCurrency}
-              autoCapitalize="characters"
-              className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-            />
-          </Field>
-          <Field label="FX rate to INR">
-            <TextInput
-              value={fxRate}
-              onChangeText={setFxRate}
-              keyboardType="decimal-pad"
-              className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-            />
-          </Field>
+          <Choice
+            label="Currency"
+            value={currency}
+            options={['INR', 'USD', 'EUR', 'GBP'].map((value) => ({ value, label: value }))}
+            onChange={setCurrency}
+            hint="INR, USD, EUR, or GBP"
+          />
+          {currency !== 'INR' ? (
+            <Field label="FX rate to INR">
+              <TextInput
+                value={fxRate}
+                onChangeText={setFxRate}
+                keyboardType="decimal-pad"
+                className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
+              />
+            </Field>
+          ) : null}
           {error ? <Text className="font-body text-caption text-loss">{error}</Text> : null}
           <Pressable
             accessibilityRole="button"

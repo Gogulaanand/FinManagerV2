@@ -26,3 +26,4 @@ export type {
 } from './import.js';
 export { YahooFinanceQuoteProvider } from './quotes.js';
 export type { PriceQuoteProvider, QuoteRefreshResult, QuoteRefreshStatus } from './quotes.js';
+export { fxRateToInrForCurrency } from './fx.js';

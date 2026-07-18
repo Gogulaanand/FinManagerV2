@@ -52,6 +52,14 @@ export function formatDelta(ratio: number, fractionDigits = 1): string {
   return `${sign}${Math.abs(percent).toFixed(fractionDigits)}%`;
 }
 
+/** Converts storage-style enum labels into readable UI copy. */
+export function formatChoiceLabel(value: string): string {
+  return value
+    .split('_')
+    .map((word) => (word ? `${word[0]!.toUpperCase()}${word.slice(1)}` : word))
+    .join(' ');
+}
+
 /**
  * The direction of a change, for choosing a glyph and a color.
  *

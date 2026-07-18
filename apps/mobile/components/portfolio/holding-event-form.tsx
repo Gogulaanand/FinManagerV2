@@ -1,8 +1,10 @@
+import { formatChoiceLabel, fxRateToInrForCurrency } from '@finmanager/core';
 import type { Holding, HoldingEvent, HoldingEventKind } from '@finmanager/schema';
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { Card, CardTitle } from '../card';
+import { Choice } from '../choice';
 import { Field } from '../field';
 
 const kinds: readonly HoldingEventKind[] = [
@@ -45,7 +47,7 @@ export function MobileHoldingEventForm({
         price: null,
         amount: signed,
         currency: currency as HoldingEvent['currency'],
-        fxRateToInr: Number(fxRate) || null,
+        fxRateToInr: fxRateToInrForCurrency(currency, fxRate),
         note: null,
         importHash: null,
       });
@@ -64,22 +66,19 @@ export function MobileHoldingEventForm({
         </Text>
       ) : (
         <View className="mt-3 gap-3">
-          <Field label="Holding">
-            <TextInput
-              value={holdingId}
-              onChangeText={setHoldingId}
-              placeholder={holdings[0]?.id}
-              className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-            />
-          </Field>
-          <Field label="Event kind" hint={kinds.join(' · ')}>
-            <TextInput
-              value={kind}
-              onChangeText={(text) => setKind(text as HoldingEventKind)}
-              autoCapitalize="none"
-              className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-            />
-          </Field>
+          <Choice
+            label="Holding"
+            value={holdingId}
+            options={holdings.map((holding) => ({ value: holding.id!, label: holding.name }))}
+            onChange={setHoldingId}
+          />
+          <Choice
+            label="Event kind"
+            value={kind}
+            options={kinds.map((value) => ({ value, label: formatChoiceLabel(value) }))}
+            onChange={setKind}
+            hint={kinds.join(' · ')}
+          />
           <Field label="Amount (₹)">
             <TextInput
               value={amount}
@@ -88,22 +87,23 @@ export function MobileHoldingEventForm({
               className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
             />
           </Field>
-          <Field label="Currency" hint="INR, USD, EUR, or GBP">
-            <TextInput
-              value={currency}
-              onChangeText={setCurrency}
-              autoCapitalize="characters"
-              className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-            />
-          </Field>
-          <Field label="FX rate to INR">
-            <TextInput
-              value={fxRate}
-              onChangeText={setFxRate}
-              keyboardType="decimal-pad"
-              className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-            />
-          </Field>
+          <Choice
+            label="Currency"
+            value={currency}
+            options={['INR', 'USD', 'EUR', 'GBP'].map((value) => ({ value, label: value }))}
+            onChange={setCurrency}
+            hint="INR, USD, EUR, or GBP"
+          />
+          {currency !== 'INR' ? (
+            <Field label="FX rate to INR">
+              <TextInput
+                value={fxRate}
+                onChangeText={setFxRate}
+                keyboardType="decimal-pad"
+                className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
+              />
+            </Field>
+          ) : null}
           {error ? <Text className="font-body text-caption text-loss">{error}</Text> : null}
           <Pressable
             accessibilityRole="button"
