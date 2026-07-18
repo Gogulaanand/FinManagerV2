@@ -188,7 +188,15 @@ Estimated effort: 1-2 sessions.
 - Error tracking (Sentry free tier), backup/export (full data export to JSON/CSV).
 - Performance pass: cold start, list virtualization, chart render on mid-range Android.
 
-Exit criteria: family members installed and using it; CI + deploys automated; briefing written.
+**Carried-over items to revisit here (deferred from earlier phases):**
+
+- [ ] **Auth email delivery** (from Phase 3, D-024): Supabase email confirmation is ON but the built-in mailer is rate-limited, so real signups cannot complete. Wire a real sender (Resend, already the planned email provider) or make a deliberate decision to disable confirmation. Until then, new accounts must be confirmed manually.
+- [ ] **Mobile PowerSync adapter swap** (from Phase 3, D-021): replace the Expo Go `@powersync/adapter-sql-js` (in-memory, no at-rest encryption, alpha) with native `@powersync/op-sqlite` (persistent, SQLCipher). This is localized to `apps/mobile/lib/powersync.ts` via the `Constants.executionEnvironment` adapter switch, and needs a dev build (EAS/`expo run:ios`). Covers the plan's "encrypted local storage" security item.
+- [ ] **Mobile offline round-trip verification** (from Phase 3): the interactive sign-in → offline write → reconnect → sync path could not be driven in the no-touch simulator. Verify on a real device or dev build (Maestro covers this once E2E is set up).
+- [ ] **Google sign-in on mobile** (from Phase 3): only web has Google OAuth; mobile needs the expo-web-browser + deep-link flow. (Do sooner if wanted; parked here otherwise.)
+- [ ] **Delete the Phase 3 web test account** `gogulaanand02+webtest@gmail.com` and its synced rows from Supabase once cross-platform sync is confirmed.
+
+Exit criteria: family members installed and using it; CI + deploys automated; the carried-over items above resolved or consciously re-deferred; briefing written.
 
 Total: roughly 14-18 focused sessions.
 
