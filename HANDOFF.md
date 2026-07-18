@@ -10,11 +10,11 @@ This file carries mid-phase state between sessions; completed phases live in pha
 ### Where we are
 
 Phase 4 is implemented and committed on branch `phase-4-expenses` (latest feature commit `62deaa3`, followed by the final provider/docs commit). The app now has real expenses and budgeting flows on both platforms: accounts, seeded categories, concrete transactions with CRUD, amount-first mobile entry, recurring materialization, monthly budget progress/overspend states, shared chart math, native/web charts, CSV mapping previews, synced profile mappings, and canonical import deduplication.
-The repo-wide gate is green: `pnpm turbo run build test lint typecheck` completed 21/21 tasks and `pnpm format:check` is clean. Core has 97 tests and sync has 14 tests. The web production build no longer emits the Phase 3 PowerSync SSR exceptions after moving the provider behind a browser-only client boundary. Expo iOS export also completed.
+The repo-wide gate is green: `pnpm turbo run build test lint typecheck` completed 21/21 tasks and `pnpm format:check` is clean. Core has 97 tests and sync has 14 tests. The web production build no longer emits the Phase 3 PowerSync SSR exceptions after moving the provider behind a browser-only client boundary. Expo iOS export also completed. The owner applied `20260718000001_phase4_expenses.sql`; remote migration history now matches the repository and verification found all five new columns, five constraints, four indexes, and RLS enabled on the five affected tables.
 
 ### Exact next action
 
-Start Phase 5 (Portfolio + Investments): read `phases/briefing/phase-4.md` and only the files it lists. Before portfolio work, apply and verify `supabase/migrations/20260718000001_phase4_expenses.sql`; this worktree could not run `supabase migration list` because no project ref is linked.
+Start Phase 5 (Portfolio + Investments): read `phases/briefing/phase-4.md` and only the files it lists. The Phase 4 migration is already applied; do not rerun it.
 
 ### Files in flight
 
@@ -22,7 +22,7 @@ None after the final handoff commit. See `phases/briefing/phase-4.md` for the fu
 
 ### Open items / warnings
 
-- **Phase 4 migration is not applied or remotely verified from this worktree.** The repository has the migration file, but `supabase migration list` reports that no project ref is linked. Link the intended project and apply it before using recurrence/import fields against Supabase.
+- **Phase 4 migration is applied and remotely verified.** `supabase migration list --linked` shows `20260718000001` on both sides; the remote schema contains all five recurrence columns, five Phase 4 constraints, four Phase 4 indexes, `profiles.csv_mappings`, and RLS remains enabled.
 - **Chrome verification was unavailable:** the Chrome control connector could not connect, so the web route was verified by production build/prerender only. Do not call that a signed-in end-to-end Chrome pass.
 - **Mobile interactive verification remains outstanding:** Expo iOS export passed, but the simulator has no touch input. Run the keypad, CRUD, budget, and airplane-mode sync path on a real Expo Go device.
 - **Supabase email confirmation is ON and the built-in mailer is rate-limited**, so real signups can't complete. The Phase 3 web E2E confirmed its test account via a direct `email_confirmed_at` SQL update. Fix with SMTP/Resend (the planned email provider) or a deliberate toggle at Phase 9 (D-024).

@@ -72,10 +72,10 @@ calculating separate virtual copies.
   offline airplane-mode interaction.
 - The app intentionally keeps the Phase 3 SQL.js mobile adapter in-memory;
   relaunch re-sync behavior is deferred to the Phase 9 OP-SQLite swap.
-- The migration file is committed but was not applied or remotely verified in
-  this worktree: `supabase migration list` reported that no Supabase project
-  ref is linked. Apply it to the intended project before using the new fields
-  against the live backend.
+- The owner applied `20260718000001_phase4_expenses.sql` to Supabase. Remote
+  migration history now matches the repository, and verification found all
+  five recurrence columns, the profile JSON column, five constraints, four
+  indexes, and RLS enabled on the five affected tables.
 
 ## Files touched in Phase 4
 

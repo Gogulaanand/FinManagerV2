@@ -202,3 +202,9 @@ Consequence: Phase 5/9 may add reconciliation or balance-history behavior, but P
 The web `AppProviders` component is loaded through `ClientProviders` with SSR disabled. The production build previously emitted repeated `a.execute is not a function` traces while PowerSync attempted to initialize its browser database during static prerender.
 Why: wa-sqlite is a browser-only runtime; an SSR no-op flag did not prevent the SDK initialization path from touching the wrong database shape.
 Consequence: the server renders static shells, while PowerSync initializes only in the browser where the existing reactive query/repository path is valid.
+
+## D-030: Supabase migration history was normalized before applying Phase 4 (2026-07-18)
+
+The linked project had the Phase 3 migrations applied under dashboard-generated timestamps (`20260718024023` and `20260718024101`), while the repository carried the equivalent canonical files as `20260717000001` and `20260717000002`.
+Why: Supabase refuses to push a local migration while remote history contains versions absent from the local directory. The remote inventory, migration names, table set, and Phase 4 preflight were checked before the history was reconciled.
+Consequence: the remote history now matches the repository, and `20260718000001_phase4_expenses.sql` applied cleanly. Future `supabase db push --linked` runs can use the committed migration sequence directly.
