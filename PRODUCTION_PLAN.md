@@ -80,6 +80,7 @@ All tables carry `user_id` + RLS, and sync via PowerSync bucket rules scoped per
 4. Long operations (pnpm install, EAS builds, test suites) run in background while the agent continues other work.
 5. Vertical slices after the foundation: each feature phase delivers schema + sync rules + core logic + web UI + mobile UI for one module, so every phase ends with something usable.
 6. STATUS.md is updated at every session end. DECISIONS.md is appended whenever a non-obvious technical or product decision is made. HANDOFF.md is rewritten at every session end with mid-phase state.
+7. Learning nudges (owner is upskilling): whenever a phase introduces a non-trivial concept or makes a system-design choice worth understanding (e.g. offline-first sync, RLS, XIRR, indexing, auth flows), pause before or right after implementing it and check the owner's understanding. Briefly explain the concept and the design tradeoff in plain language, then ask whether it landed and whether they want to go deeper, before moving on. Prioritise concepts that transfer beyond this project.
 
 ## Phases
 

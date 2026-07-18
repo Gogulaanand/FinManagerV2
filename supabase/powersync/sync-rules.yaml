@@ -1,0 +1,30 @@
+# PowerSync Sync Streams for FinManager (edition 3).
+#
+# This is the DOWNLOAD filter: it decides which Postgres rows get streamed into
+# each device's local SQLite. Every table is scoped to the signed-in user via
+# auth.user_id() (the `sub` claim of the Supabase access token the connector
+# supplies), so a device only ever holds its owner's rows. This mirrors the
+# Postgres RLS policies - RLS is the authoritative security boundary for writes,
+# these streams are the read boundary for what syncs down.
+#
+# Paste this into the PowerSync dashboard (Sync Streams editor) -> Validate ->
+# Deploy. Keep it in lockstep with supabase/migrations and packages/sync/schema.ts.
+config:
+  edition: 3
+streams:
+  user_data:
+    auto_subscribe: true
+    queries:
+      - SELECT * FROM profiles WHERE user_id = auth.user_id()
+      - SELECT * FROM trusted_contacts WHERE user_id = auth.user_id()
+      - SELECT * FROM activity_log WHERE user_id = auth.user_id()
+      - SELECT * FROM tax_scenarios WHERE user_id = auth.user_id()
+      - SELECT * FROM accounts WHERE user_id = auth.user_id()
+      - SELECT * FROM categories WHERE user_id = auth.user_id()
+      - SELECT * FROM transactions WHERE user_id = auth.user_id()
+      - SELECT * FROM budgets WHERE user_id = auth.user_id()
+      - SELECT * FROM holdings WHERE user_id = auth.user_id()
+      - SELECT * FROM holding_events WHERE user_id = auth.user_id()
+      - SELECT * FROM valuations WHERE user_id = auth.user_id()
+      - SELECT * FROM goals WHERE user_id = auth.user_id()
+      - SELECT * FROM fire_settings WHERE user_id = auth.user_id()

@@ -11,6 +11,7 @@ nodeLinker: hoisted
 # sharp: Next.js image optimization. unrs-resolver: ESLint import resolution.
 # Both are first-party build deps of tooling we already trust.
 allowBuilds:
+  '@journeyapps/wa-sqlite': true
   sharp: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
