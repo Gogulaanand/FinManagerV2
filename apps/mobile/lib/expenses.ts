@@ -25,11 +25,11 @@ import {
   deleteBudget as repoDeleteBudget,
   deleteCategory as repoDeleteCategory,
   deleteTransaction as repoDeleteTransaction,
+  ensureRecurringThrough,
   mapAccountRows,
   mapBudgetRows,
   mapCategoryRows,
   mapTransactionRows,
-  materializeRecurringTransactions,
   saveAccount as repoSaveAccount,
   saveBudget as repoSaveBudget,
   saveCategory as repoSaveCategory,
@@ -94,7 +94,7 @@ export interface ExpensesApi {
   readonly saveTransaction: (transaction: Transaction) => Promise<void>;
   readonly importCsvRows: (
     rows: Parameters<typeof repoCommitCsvImport>[2],
-  ) => Promise<{ readonly created: number; readonly skipped: number }>;
+  ) => Promise<{ readonly created: number; readonly skipped: number; readonly failed: number }>;
   readonly deleteTransaction: (id: string) => Promise<void>;
   readonly saveBudget: (budget: Budget) => Promise<void>;
   readonly deleteBudget: (id: string) => Promise<void>;
@@ -133,9 +133,14 @@ export function useExpenses(): ExpensesApi {
   );
 
   useEffect(() => {
-    if (!userId || categories.length > 0) return;
+    if (!userId) return;
     void seedDefaultCategories(db, userId).catch(() => undefined);
-  }, [categories.length, db, userId]);
+  }, [db, userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    void ensureRecurringThrough(db, userId, month).catch(() => undefined);
+  }, [db, month, transactions.length, userId]);
 
   const summary = useMemo(
     () => calculateMonthlySummary(transactions, categories, month),
@@ -177,13 +182,13 @@ export function useExpenses(): ExpensesApi {
         userId,
       });
       await repoSaveTransaction(db, userId, next);
-      if (next.isRecurring) await materializeRecurringTransactions(db, userId, next, month);
+      if (next.isRecurring) await ensureRecurringThrough(db, userId, month);
     },
     [db, month, userId],
   );
   const importCsvRows = useCallback(
     async (rows: Parameters<typeof repoCommitCsvImport>[2]) => {
-      if (!userId) return { created: 0, skipped: rows.length };
+      if (!userId) return { created: 0, skipped: rows.length, failed: 0 };
       return repoCommitCsvImport(db, userId, rows);
     },
     [db, userId],

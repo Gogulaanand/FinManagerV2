@@ -96,7 +96,14 @@ export function TransactionForm({
           label="Type"
           value={direction}
           options={directionOptions}
-          onChange={setDirection}
+          onChange={(next) => {
+            setDirection(next);
+            setCategoryId(
+              categories.find(
+                (category) => category.kind === (next === 'debit' ? 'expense' : 'income'),
+              )?.id ?? '',
+            );
+          }}
         />
         <SelectField
           label="Account"

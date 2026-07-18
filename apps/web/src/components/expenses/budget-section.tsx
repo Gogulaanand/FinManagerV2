@@ -41,7 +41,9 @@ export function BudgetSection({
       return;
     }
     setError(null);
-    await onSave(parsed.data);
+    const existing = progress.find((item) => item.categoryId === parsed.data.categoryId);
+    const nextBudget = existing?.budgetId ? { ...parsed.data, id: existing.budgetId } : parsed.data;
+    await onSave(nextBudget);
     setAmount(0);
   }
 
@@ -101,7 +103,11 @@ export function BudgetSection({
                     type="button"
                     size="sm"
                     variant="ghost"
-                    onClick={() => item.budgetId && void onDelete(item.budgetId)}
+                    onClick={() => {
+                      if (item.budgetId && window.confirm(`Clear ${item.label} budget?`)) {
+                        void onDelete(item.budgetId);
+                      }
+                    }}
                   >
                     Clear
                   </Button>

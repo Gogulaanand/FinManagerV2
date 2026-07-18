@@ -107,17 +107,21 @@ function directionAndAmount(
 
 export function canonicalImportHash(
   accountId: string,
-  row: Pick<CsvImportRow, 'occurredOn' | 'note' | 'merchant' | 'amount' | 'direction'>,
+  row: Pick<
+    CsvImportRow,
+    'sourceRow' | 'occurredOn' | 'note' | 'merchant' | 'amount' | 'direction'
+  >,
 ): string {
   return [
     accountId,
+    row.sourceRow,
     row.occurredOn,
     row.note ?? '',
     row.merchant ?? '',
     row.amount.toFixed(2),
     row.direction,
   ]
-    .map((value) => value.trim().toLowerCase())
+    .map((value) => String(value).trim().toLowerCase())
     .join('\u001f');
 }
 

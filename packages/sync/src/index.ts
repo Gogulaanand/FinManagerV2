@@ -33,6 +33,7 @@ export {
   deleteBudget,
   deleteCategory,
   deleteTransaction,
+  ensureRecurringThrough,
   mapAccountRows,
   mapBudgetRows,
   mapCategoryRows,

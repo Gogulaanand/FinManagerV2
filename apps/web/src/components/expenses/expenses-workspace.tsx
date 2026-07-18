@@ -71,7 +71,9 @@ export function ExpensesWorkspace() {
 
   async function importRows(rows: Parameters<typeof api.importCsvRows>[0]) {
     const result = await api.importCsvRows(rows);
-    setSetupMessage(`${result.created} CSV rows imported; ${result.skipped} duplicates skipped.`);
+    setSetupMessage(
+      `${result.created} CSV rows imported; ${result.skipped} duplicates skipped; ${result.failed} failed.`,
+    );
   }
 
   return (
@@ -213,7 +215,14 @@ export function ExpensesWorkspace() {
                         type="button"
                         size="sm"
                         variant="ghost"
-                        onClick={() => void api.deleteTransaction(transaction.id!)}
+                        onClick={() => {
+                          if (
+                            transaction.id &&
+                            window.confirm('Delete this transaction? This cannot be undone.')
+                          ) {
+                            void api.deleteTransaction(transaction.id);
+                          }
+                        }}
                       >
                         Delete
                       </Button>
@@ -280,7 +289,11 @@ export function ExpensesWorkspace() {
                 type="button"
                 size="sm"
                 variant="ghost"
-                onClick={() => void api.deleteAccount(account.id!)}
+                onClick={() => {
+                  if (account.id && window.confirm(`Delete account “${account.name}”?`)) {
+                    void api.deleteAccount(account.id);
+                  }
+                }}
               >
                 Delete
               </Button>
@@ -325,7 +338,11 @@ export function ExpensesWorkspace() {
                   type="button"
                   size="sm"
                   variant="ghost"
-                  onClick={() => void api.deleteCategory(category.id!)}
+                  onClick={() => {
+                    if (category.id && window.confirm(`Delete category “${category.name}”?`)) {
+                      void api.deleteCategory(category.id);
+                    }
+                  }}
                 >
                   Delete
                 </Button>

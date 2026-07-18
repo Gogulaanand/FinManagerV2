@@ -125,4 +125,15 @@ describe('expense analytics', () => {
       { categoryId: 'food', label: 'Food & Dining', budget: 100, actual: 100, range: 100 },
     ]);
   });
+
+  it('includes debit transactions without a category in the breakdown', () => {
+    const breakdown = calculateCategoryBreakdown(
+      [tx({ categoryId: null, amount: 75 })],
+      categories,
+      '2026-07',
+    );
+    expect(breakdown).toMatchObject([
+      { categoryId: null, label: 'Uncategorised', amount: 75, percentage: 100 },
+    ]);
+  });
 });

@@ -95,7 +95,7 @@ export function calculateCategoryBreakdown(
     if (
       !inMonth(transaction.occurredOn, month) ||
       transaction.direction !== 'debit' ||
-      category?.kind !== 'expense'
+      (category && category.kind !== 'expense')
     ) {
       continue;
     }

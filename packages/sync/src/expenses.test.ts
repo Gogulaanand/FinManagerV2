@@ -120,7 +120,7 @@ describe('expense repositories', () => {
       { ...row, sourceRow: 3, importHash: 'bank-row-2' },
       { ...row, sourceRow: 4 },
     ]);
-    expect(result).toEqual({ created: 1, skipped: 2 });
+    expect(result).toEqual({ created: 1, skipped: 2, failed: 0 });
     expect(
       db.statements.filter((statement) => statement.sql.startsWith('INSERT INTO transactions'))
         .length,

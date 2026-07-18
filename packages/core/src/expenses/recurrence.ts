@@ -37,6 +37,10 @@ function endOfMonth(month: string): Date {
   return new Date(Date.UTC(year, monthNumber, 0));
 }
 
+export function endOfMonthDate(month: string): string {
+  return formatDate(endOfMonth(month));
+}
+
 function occurrenceDate(
   source: Date,
   index: number,

@@ -28,7 +28,8 @@ calculating separate virtual copies.
   hashes in `packages/core/src/expenses/csv.ts`.
 - Amount-first mobile keypad reducer in `packages/core/src/expenses/keypad.ts`.
 - Vitest coverage for schema validation, analytics, recurrence, CSV parsing,
-  and keypad behavior.
+  keypad behavior, and sync integration paths for duplicate imports, recurrence
+  catch-up, and budget natural-key updates.
 - Migration `supabase/migrations/20260718000001_phase4_expenses.sql` adds only
   the recurrence/import fields required by the existing tables and the synced
   profile mapping JSON column. RLS is unchanged.
@@ -172,3 +173,26 @@ Estimated effort: 2-3 sessions (the heaviest module).
 - Price refresh for listed assets when online (manual-first; auto-refresh best-effort, manual override always wins).
 
 Exit criteria: full net worth and true XIRR on one screen; briefing written.
+
+### Phase 5.1: Cross-phase Chrome verification carryover
+
+Complete alongside Phase 5's Chrome verification, using a real Chrome session
+and a real Expo Go device where touch interaction is required.
+
+- Re-run the Phase 4 Expenses verification: add/edit/delete concrete
+  transactions, set a monthly category budget, confirm progress and overspend
+  states, inspect all three charts, and import the same bank CSV twice to
+  confirm canonical duplicate skipping.
+- Verify the Phase 4 offline path: write a transaction while offline, reconnect,
+  confirm it syncs to Supabase, and confirm the same row appears on another
+  signed-in device.
+- Verify the Phase 5 portfolio flow delivered by that phase, including its
+  core screen and any offline/sync behavior in its exit criteria.
+- When Phase 5 is complete, share one copy-paste Chrome verification prompt
+  covering both Phase 4 and Phase 5, with explicit accounts, test data, steps,
+  expected results, and evidence to report. Do not split this into separate
+  prompts.
+
+Exit criteria: the combined Phase 4 + Phase 5 Chrome verification prompt has
+been shared and both phase checklists have been completed; findings are
+recorded in the Phase 5 handoff.

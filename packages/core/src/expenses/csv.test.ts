@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseCsv, previewCsv } from './csv';
+import { canonicalImportHash, parseCsv, previewCsv } from './csv';
 
 describe('bank CSV transformation', () => {
   it('parses quoted commas and escaped quotes', () => {
@@ -48,5 +48,18 @@ describe('bank CSV transformation', () => {
       { sourceRow: 2, message: 'Date is required' },
       { sourceRow: 3, message: 'Amount is required' },
     ]);
+  });
+
+  it('keeps identical-looking transactions distinct when they occupy different source rows', () => {
+    const common = {
+      occurredOn: '2026-07-03',
+      note: 'UPI food',
+      merchant: null,
+      amount: 250,
+      direction: 'debit' as const,
+    };
+    expect(canonicalImportHash('account-id', { sourceRow: 2, ...common })).not.toBe(
+      canonicalImportHash('account-id', { sourceRow: 3, ...common }),
+    );
   });
 });

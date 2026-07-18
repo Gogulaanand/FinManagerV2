@@ -187,9 +187,9 @@ Consequence: occurrence generation is idempotent and month-end clamped in `packa
 
 ## D-027: Bank CSV mappings live in synced profile JSON and imports deduplicate by canonical hash (2026-07-18)
 
-Each bank mapping stores its column-to-field map in `profiles.csv_mappings`, which is mirrored in `JSON_COLUMNS` and synced through the existing profile row. Imported rows carry a canonical account/date/description/merchant/amount/direction hash.
-Why: mappings are user preferences rather than ledger entities, while the hash is stable across repeated downloads of the same statement and across devices.
-Consequence: CSV preview requires a real account selection, and repository import reports created versus skipped duplicate rows.
+Each bank mapping stores its column-to-field map in `profiles.csv_mappings`, which is mirrored in `JSON_COLUMNS` and synced through the existing profile row. Imported rows carry a canonical account/source-row/date/description/merchant/amount/direction hash.
+Why: mappings are user preferences rather than ledger entities, while the hash is stable across repeated imports of the same statement and source-row identity prevents two legitimate identical-looking rows in one statement from collapsing into one transaction.
+Consequence: CSV preview requires a real account selection, and repository import reports created, skipped, and failed rows.
 
 ## D-028: Account balances remain manual snapshots in Phase 4 (2026-07-18)
 
@@ -208,3 +208,15 @@ Consequence: the server renders static shells, while PowerSync initializes only 
 The linked project had the Phase 3 migrations applied under dashboard-generated timestamps (`20260718024023` and `20260718024101`), while the repository carried the equivalent canonical files as `20260717000001` and `20260717000002`.
 Why: Supabase refuses to push a local migration while remote history contains versions absent from the local directory. The remote inventory, migration names, table set, and Phase 4 preflight were checked before the history was reconciled.
 Consequence: the remote history now matches the repository, and `20260718000001_phase4_expenses.sql` applied cleanly. Future `supabase db push --linked` runs can use the committed migration sequence directly.
+
+## D-031: recurrence catch-up advances by month-end and generated rows are not sources (2026-07-18)
+
+Recurring sources are materialized through the selected month's final calendar day. The source watermark is that concrete date; generated occurrences keep the recurring ID and occurrence key but clear recurrence metadata and `isRecurring`.
+Why: changing months must expose all expected rows, including a source saved before the selected month, while editing a generated row must never fork or mutate the schedule. The watermark also prevents a deleted prior occurrence from being recreated during a later catch-up.
+Consequence: `ensureRecurringThrough` runs from both clients through the shared repository, and recurrence behavior is covered by the sync integration suite.
+
+## D-032: Phase 4 write flows are parity-first across web and mobile (2026-07-18)
+
+Accounts, categories, transactions, budgets, confirmations, and charts are available on both clients and call the same PowerSync repositories. Mobile keeps the amount-first keypad, while its setup and budget forms use the shared Zod contracts.
+Why: cross-device sync is only useful if either client can complete the real monthly ledger flow; a read-only mobile budget card would leave the feature incomplete.
+Consequence: interactive mobile verification still requires a real Expo Go device because the local simulator has no touch input, but the code path and native iOS bundle are checked in CI.

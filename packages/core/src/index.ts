@@ -40,6 +40,7 @@ export {
   calculateBudgetProgress,
   calculateCategoryBreakdown,
   calculateMonthlySummary,
+  endOfMonthDate,
   expandOccurrences,
   parseCsv,
   previewCsv,

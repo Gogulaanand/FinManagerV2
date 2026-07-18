@@ -17,7 +17,7 @@ export type {
 } from './analytics.js';
 export { canonicalImportHash, parseCsv, previewCsv } from './csv.js';
 export type { CsvDocument, CsvImportPreview, CsvPreviewError } from './csv.js';
-export { expandOccurrences } from './recurrence.js';
+export { endOfMonthDate, expandOccurrences } from './recurrence.js';
 export type { ExpandedOccurrence, RecurrenceExpansionInput } from './recurrence.js';
 export { reduceKeypad } from './keypad.js';
 export type { KeypadAction } from './keypad.js';

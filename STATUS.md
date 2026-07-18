@@ -5,16 +5,17 @@ Last updated: 2026-07-18 (Phase 4 complete).
 ## Current State
 
 - Phase 4 done: **expenses + budgeting**. The shared schema/core/sync layers now power accounts, seeded Indian categories, concrete debit/credit transactions, recurring expansion, monthly budgets, chart series, and generic CSV import with synced per-bank mappings and import-hash deduplication.
-- `pnpm turbo run build test lint typecheck` -> **21/21**; `pnpm format:check` clean; core has 97 tests and sync has 14 tests.
+- `pnpm turbo run build test lint typecheck` -> **21/21**; `pnpm format:check` clean; core has 99 tests and sync has 17 tests.
 - Web production build and the Expo iOS export are clean. Interactive Chrome verification could not run because the Chrome connector was unavailable; mobile interactive verification remains blocked by the no-touch simulator and needs a real Expo Go device.
 - Open items: retain the Phase 3 email/Google/mobile-adapter warnings in `HANDOFF.md` (D-021..D-024). The Phase 4 migration is now applied and verified remotely.
 
 ## Next Up
 
-**Phase 5: Portfolio + Investments** (see PRODUCTION_PLAN.md, `### Phase 5`).
-Start by reading `phases/briefing/phase-4.md` and only the files it lists. The
-Phase 4 migration is applied and its remote columns, constraints, indexes, and
-RLS flags have been verified.
+**Phase 5: Portfolio + Investments**, with the Phase 5.1 cross-phase Chrome
+verification carryover (see PRODUCTION_PLAN.md, `### Phase 5` and `### Phase
+5.1`). Start by reading `phases/briefing/phase-4.md` and only the files it
+lists. The Phase 4 migration is applied and its remote columns, constraints,
+indexes, and RLS flags have been verified.
 
 ## Phase Tracker
 
