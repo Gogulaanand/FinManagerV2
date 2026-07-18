@@ -15,3 +15,7 @@ export type {
   MonthlySummary,
   MonthlyTrendPoint,
 } from './analytics.js';
+export { canonicalImportHash, parseCsv, previewCsv } from './csv.js';
+export type { CsvDocument, CsvImportPreview, CsvPreviewError } from './csv.js';
+export { expandOccurrences } from './recurrence.js';
+export type { ExpandedOccurrence, RecurrenceExpansionInput } from './recurrence.js';
