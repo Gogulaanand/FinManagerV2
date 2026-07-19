@@ -208,8 +208,11 @@ Estimated effort: 1-2 sessions.
 
 - E2E smoke tests: Playwright (web), Maestro (mobile) for the critical paths (auth, add expense offline, portfolio view, tax calc).
 - Web to Vercel (production + preview), mobile via EAS Build: Android internal distribution + TestFlight for family iPhones.
-- Error tracking (Sentry free tier), backup/export (full data export to JSON/CSV).
+- Error tracking (Sentry free tier)
+- backup/export (full data export to JSON/CSV).
+- import data for expenses (allow downloading a sample template csv, and validate the user uploaded csv against the format, sanitize all data and then proceed to import data, reject random imports not following the template - possible fields: [date, category, amount, type(income/expense)])
 - Performance pass: cold start, list virtualization, chart render on mid-range Android.
+- Guideline to make the app accessible for mobile phones - via app store / direct install ?
 
 **Carried-over items to revisit here (deferred from earlier phases):**
 
@@ -222,6 +225,12 @@ Estimated effort: 1-2 sessions.
 - [ ] **Expenses arbitrary month/year navigation** (from Phase 5.3 UX review): the expenses month selector only steps one month at a time via left/right arrows, so reaching e.g. May last year or January 2024 takes many taps. Add a way to jump directly to any month/year (month-year picker, tap-the-label dropdown, or a compact year+month grid). Needs ideation and design work - what pattern fits the existing token/card language, how it behaves on mobile vs web, and how it interacts with the 6-month trend window. No implementation yet.
 
 Exit criteria: family members installed and using it; CI + deploys automated; the carried-over items above resolved or consciously re-deferred; briefing written.
+
+### Re-prioritization (2026-07-19)
+
+After Phase 7, the owner re-ordered the remaining work; detailed plans live in `phases/plans/`.
+Order: correctness sweep (plan-improvements.md I1), then the two promoted UX items (plan-mobile-nav-and-month-picker.md: mobile add/edit modal routes, expenses month/year navigation), then Phase 8 (plan-phase8-deadman-switch.md), then Phase 9 (plan-phase9-hardening-release.md), then donations per plan-monetization.md.
+The Phase 8/9 sections above remain the scope of record; the plan docs refine them into session-sized sub-phases and carry the design decisions.
 
 Total: roughly 14-18 focused sessions.
 
