@@ -41,7 +41,6 @@ export function MobileFireSettingsForm({
     initial.monthlyInvestment ? Math.round(initial.monthlyInvestment) : 0,
   );
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
   async function submit() {
     try {
@@ -59,9 +58,7 @@ export function MobileFireSettingsForm({
         monthlyInvestment: monthlyInvestment > 0 ? monthlyInvestment : null,
       });
       setError(null);
-      setSaved(true);
     } catch (reason) {
-      setSaved(false);
       setError(reason instanceof Error ? reason.message : 'Check the FIRE inputs');
     }
   }
@@ -73,19 +70,13 @@ export function MobileFireSettingsForm({
         <CurrencyField
           label="Monthly expenses (₹)"
           value={monthlyExpenses}
-          onChange={(value) => {
-            setMonthlyExpenses(value);
-            setSaved(false);
-          }}
+          onChange={(value) => setMonthlyExpenses(value)}
           hint="Auto-suggested from recent spend; annualised (×12) for FIRE"
         />
         <CurrencyField
           label="Monthly investment (₹)"
           value={monthlyInvestment}
-          onChange={(value) => {
-            setMonthlyInvestment(value);
-            setSaved(false);
-          }}
+          onChange={(value) => setMonthlyInvestment(value)}
           hint="Invested each month toward FIRE. Leave 0 to derive it from income minus expenses"
         />
         <Field label="Withdrawal rate (%)" hint="4% is the common safe rule (25x expenses)">
@@ -128,7 +119,10 @@ export function MobileFireSettingsForm({
             className={inputClass}
           />
         </Field>
-        <Field label="Lean multiplier" hint="Lean FIRE corpus vs the regular number">
+        <Field
+          label="Lean multiplier"
+          hint="Below 1 - a leaner target than the regular number (e.g. 0.7)"
+        >
           <TextInput
             value={leanMultiplier}
             onChangeText={setLeanMultiplier}
@@ -145,11 +139,6 @@ export function MobileFireSettingsForm({
           />
         </Field>
         {error ? <Text className="font-body text-caption text-loss">{error}</Text> : null}
-        {saved ? (
-          <Text className="font-body text-caption text-foreground-muted">
-            FIRE settings saved locally.
-          </Text>
-        ) : null}
         <Pressable
           accessibilityRole="button"
           onPress={() => void submit()}

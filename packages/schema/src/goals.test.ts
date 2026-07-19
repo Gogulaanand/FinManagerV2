@@ -84,6 +84,12 @@ describe('FireSettingsSchema', () => {
     expect(() => FireSettingsSchema.parse({ currentAge: 40, retirementAge: 30 })).toThrow();
   });
 
+  it('rejects a lean multiplier of one or more', () => {
+    expect(() => FireSettingsSchema.parse({ leanMultiplier: 1 })).toThrow();
+    expect(() => FireSettingsSchema.parse({ leanMultiplier: 1.2 })).toThrow();
+    expect(FireSettingsSchema.parse({ leanMultiplier: 0.7 }).leanMultiplier).toBe(0.7);
+  });
+
   it('rejects a fat multiplier below the lean multiplier', () => {
     expect(() => FireSettingsSchema.parse({ leanMultiplier: 1.2, fatMultiplier: 0.8 })).toThrow();
   });

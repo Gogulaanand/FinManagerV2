@@ -346,7 +346,6 @@ export function GoalsWorkspace() {
           initial={api.fireSettings}
           onSave={async (settings) => {
             await api.saveFireSettings(settings);
-            setNotice('FIRE settings saved locally; sync will follow when online.');
           }}
         />
       ) : null}

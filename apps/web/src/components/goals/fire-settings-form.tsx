@@ -39,7 +39,6 @@ export function FireSettingsForm({ initial, onSave }: FireSettingsFormProps) {
     initial.monthlyInvestment ? Math.round(initial.monthlyInvestment) : 0,
   );
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
   async function submit() {
     try {
@@ -57,9 +56,7 @@ export function FireSettingsForm({ initial, onSave }: FireSettingsFormProps) {
         monthlyInvestment: monthlyInvestment > 0 ? monthlyInvestment : null,
       });
       setError(null);
-      setSaved(true);
     } catch (reason) {
-      setSaved(false);
       setError(reason instanceof Error ? reason.message : 'Check the FIRE inputs');
     }
   }
@@ -73,19 +70,13 @@ export function FireSettingsForm({ initial, onSave }: FireSettingsFormProps) {
         <CurrencyField
           label="Monthly expenses (₹)"
           value={monthlyExpenses}
-          onChange={(value) => {
-            setMonthlyExpenses(value);
-            setSaved(false);
-          }}
+          onChange={(value) => setMonthlyExpenses(value)}
           hint="Auto-suggested from your recent spend; we annualise it (×12) for the FIRE number"
         />
         <CurrencyField
           label="Monthly investment (₹)"
           value={monthlyInvestment}
-          onChange={(value) => {
-            setMonthlyInvestment(value);
-            setSaved(false);
-          }}
+          onChange={(value) => setMonthlyInvestment(value)}
           hint="How much you invest each month toward FIRE. Leave 0 to derive it from your recent income minus expenses"
         />
         <Field label="Withdrawal rate (%)" hint="4% is the common safe rule (25x expenses)">
@@ -151,12 +142,16 @@ export function FireSettingsForm({ initial, onSave }: FireSettingsFormProps) {
             />
           )}
         </Field>
-        <Field label="Lean multiplier" hint="Lean FIRE corpus vs the regular number">
+        <Field
+          label="Lean multiplier"
+          hint="Below 1 - a leaner target than the regular number (e.g. 0.7)"
+        >
           {(id) => (
             <Input
               id={id}
               type="number"
               min="0"
+              max="0.99"
               step="any"
               value={leanMultiplier}
               onChange={(event) => setLeanMultiplier(event.target.value)}
@@ -177,11 +172,6 @@ export function FireSettingsForm({ initial, onSave }: FireSettingsFormProps) {
         </Field>
       </div>
       {error ? <p className="mt-3 font-body text-caption text-loss">{error}</p> : null}
-      {saved ? (
-        <p className="mt-3 font-body text-caption text-foreground-muted">
-          FIRE settings saved locally; sync will follow when online.
-        </p>
-      ) : null}
       <div className="mt-4">
         <Button type="button" onClick={() => void submit()}>
           Save FIRE settings

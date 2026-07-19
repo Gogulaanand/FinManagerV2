@@ -303,7 +303,6 @@ export default function GoalsScreen() {
             initial={api.fireSettings}
             onSave={async (settings) => {
               await api.saveFireSettings(settings);
-              setNotice('FIRE settings saved locally.');
             }}
           />
         ) : null}

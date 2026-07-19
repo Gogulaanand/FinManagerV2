@@ -47,7 +47,14 @@ export const FireSettingsSchema = z
     currentAge: z.number().int().min(0).max(120).nullable().default(null),
     retirementAge: z.number().int().min(0).max(120).nullable().default(null),
     // Lean/fat FIRE corpus multipliers relative to the regular FIRE number.
-    leanMultiplier: z.number().finite().positive().nullable().default(null),
+    // Lean is below 1x (a leaner target); the regular FIRE card already covers 1x.
+    leanMultiplier: z
+      .number()
+      .finite()
+      .positive()
+      .lt(1, 'Lean multiplier must be below 1 (the regular FIRE number is 1x)')
+      .nullable()
+      .default(null),
     fatMultiplier: z.number().finite().positive().nullable().default(null),
     // Amount invested each month toward FIRE, in today's rupees. When null the
     // app falls back to the savings rate derived from recent transactions.
