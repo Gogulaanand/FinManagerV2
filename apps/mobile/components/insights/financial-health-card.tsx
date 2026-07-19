@@ -112,7 +112,9 @@ function FinancialHealthCardContent() {
                 dontAskAgain ? 'border-primary bg-primary' : 'border-border bg-surface'
               }`}
             >
-              {dontAskAgain ? <Text className="text-caption text-primary-foreground">✓</Text> : null}
+              {dontAskAgain ? (
+                <Text className="text-caption text-primary-foreground">✓</Text>
+              ) : null}
             </View>
             <Text className="font-body text-caption text-foreground-muted">
               Don&rsquo;t show this again

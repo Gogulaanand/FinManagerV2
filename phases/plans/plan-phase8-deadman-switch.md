@@ -7,11 +7,11 @@ Implements the PRODUCTION_PLAN.md Phase 8 spec: trusted contacts CRUD, daily ina
 
 ## Cross-doc dependencies
 
-| Dependency | Produced by | Consumed by |
-| --- | --- | --- |
+| Dependency                                           | Produced by  | Consumed by                                                                  |
+| ---------------------------------------------------- | ------------ | ---------------------------------------------------------------------------- |
 | Resend account + verified sending domain + Auth SMTP | Sub-phase 8a | 8b test-sends, Phase 9b signup verification (D-024), monetization onboarding |
-| Real web settings page | Sub-phase 8b | Monetization "Support" surface, improvements item #8 |
-| `logActivity` hardening (improvements #12) | Sub-phase 8a | Reliability of the inactivity signal itself |
+| Real web settings page                               | Sub-phase 8b | Monetization "Support" surface, improvements item #8                         |
+| `logActivity` hardening (improvements #12)           | Sub-phase 8a | Reliability of the inactivity signal itself                                  |
 
 ## What already exists (verified in repo)
 
@@ -60,12 +60,12 @@ The PowerSync sync rules (`supabase/powersync/sync-rules.yaml`) and client schem
 
 Only `threshold_days` (T) is user-configurable; the cadence is fixed to keep the knob count low and match the plan spec:
 
-| Days since last activity | Step | Recipient |
-| --- | --- | --- |
-| T (default 30) | `reminder_1` | the user |
-| T + 7 (37) | `reminder_2` | the user |
-| T + 14 (44) | `reminder_3` (final warning, names the contacts) | the user |
-| T + 21 (51) | `disclosure` | each active trusted contact, per its `disclosure_scope` |
+| Days since last activity | Step                                             | Recipient                                               |
+| ------------------------ | ------------------------------------------------ | ------------------------------------------------------- |
+| T (default 30)           | `reminder_1`                                     | the user                                                |
+| T + 7 (37)               | `reminder_2`                                     | the user                                                |
+| T + 14 (44)              | `reminder_3` (final warning, names the contacts) | the user                                                |
+| T + 21 (51)              | `disclosure`                                     | each active trusted contact, per its `disclosure_scope` |
 
 ### Concept: idempotency via insert-pending, send, mark-sent
 

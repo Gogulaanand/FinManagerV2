@@ -7,12 +7,12 @@ Implements the PRODUCTION_PLAN.md Phase 9 spec and resolves its carried-over ite
 
 ## Cross-doc dependencies
 
-| Dependency | Produced by | Consumed by |
-| --- | --- | --- |
-| Resend + Auth SMTP | Phase 8a | 9b end-to-end signup verification (D-024) |
-| Seeded E2E test data | 9a | 9b preview-deploy tests; closes the Phase 5.3/6/7 verification debt |
-| EAS dev build | 9c | op-sqlite adapter swap, Maestro on device, mobile Google sign-in |
-| Deployed web + native mobile build | 9b + 9c | Monetization Path A shipping surface |
+| Dependency                         | Produced by | Consumed by                                                         |
+| ---------------------------------- | ----------- | ------------------------------------------------------------------- |
+| Resend + Auth SMTP                 | Phase 8a    | 9b end-to-end signup verification (D-024)                           |
+| Seeded E2E test data               | 9a          | 9b preview-deploy tests; closes the Phase 5.3/6/7 verification debt |
+| EAS dev build                      | 9c          | op-sqlite adapter swap, Maestro on device, mobile Google sign-in    |
+| Deployed web + native mobile build | 9b + 9c     | Monetization Path A shipping surface                                |
 
 ## Current state (verified in repo)
 
@@ -94,16 +94,16 @@ Exit criteria: family members installed and using both platforms; export produce
 
 ## Carried-over items ledger (from PRODUCTION_PLAN.md Phase 9 section)
 
-| Item | Resolved in |
-| --- | --- |
-| Auth email delivery (D-024) | Built in Phase 8a, verified in 9b |
-| Mobile PowerSync adapter swap (D-021) | 9c |
-| Mobile offline round-trip verification | 9c |
-| Google sign-in on mobile | 9c |
-| Test account cleanup | 9d |
-| Mobile add/edit modal routes | plan-mobile-nav-and-month-picker.md sub-phase A |
-| Expenses month/year navigation | plan-mobile-nav-and-month-picker.md sub-phase B |
-| Expense template import | 9d |
+| Item                                   | Resolved in                                     |
+| -------------------------------------- | ----------------------------------------------- |
+| Auth email delivery (D-024)            | Built in Phase 8a, verified in 9b               |
+| Mobile PowerSync adapter swap (D-021)  | 9c                                              |
+| Mobile offline round-trip verification | 9c                                              |
+| Google sign-in on mobile               | 9c                                              |
+| Test account cleanup                   | 9d                                              |
+| Mobile add/edit modal routes           | plan-mobile-nav-and-month-picker.md sub-phase A |
+| Expenses month/year navigation         | plan-mobile-nav-and-month-picker.md sub-phase B |
+| Expense template import                | 9d                                              |
 
 ## Risks
 

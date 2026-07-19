@@ -39,6 +39,9 @@ ios/
 .omc/
 .worktrees/
 
+# Supabase CLI temp state
+supabase/.temp/
+
 # PowerSync worker assets copied by powersync-web copy-assets (generated)
 apps/web/public/@powersync/
 

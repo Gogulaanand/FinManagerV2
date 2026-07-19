@@ -5,14 +5,14 @@ Mandate from the owner: assess honestly whether the app can carry a subscription
 
 ## Cross-doc dependencies
 
-| Dependency | Produced by | Consumed by |
-| --- | --- | --- |
-| Working signup email (D-024) | Phase 8a / verified 9b | Any external user, free or paid |
-| Deployed web + native mobile build | Phase 9b / 9c | Any external user |
-| Persistent encrypted mobile storage | Phase 9c | Credibility of the privacy pitch |
-| Atomic `ai_usage` RPC (improvements I1 item #1) | plan-improvements.md | Path B per-plan AI budgets |
-| Real settings page (web) | Phase 8b | The "Support" surface |
-| DPDP-compliant privacy policy | Write during 9d | Any external user |
+| Dependency                                      | Produced by            | Consumed by                      |
+| ----------------------------------------------- | ---------------------- | -------------------------------- |
+| Working signup email (D-024)                    | Phase 8a / verified 9b | Any external user, free or paid  |
+| Deployed web + native mobile build              | Phase 9b / 9c          | Any external user                |
+| Persistent encrypted mobile storage             | Phase 9c               | Credibility of the privacy pitch |
+| Atomic `ai_usage` RPC (improvements I1 item #1) | plan-improvements.md   | Path B per-plan AI budgets       |
+| Real settings page (web)                        | Phase 8b               | The "Support" surface            |
+| DPDP-compliant privacy policy                   | Write during 9d        | Any external user                |
 
 ---
 

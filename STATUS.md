@@ -5,12 +5,12 @@ Last updated: 2026-07-19 (Phase 5.3 and Phase 7 fully tested and committed; Verc
 ## Current State
 
 - Phase 5.3 (UX simplification) and Phase 7 (AI Insights) are both Done.
-All automated tests pass (`CI=true pnpm turbo run build test lint typecheck` green) and both phases have been manually verified.
-Phase 7 backend is deployed to Supabase `vkivzhbckfsjtvzatuiz`: migration `20260719000004` applied, `ai-insights` Edge Function live (v1, ACTIVE), `ANTHROPIC_API_KEY` set, PowerSync `ai_summaries` rule published.
+  All automated tests pass (`CI=true pnpm turbo run build test lint typecheck` green) and both phases have been manually verified.
+  Phase 7 backend is deployed to Supabase `vkivzhbckfsjtvzatuiz`: migration `20260719000004` applied, `ai-insights` Edge Function live (v1, ACTIVE), `ANTHROPIC_API_KEY` set, PowerSync `ai_summaries` rule published.
 - The web app is connected to Vercel (`fin-manager-web`).
-The build passes but the app does not load yet - the three `NEXT_PUBLIC_*` env vars have not been set in Vercel (see HANDOFF.md for the exact values and setup steps).
+  The build passes but the app does not load yet - the three `NEXT_PUBLIC_*` env vars have not been set in Vercel (see HANDOFF.md for the exact values and setup steps).
 - Phases 0-7 are all done.
-The ordered backlog for Phase 8+ is: correctness sweep (plan-improvements.md), mobile nav / month-picker UX (plan-mobile-nav-and-month-picker.md), Phase 8 dead-man switch (plan-phase8-deadman-switch.md), Phase 9 hardening + release (plan-phase9-hardening-release.md), then monetization/donations.
+  The ordered backlog for Phase 8+ is: correctness sweep (plan-improvements.md), mobile nav / month-picker UX (plan-mobile-nav-and-month-picker.md), Phase 8 dead-man switch (plan-phase8-deadman-switch.md), Phase 9 hardening + release (plan-phase9-hardening-release.md), then monetization/donations.
 
 ## Next Up
 

@@ -20,11 +20,11 @@ The GitHub repo is linked to Vercel (`fin-manager-web`) and the build passes - b
 
 1. In the Vercel project dashboard > Settings > Environment Variables, add all three variables (all environments):
 
-   | Variable | Value |
-   |---|---|
-   | `NEXT_PUBLIC_SUPABASE_URL` | `https://vkivzhbckfsjtvzatuiz.supabase.co` |
-   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `sb_publishable_nwtm1eYDVnXoYzFUbhZJwg_oyEe-jUc` |
-   | `NEXT_PUBLIC_POWERSYNC_URL` | `https://6a5b0b247f33bac37ef7cefc.powersync.journeyapps.com` |
+   | Variable                        | Value                                                        |
+   | ------------------------------- | ------------------------------------------------------------ |
+   | `NEXT_PUBLIC_SUPABASE_URL`      | `https://vkivzhbckfsjtvzatuiz.supabase.co`                   |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `sb_publishable_nwtm1eYDVnXoYzFUbhZJwg_oyEe-jUc`             |
+   | `NEXT_PUBLIC_POWERSYNC_URL`     | `https://6a5b0b247f33bac37ef7cefc.powersync.journeyapps.com` |
 
 2. In Supabase dashboard > Authentication > URL Configuration, add the Vercel production URL (e.g. `https://fin-manager-web.vercel.app`) to **Redirect URLs** so OAuth / magic-link auth works from the deployed app.
 

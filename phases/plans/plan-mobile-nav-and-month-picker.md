@@ -8,11 +8,11 @@ Sub-phase B resolves the carried-over item "Expenses arbitrary month/year naviga
 
 ## Cross-doc dependencies
 
-| Dependency | Produced by | Consumed by |
-| --- | --- | --- |
-| Core month helpers (`packages/core/src/expenses/month.ts`) | Sub-phase B | Improvements I2 (dedup pattern), both platform expense libs |
-| Mobile notice store (`apps/mobile/lib/notice.ts`) | Sub-phase A | Any future toast usage |
-| Improvements item #6 (duplicated `shiftMonth`/`monthNow`) | Retired by sub-phase B | plan-improvements.md |
+| Dependency                                                 | Produced by            | Consumed by                                                 |
+| ---------------------------------------------------------- | ---------------------- | ----------------------------------------------------------- |
+| Core month helpers (`packages/core/src/expenses/month.ts`) | Sub-phase B            | Improvements I2 (dedup pattern), both platform expense libs |
+| Mobile notice store (`apps/mobile/lib/notice.ts`)          | Sub-phase A            | Any future toast usage                                      |
+| Improvements item #6 (duplicated `shiftMonth`/`monthNow`)  | Retired by sub-phase B | plan-improvements.md                                        |
 
 The improvements plan (plan-improvements.md) recommends running its I1 correctness sweep before this work because I1 fixes live bugs.
 That ordering is a recommendation; this plan has no hard dependency on I1.
@@ -62,14 +62,14 @@ We choose gesture consistency over that convention; if a sheet feel is ever want
 
 ### Route map
 
-| New route | Renders | Params | Replaces |
-| --- | --- | --- | --- |
-| `app/transaction/new.tsx` | `MobileTransactionForm` | none | `expenses.tsx` `formOpen` (add) |
-| `app/transaction/[id].tsx` | `MobileTransactionForm` | `id` of transaction to edit | `expenses.tsx` `editingId` + `formOpen` |
-| `app/goal/new.tsx` | `MobileGoalForm` | none | `goals.tsx` `showForm` (add) |
-| `app/goal/[id].tsx` | `MobileGoalForm` | `id` of goal to edit | `goals.tsx` `editingId` + `showForm` |
-| `app/holding/new.tsx` | `MobileHoldingForm` | none | `portfolio.tsx` `showForm` |
-| `app/budget/index.tsx` | `MobileBudgetForm` (extracted) | none | `expenses.tsx` `budgetOpen` |
+| New route                  | Renders                        | Params                      | Replaces                                |
+| -------------------------- | ------------------------------ | --------------------------- | --------------------------------------- |
+| `app/transaction/new.tsx`  | `MobileTransactionForm`        | none                        | `expenses.tsx` `formOpen` (add)         |
+| `app/transaction/[id].tsx` | `MobileTransactionForm`        | `id` of transaction to edit | `expenses.tsx` `editingId` + `formOpen` |
+| `app/goal/new.tsx`         | `MobileGoalForm`               | none                        | `goals.tsx` `showForm` (add)            |
+| `app/goal/[id].tsx`        | `MobileGoalForm`               | `id` of goal to edit        | `goals.tsx` `editingId` + `showForm`    |
+| `app/holding/new.tsx`      | `MobileHoldingForm`            | none                        | `portfolio.tsx` `showForm`              |
+| `app/budget/index.tsx`     | `MobileBudgetForm` (extracted) | none                        | `expenses.tsx` `budgetOpen`             |
 
 Each route file follows the `app/holding/[id].tsx` pattern: read `useLocalSearchParams`, call the shared hook (`useExpenses` / `useGoals` / `usePortfolio`), resolve `initial` from the hook's live arrays, and pass `onSave` that awaits the repo save, sets the notice, and calls `router.back()`.
 Edit routes where the id is not yet found (sync race on a cold start) render a brief loading state and fall back to `router.back()` if it never resolves.
