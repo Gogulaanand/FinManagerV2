@@ -1,35 +1,31 @@
-import { formatChoiceLabel, fxRateToInrForCurrency } from '@finmanager/core';
+import { EVENT_KIND_LABELS, allowedEventKinds, fxRateToInrForCurrency } from '@finmanager/core';
 import type { Holding, HoldingEvent, HoldingEventKind } from '@finmanager/schema';
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
+import { AmountKeypad } from '../expenses/amount-keypad';
 import { Card, CardTitle } from '../card';
 import { Choice } from '../choice';
 import { Field } from '../field';
 
-const kinds: readonly HoldingEventKind[] = [
-  'buy',
-  'sell',
-  'vest',
-  'exercise',
-  'dividend',
-  'interest',
-  'contribution',
-  'withdrawal',
-];
-
 export function MobileHoldingEventForm({
-  holdings,
+  holding,
   onSave,
 }: {
-  readonly holdings: readonly Holding[];
+  readonly holding: Holding;
   readonly onSave: (event: HoldingEvent) => Promise<void>;
 }) {
-  const [holdingId, setHoldingId] = useState(holdings[0]?.id ?? '');
-  const [kind, setKind] = useState<HoldingEventKind>('buy');
+  const kinds = allowedEventKinds(holding.type);
+  const [kind, setKind] = useState<HoldingEventKind>(kinds[0]!);
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState('INR');
-  const [fxRate, setFxRate] = useState('1');
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [occurredOn, setOccurredOn] = useState(new Date().toISOString().slice(0, 10));
+  const [quantity, setQuantity] = useState('');
+  const [price, setPrice] = useState('');
+  const [fxRate, setFxRate] = useState(
+    String(holding.manualFxRateToInr ?? holding.automaticPriceFxRateToInr ?? 1),
+  );
   const [error, setError] = useState<string | null>(null);
   async function submit() {
     const absolute = Math.abs(Number(amount) || 0);
@@ -40,14 +36,14 @@ export function MobileHoldingEventForm({
         : absolute;
     try {
       await onSave({
-        holdingId,
+        holdingId: holding.id!,
         kind,
-        occurredOn: new Date().toISOString().slice(0, 10),
-        quantity: null,
-        price: null,
+        occurredOn,
+        quantity: quantity ? Number(quantity) : null,
+        price: price ? Number(price) : null,
         amount: signed,
-        currency: currency as HoldingEvent['currency'],
-        fxRateToInr: fxRateToInrForCurrency(currency, fxRate),
+        currency: holding.currency,
+        fxRateToInr: fxRateToInrForCurrency(holding.currency, fxRate),
         note: null,
         importHash: null,
       });
@@ -60,62 +56,86 @@ export function MobileHoldingEventForm({
   return (
     <Card>
       <CardTitle>Add event</CardTitle>
-      {holdings.length === 0 ? (
-        <Text className="mt-3 font-body text-body-md text-foreground-muted">
-          Add a holding first.
-        </Text>
-      ) : (
-        <View className="mt-3 gap-3">
-          <Choice
-            label="Holding"
-            value={holdingId}
-            options={holdings.map((holding) => ({ value: holding.id!, label: holding.name }))}
-            onChange={setHoldingId}
-          />
-          <Choice
-            label="Event kind"
-            value={kind}
-            options={kinds.map((value) => ({ value, label: formatChoiceLabel(value) }))}
-            onChange={setKind}
-            hint={kinds.map(formatChoiceLabel).join(' · ')}
-          />
-          <Field label="Amount (₹)">
-            <TextInput
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="decimal-pad"
-              className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-            />
-          </Field>
-          <Choice
-            label="Currency"
-            value={currency}
-            options={['INR', 'USD', 'EUR', 'GBP'].map((value) => ({ value, label: value }))}
-            onChange={setCurrency}
-            hint="INR, USD, EUR, or GBP"
-          />
-          {currency !== 'INR' ? (
-            <Field label="FX rate to INR">
-              <TextInput
-                value={fxRate}
-                onChangeText={setFxRate}
-                keyboardType="decimal-pad"
-                className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-              />
-            </Field>
-          ) : null}
-          {error ? <Text className="font-body text-caption text-loss">{error}</Text> : null}
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => void submit()}
-            className="rounded-md bg-primary px-4 py-3"
-          >
-            <Text className="text-center font-body text-label text-primary-foreground">
-              Save event
+      <View className="mt-3 gap-3">
+        {!detailsOpen ? (
+          <>
+            <Text className="text-center font-display text-display-md text-foreground">
+              {holding.currency} {amount || '0'}
             </Text>
-          </Pressable>
-        </View>
-      )}
+            <AmountKeypad
+              value={amount}
+              onChange={setAmount}
+              onSubmit={() => setDetailsOpen(true)}
+            />
+          </>
+        ) : (
+          <>
+            <Choice
+              label="Event kind"
+              value={kind}
+              options={kinds.map((value) => ({ value, label: EVENT_KIND_LABELS[value] }))}
+              onChange={setKind}
+            />
+            <Text className="font-body text-body-md text-foreground-muted">
+              Amount: {holding.currency} {amount || '0'}
+            </Text>
+            {holding.currency !== 'INR' ? (
+              <Field label="FX rate to INR">
+                <TextInput
+                  value={fxRate}
+                  onChangeText={setFxRate}
+                  keyboardType="decimal-pad"
+                  className="h-11 rounded-md border border-border bg-background px-3 text-foreground"
+                />
+              </Field>
+            ) : null}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: moreOpen }}
+              onPress={() => setMoreOpen((open) => !open)}
+              className="rounded-md bg-surface-muted px-3 py-3"
+            >
+              <Text className="text-foreground">More options</Text>
+            </Pressable>
+            {moreOpen ? (
+              <View className="gap-3">
+                <Field label="Date">
+                  <TextInput
+                    value={occurredOn}
+                    onChangeText={setOccurredOn}
+                    placeholder="YYYY-MM-DD"
+                    className="h-11 rounded-md border border-border bg-background px-3 text-foreground"
+                  />
+                </Field>
+                <Field label="Quantity">
+                  <TextInput
+                    value={quantity}
+                    onChangeText={setQuantity}
+                    keyboardType="decimal-pad"
+                    className="h-11 rounded-md border border-border bg-background px-3 text-foreground"
+                  />
+                </Field>
+                <Field label="Price">
+                  <TextInput
+                    value={price}
+                    onChangeText={setPrice}
+                    keyboardType="decimal-pad"
+                    className="h-11 rounded-md border border-border bg-background px-3 text-foreground"
+                  />
+                </Field>
+              </View>
+            ) : null}
+            {error ? <Text className="text-caption text-loss">{error}</Text> : null}
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => void submit()}
+              className="rounded-md bg-primary px-4 py-3"
+            >
+              <Text className="text-center text-primary-foreground">Save event</Text>
+            </Pressable>
+          </>
+        )}
+      </View>
     </Card>
   );
 }

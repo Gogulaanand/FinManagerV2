@@ -3,7 +3,14 @@ import { describe, expect, it } from 'vitest';
 
 import type { Budget, CsvImportRow } from '@finmanager/schema';
 
-import { commitCsvImport, ensureRecurringThrough, saveBudget } from './expenses';
+import {
+  TRANSACTIONS_MONTH_COUNT_QUERY,
+  TRANSACTIONS_MONTH_PAGE_QUERY,
+  TRANSACTIONS_WINDOW_QUERY,
+  commitCsvImport,
+  ensureRecurringThrough,
+  saveBudget,
+} from './expenses';
 
 interface Statement {
   readonly sql: string;
@@ -69,6 +76,46 @@ function fakeDb(initialRows: readonly Record<string, unknown>[] = []) {
       if (sql.startsWith('SELECT id FROM transactions')) {
         const hash = String(params[1]);
         return { rows: [...state.values()].filter((row) => row.import_hash === hash) };
+      }
+      if (sql === TRANSACTIONS_WINDOW_QUERY) {
+        const [start, endExclusive] = params.map(String);
+        return {
+          rows: [...state.values()]
+            .filter(
+              (row) => String(row.occurred_on) >= start! && String(row.occurred_on) < endExclusive!,
+            )
+            .sort((left, right) =>
+              `${String(right.occurred_on)}:${String(right.created_at)}`.localeCompare(
+                `${String(left.occurred_on)}:${String(left.created_at)}`,
+              ),
+            ),
+        };
+      }
+      if (sql === TRANSACTIONS_MONTH_PAGE_QUERY) {
+        const [start, endExclusive, limit] = params;
+        return {
+          rows: [...state.values()]
+            .filter(
+              (row) =>
+                String(row.occurred_on) >= String(start) &&
+                String(row.occurred_on) < String(endExclusive),
+            )
+            .sort((left, right) =>
+              `${String(right.occurred_on)}:${String(right.created_at)}`.localeCompare(
+                `${String(left.occurred_on)}:${String(left.created_at)}`,
+              ),
+            )
+            .slice(0, Number(limit)),
+        };
+      }
+      if (sql === TRANSACTIONS_MONTH_COUNT_QUERY) {
+        const [start, endExclusive] = params;
+        const count = [...state.values()].filter(
+          (row) =>
+            String(row.occurred_on) >= String(start) &&
+            String(row.occurred_on) < String(endExclusive),
+        ).length;
+        return { rows: [{ count }] };
       }
       if (sql.startsWith('SELECT occurrence_key')) {
         const requestedRecurringId = String(params[1]);
@@ -174,6 +221,29 @@ function fakeDb(initialRows: readonly Record<string, unknown>[] = []) {
 }
 
 describe('expense repository integration paths', () => {
+  it('windows, orders, limits, and counts a large transaction set', async () => {
+    const rows = Array.from({ length: 120 }, (_, index) => {
+      const month = index < 60 ? '07' : index < 100 ? '06' : '01';
+      const day = String((index % 28) + 1).padStart(2, '0');
+      return {
+        id: `transaction-${String(index).padStart(3, '0')}`,
+        occurred_on: `2026-${month}-${day}`,
+        created_at: `2026-${month}-${day}T${String(index % 24).padStart(2, '0')}:00:00.000Z`,
+      };
+    });
+    const db = fakeDb(rows);
+
+    const window = await db.execute(TRANSACTIONS_WINDOW_QUERY, ['2026-02-01', '2026-08-01']);
+    expect(window.rows?._array ?? window.rows).toHaveLength(100);
+    const page = await db.execute(TRANSACTIONS_MONTH_PAGE_QUERY, ['2026-07-01', '2026-08-01', 50]);
+    const pageRows = (page.rows?._array ?? page.rows) as readonly Record<string, unknown>[];
+    expect(pageRows).toHaveLength(50);
+    expect(pageRows[0]?.occurred_on).toBe('2026-07-28');
+    const count = await db.execute(TRANSACTIONS_MONTH_COUNT_QUERY, ['2026-07-01', '2026-08-01']);
+    const countRows = (count.rows?._array ?? count.rows) as readonly Record<string, unknown>[];
+    expect(countRows[0]?.count).toBe(60);
+  });
+
   it('imports the same CSV once and skips it on the second pass', async () => {
     const db = fakeDb();
     const rows = [importRow(2, 'bank-row-2'), importRow(3, 'bank-row-3')];

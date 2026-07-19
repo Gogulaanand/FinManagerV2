@@ -285,3 +285,19 @@ Consequence: added `monthly_investment double precision` to `fire_settings` (mig
 The Goals workspace is split into an outer gate (`GoalsWorkspace` / mobile `GoalsScreen`) that reads only `useStatus()` + auth, and an inner component (`GoalsWorkspaceContent` / `GoalsContent`) that owns the `useQuery` hooks. The gate holds the skeleton until `status.hasSynced` is true (signed-out users skip the wait), so the queries mount against a populated local DB.
 Why: `db.connect()` only runs after `onAuthStateChange` resolves the session, which is after the page first mounts. Queries mounted during that initial-connect window attach to an empty local DB, resolve to `[]`, and render zeros - and the live queries do not re-emit the rows that stream in afterwards, so only a remount (e.g. navigating away and back) fixes it. Gating render (an early `if (loading)` return) is not enough because the hooks still mount; the mount itself must be deferred.
 Consequence: headline FIRE tiles and stored FIRE settings render correct values on first load. The same first-load-zeros pattern still exists latently in the Portfolio and Expenses workspaces (they are entered after sync in practice); apply the same split there if it surfaces.
+
+## D-039: expense pagination uses a growing live-query LIMIT (2026-07-19)
+
+Month transaction lists use one month-bounded PowerSync live query whose LIMIT grows by 50, plus a separate month count query. OFFSET pages are rejected because a live insert at the top would shift offsets and cause duplicates or omissions. The six-month unbounded window remains the source for trends and full-month aggregates, so list pagination cannot flatten charts or undercount summaries.
+
+## D-040: mobile expenses use one owning FlatList, not FlashList or nested scrolling (2026-07-19)
+
+The transaction `FlatList` owns the entire expense screen scroll; summaries and controls are its header, while budgets, collapsed Accounts/Categories, and charts are its footer. Hundreds of simple monthly rows do not justify a new FlashList native dependency, and a nested max-height list would compete with the outer gesture in Expo Go.
+
+## D-041: portfolio navigation is holding-centric via dedicated routes (2026-07-19)
+
+Web uses `/portfolio/[holdingId]` and mobile uses `/holding/[id]` as a sibling root Stack screen. The hubs are summaries and launch points; holding detail owns edit, contextual event/value actions, and the merged timeline. Expandable hub panels were rejected because they retain the original form-heavy workspace and make mobile navigation/scroll state harder to understand.
+
+## D-042: global portfolio history UI is retained as dead component code (2026-07-19)
+
+The portfolio hubs no longer import or render the global event form, valuation form, ledger history card, or valuation history card. The form components remain and are reworked for contextual reuse on holding detail; no schema or event-kind capability was removed. This intentionally follows the owner decision to simplify render paths without deleting reusable or potentially recoverable code.

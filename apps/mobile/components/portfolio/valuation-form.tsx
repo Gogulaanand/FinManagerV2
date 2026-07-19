@@ -4,29 +4,32 @@ import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { Card, CardTitle } from '../card';
-import { Choice } from '../choice';
+import { AmountKeypad } from '../expenses/amount-keypad';
 import { Field } from '../field';
 
 export function MobileValuationForm({
-  holdings,
+  holding,
   onSave,
 }: {
-  readonly holdings: readonly Holding[];
+  readonly holding: Holding;
   readonly onSave: (valuation: Valuation) => Promise<void>;
 }) {
-  const [holdingId, setHoldingId] = useState(holdings[0]?.id ?? '');
   const [value, setValue] = useState('');
-  const [currency, setCurrency] = useState('INR');
-  const [fxRate, setFxRate] = useState('1');
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [asOf, setAsOf] = useState(new Date().toISOString().slice(0, 10));
+  const [fxRate, setFxRate] = useState(
+    String(holding.manualFxRateToInr ?? holding.automaticPriceFxRateToInr ?? 1),
+  );
   const [error, setError] = useState<string | null>(null);
   async function submit() {
     try {
       await onSave({
-        holdingId,
-        asOf: new Date().toISOString().slice(0, 10),
+        holdingId: holding.id!,
+        asOf,
         value: Number(value),
-        currency: currency as Valuation['currency'],
-        fxRateToInr: fxRateToInrForCurrency(currency, fxRate),
+        currency: holding.currency,
+        fxRateToInr: fxRateToInrForCurrency(holding.currency, fxRate),
         source: 'manual',
       });
       setValue('');
@@ -37,56 +40,59 @@ export function MobileValuationForm({
   }
   return (
     <Card>
-      <CardTitle>Manual valuation</CardTitle>
-      {holdings.length === 0 ? (
-        <Text className="mt-3 font-body text-body-md text-foreground-muted">
-          Add a holding first.
-        </Text>
-      ) : (
-        <View className="mt-3 gap-3">
-          <Choice
-            label="Holding"
-            value={holdingId}
-            options={holdings.map((holding) => ({ value: holding.id!, label: holding.name }))}
-            onChange={setHoldingId}
-          />
-          <Field label="Value (₹)">
-            <TextInput
-              value={value}
-              onChangeText={setValue}
-              keyboardType="decimal-pad"
-              className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-            />
-          </Field>
-          <Choice
-            label="Currency"
-            value={currency}
-            options={['INR', 'USD', 'EUR', 'GBP'].map((value) => ({ value, label: value }))}
-            onChange={setCurrency}
-            hint="INR, USD, EUR, or GBP"
-          />
-          {currency !== 'INR' ? (
-            <Field label="FX rate to INR">
-              <TextInput
-                value={fxRate}
-                onChangeText={setFxRate}
-                keyboardType="decimal-pad"
-                className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-              />
-            </Field>
-          ) : null}
-          {error ? <Text className="font-body text-caption text-loss">{error}</Text> : null}
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => void submit()}
-            className="rounded-md bg-primary px-4 py-3"
-          >
-            <Text className="text-center font-body text-label text-primary-foreground">
-              Save valuation
+      <CardTitle>Update value</CardTitle>
+      <View className="mt-3 gap-3">
+        {!detailsOpen ? (
+          <>
+            <Text className="text-center font-display text-display-md text-foreground">
+              {holding.currency} {value || '0'}
             </Text>
-          </Pressable>
-        </View>
-      )}
+            <AmountKeypad value={value} onChange={setValue} onSubmit={() => setDetailsOpen(true)} />
+          </>
+        ) : (
+          <>
+            <Text className="font-body text-body-md text-foreground-muted">
+              Value: {holding.currency} {value || '0'}
+            </Text>
+            {holding.currency !== 'INR' ? (
+              <Field label="FX rate to INR">
+                <TextInput
+                  value={fxRate}
+                  onChangeText={setFxRate}
+                  keyboardType="decimal-pad"
+                  className="h-11 rounded-md border border-border bg-background px-3 text-foreground"
+                />
+              </Field>
+            ) : null}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: moreOpen }}
+              onPress={() => setMoreOpen((open) => !open)}
+              className="rounded-md bg-surface-muted px-3 py-3"
+            >
+              <Text className="text-foreground">More options</Text>
+            </Pressable>
+            {moreOpen ? (
+              <Field label="As of date">
+                <TextInput
+                  value={asOf}
+                  onChangeText={setAsOf}
+                  placeholder="YYYY-MM-DD"
+                  className="h-11 rounded-md border border-border bg-background px-3 text-foreground"
+                />
+              </Field>
+            ) : null}
+            {error ? <Text className="text-caption text-loss">{error}</Text> : null}
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => void submit()}
+              className="rounded-md bg-primary px-4 py-3"
+            >
+              <Text className="text-center text-primary-foreground">Update value</Text>
+            </Pressable>
+          </>
+        )}
+      </View>
     </Card>
   );
 }

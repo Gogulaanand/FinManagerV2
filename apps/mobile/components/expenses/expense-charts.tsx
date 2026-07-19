@@ -1,6 +1,7 @@
 import { Bar, CartesianChart, Line, Pie, PolarChart } from 'victory-native';
 import { dark, light } from '@finmanager/tokens';
-import { Text, useColorScheme, View } from 'react-native';
+import { useState } from 'react';
+import { type LayoutChangeEvent, Text, useColorScheme, View } from 'react-native';
 
 import type { ExpensesApi } from '../../lib/expenses';
 import { Card, CardTitle } from '../card';
@@ -11,7 +12,17 @@ export interface MobileExpenseChartsProps {
   readonly budgetChart: ExpensesApi['budgetChart'];
 }
 
-const chartSize = { width: 340, height: 220 } as const;
+function useContainerWidth() {
+  const [width, setWidth] = useState(0);
+  return {
+    width,
+    onLayout: (event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width),
+  };
+}
+
+function clamp(minimum: number, value: number, maximum: number): number {
+  return Math.min(maximum, Math.max(minimum, value));
+}
 
 function EmptyChart({ children }: { children: string }) {
   return <Text className="py-8 font-body text-body-md text-foreground-muted">{children}</Text>;
@@ -24,6 +35,9 @@ export function MobileExpenseCharts({
 }: MobileExpenseChartsProps) {
   const scheme = useColorScheme();
   const colors = scheme === 'dark' ? dark : light;
+  const container = useContainerWidth();
+  const chartSize = { width: container.width, height: clamp(180, container.width * 0.58, 240) };
+  const pieSize = Math.min(container.width, 240);
   const categoryData = categoryBreakdown.map((item) => ({
     label: item.label,
     value: item.amount,
@@ -31,10 +45,12 @@ export function MobileExpenseCharts({
   }));
 
   return (
-    <View className="gap-4">
+    <View className="gap-4" onLayout={container.onLayout}>
       <Card>
         <CardTitle>Monthly trend</CardTitle>
-        {monthlyTrend.length === 0 ? (
+        {container.width === 0 ? (
+          <View className="h-56" />
+        ) : monthlyTrend.length === 0 ? (
           <EmptyChart>Add transactions to see your trend.</EmptyChart>
         ) : (
           <View className="mt-3 overflow-hidden rounded-md bg-background">
@@ -62,7 +78,9 @@ export function MobileExpenseCharts({
 
       <Card>
         <CardTitle>Category breakdown</CardTitle>
-        {categoryData.length === 0 ? (
+        {container.width === 0 ? (
+          <View className="h-56" />
+        ) : categoryData.length === 0 ? (
           <EmptyChart>No spending in this month.</EmptyChart>
         ) : (
           <View className="items-center">
@@ -71,7 +89,7 @@ export function MobileExpenseCharts({
               labelKey="label"
               valueKey="value"
               colorKey="color"
-              explicitSize={chartSize}
+              explicitSize={{ width: pieSize, height: pieSize }}
             >
               <Pie.Chart innerRadius="55%">{() => <Pie.Slice />}</Pie.Chart>
             </PolarChart>
@@ -102,7 +120,9 @@ export function MobileExpenseCharts({
 
       <Card>
         <CardTitle>Budget vs actual</CardTitle>
-        {budgetChart.length === 0 ? (
+        {container.width === 0 ? (
+          <View className="h-56" />
+        ) : budgetChart.length === 0 ? (
           <EmptyChart>Set a category budget to compare it with actual spending.</EmptyChart>
         ) : (
           <View className="mt-3 overflow-hidden rounded-md bg-background">

@@ -70,22 +70,22 @@ export function MobileHoldingForm({
   const [quantity, setQuantity] = useState(String(initial?.quantity ?? ''));
   const [value, setValue] = useState(String(initial?.manualValueOverride ?? ''));
   const [fxRate, setFxRate] = useState(String(initial?.manualFxRateToInr ?? ''));
-  const [metadataText, setMetadataText] = useState(
-    initial?.metadata ? JSON.stringify(initial.metadata) : '',
+  const [metadataDraft, setMetadataDraft] = useState<HoldingMetadata | null>(
+    initial?.metadata ?? null,
   );
   const [error, setError] = useState<string | null>(null);
   async function submit() {
     try {
       const quantityValue = Number(quantity) || 0;
-      const metadata = metadataText.trim()
-        ? HoldingMetadataSchema.parse(JSON.parse(metadataText) as unknown)
-        : metadataFor(
-            type as HoldingType,
-            name,
-            quantityValue,
-            initial?.avgCost ?? null,
-            initial?.metadata ?? null,
-          );
+      const metadata = HoldingMetadataSchema.nullable().parse(
+        metadataFor(
+          type as HoldingType,
+          name,
+          quantityValue,
+          initial?.avgCost ?? null,
+          metadataDraft,
+        ),
+      );
       await onSave({
         id: initial?.id,
         userId: initial?.userId,
@@ -194,23 +194,192 @@ export function MobileHoldingForm({
             />
           </Field>
         ) : null}
-        {type === 'rsu' ||
-        type === 'esop' ||
-        type === 'real_estate' ||
-        type === 'epf' ||
-        type === 'ppf' ||
-        type === 'nps' ? (
-          <Field label="Special-asset metadata JSON" hint="Paste the strict object for this type">
-            <TextInput
-              value={metadataText}
-              onChangeText={setMetadataText}
-              multiline
-              textAlignVertical="top"
-              className="min-h-28 rounded-md border border-border bg-background px-3 py-3 font-body text-caption text-foreground"
-              placeholder='{"kind":"rsu","grantDate":"2025-01-01","grantPrice":10,"sourceCurrency":"USD","vestSchedule":[{"date":"2025-07-01","quantity":10,"vested":true}]}'
-            />
-          </Field>
-        ) : null}
+        {(() => {
+          const metadata = metadataFor(
+            type as HoldingType,
+            name,
+            Number(quantity) || 0,
+            initial?.avgCost ?? null,
+            metadataDraft,
+          );
+          const inputClass =
+            'h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground';
+          if (metadata?.kind === 'rsu' || metadata?.kind === 'esop') {
+            const tranche = metadata.vestSchedule[0]!;
+            const update = (next: typeof metadata) => setMetadataDraft(next);
+            return (
+              <View className="gap-3 rounded-md border border-border p-3">
+                <CardTitle>{metadata.kind.toUpperCase()} grant</CardTitle>
+                <Field label="Grant date">
+                  <TextInput
+                    value={metadata.grantDate}
+                    onChangeText={(grantDate) => update({ ...metadata, grantDate })}
+                    placeholder="YYYY-MM-DD"
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Grant price">
+                  <TextInput
+                    value={String(metadata.grantPrice)}
+                    onChangeText={(value) => update({ ...metadata, grantPrice: Number(value) })}
+                    keyboardType="decimal-pad"
+                    className={inputClass}
+                  />
+                </Field>
+                <Choice
+                  label="Source currency"
+                  value={metadata.sourceCurrency}
+                  options={['INR', 'USD', 'EUR', 'GBP'].map((value) => ({ value, label: value }))}
+                  onChange={(sourceCurrency) =>
+                    update({ ...metadata, sourceCurrency: sourceCurrency as Holding['currency'] })
+                  }
+                />
+                <Field label="Vest date">
+                  <TextInput
+                    value={tranche.date}
+                    onChangeText={(date) =>
+                      update({
+                        ...metadata,
+                        vestSchedule: [{ ...tranche, date }, ...metadata.vestSchedule.slice(1)],
+                      })
+                    }
+                    placeholder="YYYY-MM-DD"
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Vest quantity">
+                  <TextInput
+                    value={String(tranche.quantity)}
+                    onChangeText={(value) =>
+                      update({
+                        ...metadata,
+                        vestSchedule: [
+                          { ...tranche, quantity: Number(value) },
+                          ...metadata.vestSchedule.slice(1),
+                        ],
+                      })
+                    }
+                    keyboardType="decimal-pad"
+                    className={inputClass}
+                  />
+                </Field>
+                <Pressable
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: tranche.vested }}
+                  onPress={() =>
+                    update({
+                      ...metadata,
+                      vestSchedule: [
+                        { ...tranche, vested: !tranche.vested },
+                        ...metadata.vestSchedule.slice(1),
+                      ],
+                    })
+                  }
+                  className="rounded-md bg-surface-muted p-3"
+                >
+                  <Text className="text-foreground">
+                    {tranche.vested ? '✓ Vested' : 'Not vested'}
+                  </Text>
+                </Pressable>
+              </View>
+            );
+          }
+          if (metadata?.kind === 'real_estate') {
+            const update = (next: typeof metadata) => setMetadataDraft(next);
+            return (
+              <View className="gap-3 rounded-md border border-border p-3">
+                <CardTitle>Property details</CardTitle>
+                <Field label="Purchase date">
+                  <TextInput
+                    value={metadata.purchaseDate ?? ''}
+                    onChangeText={(purchaseDate) =>
+                      update({ ...metadata, purchaseDate: purchaseDate || null })
+                    }
+                    placeholder="YYYY-MM-DD"
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Location">
+                  <TextInput
+                    value={metadata.location}
+                    onChangeText={(location) => update({ ...metadata, location })}
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Area (sq ft)">
+                  <TextInput
+                    value={String(metadata.areaSqFt ?? '')}
+                    onChangeText={(value) =>
+                      update({ ...metadata, areaSqFt: value ? Number(value) : null })
+                    }
+                    keyboardType="decimal-pad"
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Valuation source">
+                  <TextInput
+                    value={metadata.valuationSource ?? ''}
+                    onChangeText={(valuationSource) =>
+                      update({ ...metadata, valuationSource: valuationSource || null })
+                    }
+                    className={inputClass}
+                  />
+                </Field>
+              </View>
+            );
+          }
+          if (metadata && ['epf', 'ppf', 'nps'].includes(metadata.kind)) {
+            const retirement = metadata as Extract<
+              HoldingMetadata,
+              { kind: 'epf' | 'ppf' | 'nps' }
+            >;
+            const update = (next: typeof retirement) => setMetadataDraft(next);
+            return (
+              <View className="gap-3 rounded-md border border-border p-3">
+                <CardTitle>Retirement account</CardTitle>
+                <Field label="Masked account number">
+                  <TextInput
+                    value={retirement.accountNumberMasked ?? ''}
+                    onChangeText={(accountNumberMasked) =>
+                      update({ ...retirement, accountNumberMasked: accountNumberMasked || null })
+                    }
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Employer">
+                  <TextInput
+                    value={retirement.employer ?? ''}
+                    onChangeText={(employer) =>
+                      update({ ...retirement, employer: employer || null })
+                    }
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Annual interest rate (%)">
+                  <TextInput
+                    value={String(retirement.annualInterestRate ?? '')}
+                    onChangeText={(value) =>
+                      update({ ...retirement, annualInterestRate: value ? Number(value) : null })
+                    }
+                    keyboardType="decimal-pad"
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Last updated">
+                  <TextInput
+                    value={retirement.lastUpdatedOn ?? ''}
+                    onChangeText={(lastUpdatedOn) =>
+                      update({ ...retirement, lastUpdatedOn: lastUpdatedOn || null })
+                    }
+                    placeholder="YYYY-MM-DD"
+                    className={inputClass}
+                  />
+                </Field>
+              </View>
+            );
+          }
+          return null;
+        })()}
         {error ? <Text className="font-body text-caption text-loss">{error}</Text> : null}
         <View className="flex-row gap-2">
           {onCancel ? (

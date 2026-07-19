@@ -1,8 +1,10 @@
 # Project Status
 
-Last updated: 2026-07-19 (Phase 6 Goals + Retirement + FIRE code complete; added user-settable monthly investment and FIRE required-SIP + gap; repo green).
+Last updated: 2026-07-19 (Phase 5.3 UX simplification implemented and automated checks green; Chrome, Expo Go, and offline verification pending).
 
 ## Current State
+
+- Phase 5.3 UX simplification implementation is committed-ready: holding-centric web/mobile portfolio detail routes, contextual keypad/forms, typed metadata, month-bounded expense pagination, mobile FlatList/collapsibles/responsive charts, and web load-more are implemented. `CI=true pnpm turbo run build test lint` passes 15/15. Interactive Chrome + Expo Go + offline/reconnect verification remains pending, so Phase 5.3 is not yet closed and has no briefing.
 
 - Phase 4 done: **expenses + budgeting**. The shared schema/core/sync layers now power accounts, seeded Indian categories, concrete debit/credit transactions, recurring expansion, monthly budgets, chart series, and generic CSV import with synced per-bank mappings and import-hash deduplication.
 - Phase 5 done (code + Chrome E2E): portfolio holdings, typed metadata, dated FX-aware cash-flow events, XIRR, allocation/net-worth analytics, manual value override precedence, quote provenance, and offline-first CRUD are verified on Chrome with the signed-in test account.
@@ -12,9 +14,9 @@ Last updated: 2026-07-19 (Phase 6 Goals + Retirement + FIRE code complete; added
 
 ## Next Up
 
-Phase 6 code is complete and the repo is green (`build test lint typecheck` + `format:check`).
-Remaining before starting Phase 7: run the interactive Phase 6 checklist (create goals, verify SIP/status, save FIRE settings, offline write + reconnect) on real Chrome and Expo Go.
-Then start **Phase 7 (AI Insights)** using `phases/briefing/phase-6.md`.
+Start the next session with the Chrome scenarios in `phases/phase-5.3-ux-simplification-plan.md`, then run the Expo Go and offline/reconnect scenarios. Fix any observed regressions, rerun the full gate, write `phases/briefing/phase-5.3.md`, and only then close Phase 5.3.
+
+Phase 6's separate interactive checklist (goals, SIP/status, FIRE settings, offline write/reconnect) also remains outstanding before Phase 7 begins.
 
 Carried-over Phase 5 item: Expo Go mobile interactive verification of Phase 4 + Phase 5 remains outstanding (see HANDOFF.md).
 

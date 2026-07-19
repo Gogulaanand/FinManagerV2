@@ -88,8 +88,8 @@ export function HoldingForm({ initial = null, onSave, onCancel }: HoldingFormPro
   const [manualPrice, setManualPrice] = useState(String(initial?.manualPriceOverride ?? ''));
   const [manualValue, setManualValue] = useState(String(initial?.manualValueOverride ?? ''));
   const [manualFx, setManualFx] = useState(String(initial?.manualFxRateToInr ?? ''));
-  const [metadataText, setMetadataText] = useState(
-    initial?.metadata ? JSON.stringify(initial.metadata, null, 2) : '',
+  const [metadataDraft, setMetadataDraft] = useState<Holding['metadata']>(
+    initial?.metadata ?? null,
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -97,9 +97,9 @@ export function HoldingForm({ initial = null, onSave, onCancel }: HoldingFormPro
     try {
       const quantityValue = Number.parseFloat(quantity) || 0;
       const avgCostValue = numberOrNull(avgCost);
-      const metadata = metadataText.trim()
-        ? HoldingMetadataSchema.parse(JSON.parse(metadataText) as unknown)
-        : metadataFor(type, name, quantityValue, avgCostValue, initial?.metadata ?? null);
+      const metadata = HoldingMetadataSchema.nullable().parse(
+        metadataFor(type, name, quantityValue, avgCostValue, metadataDraft),
+      );
       await onSave({
         id: initial?.id,
         userId: initial?.userId,
@@ -234,28 +234,228 @@ export function HoldingForm({ initial = null, onSave, onCancel }: HoldingFormPro
             )}
           </Field>
         ) : null}
-        {type === 'rsu' ||
-        type === 'esop' ||
-        type === 'real_estate' ||
-        type === 'epf' ||
-        type === 'ppf' ||
-        type === 'nps' ? (
-          <Field
-            label="Special-asset metadata (JSON)"
-            hint="Paste the strict metadata object for the selected type; the form validates it before saving."
-          >
-            {(id) => (
-              <textarea
-                id={id}
-                rows={6}
-                value={metadataText}
-                onChange={(event) => setMetadataText(event.target.value)}
-                className="w-full rounded-md border border-border bg-background p-3 font-mono text-caption text-foreground"
-                placeholder='{"kind":"rsu","grantDate":"2025-01-01","grantPrice":10,"sourceCurrency":"USD","vestSchedule":[{"date":"2025-07-01","quantity":10,"vested":true}]}'
-              />
-            )}
-          </Field>
-        ) : null}
+        {(() => {
+          const metadata = metadataFor(
+            type,
+            name,
+            Number(quantity) || 0,
+            numberOrNull(avgCost),
+            metadataDraft,
+          );
+          if (metadata?.kind === 'rsu' || metadata?.kind === 'esop') {
+            const tranche = metadata.vestSchedule[0]!;
+            const update = (next: typeof metadata) => setMetadataDraft(next);
+            return (
+              <div className="grid gap-4 rounded-md border border-border p-4 md:col-span-2 md:grid-cols-2">
+                <CardTitle>{type.toUpperCase()} grant</CardTitle>
+                <span />
+                <Field label="Grant date">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      type="date"
+                      value={metadata.grantDate}
+                      onChange={(event) => update({ ...metadata, grantDate: event.target.value })}
+                    />
+                  )}
+                </Field>
+                <Field label="Grant price">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      type="number"
+                      min="0"
+                      value={metadata.grantPrice}
+                      onChange={(event) =>
+                        update({ ...metadata, grantPrice: Number(event.target.value) })
+                      }
+                    />
+                  )}
+                </Field>
+                <SelectField
+                  label="Source currency"
+                  value={metadata.sourceCurrency}
+                  options={['INR', 'USD', 'EUR', 'GBP'].map((value) => ({ value, label: value }))}
+                  onChange={(value) =>
+                    update({ ...metadata, sourceCurrency: value as Holding['currency'] })
+                  }
+                />
+                <Field label="Vest date">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      type="date"
+                      value={tranche.date}
+                      onChange={(event) =>
+                        update({
+                          ...metadata,
+                          vestSchedule: [
+                            { ...tranche, date: event.target.value },
+                            ...metadata.vestSchedule.slice(1),
+                          ],
+                        })
+                      }
+                    />
+                  )}
+                </Field>
+                <Field label="Vest quantity">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      type="number"
+                      min="0"
+                      value={tranche.quantity}
+                      onChange={(event) =>
+                        update({
+                          ...metadata,
+                          vestSchedule: [
+                            { ...tranche, quantity: Number(event.target.value) },
+                            ...metadata.vestSchedule.slice(1),
+                          ],
+                        })
+                      }
+                    />
+                  )}
+                </Field>
+                <label className="flex items-center gap-2 text-label text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={tranche.vested}
+                    onChange={(event) =>
+                      update({
+                        ...metadata,
+                        vestSchedule: [
+                          { ...tranche, vested: event.target.checked },
+                          ...metadata.vestSchedule.slice(1),
+                        ],
+                      })
+                    }
+                  />{' '}
+                  Vested
+                </label>
+              </div>
+            );
+          }
+          if (metadata?.kind === 'real_estate') {
+            const update = (next: typeof metadata) => setMetadataDraft(next);
+            return (
+              <div className="grid gap-4 rounded-md border border-border p-4 md:col-span-2 md:grid-cols-2">
+                <CardTitle>Property details</CardTitle>
+                <span />
+                <Field label="Purchase date">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      type="date"
+                      value={metadata.purchaseDate ?? ''}
+                      onChange={(event) =>
+                        update({ ...metadata, purchaseDate: event.target.value || null })
+                      }
+                    />
+                  )}
+                </Field>
+                <Field label="Location">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      value={metadata.location}
+                      onChange={(event) => update({ ...metadata, location: event.target.value })}
+                    />
+                  )}
+                </Field>
+                <Field label="Area (sq ft)">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      type="number"
+                      min="0"
+                      value={metadata.areaSqFt ?? ''}
+                      onChange={(event) =>
+                        update({ ...metadata, areaSqFt: numberOrNull(event.target.value) })
+                      }
+                    />
+                  )}
+                </Field>
+                <Field label="Valuation source">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      value={metadata.valuationSource ?? ''}
+                      onChange={(event) =>
+                        update({ ...metadata, valuationSource: event.target.value || null })
+                      }
+                    />
+                  )}
+                </Field>
+              </div>
+            );
+          }
+          if (metadata && ['epf', 'ppf', 'nps'].includes(metadata.kind)) {
+            const retirement = metadata as Extract<
+              NonNullable<Holding['metadata']>,
+              { kind: 'epf' | 'ppf' | 'nps' }
+            >;
+            const update = (next: typeof retirement) => setMetadataDraft(next);
+            return (
+              <div className="grid gap-4 rounded-md border border-border p-4 md:col-span-2 md:grid-cols-2">
+                <CardTitle>Retirement account</CardTitle>
+                <span />
+                <Field label="Masked account number">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      value={retirement.accountNumberMasked ?? ''}
+                      onChange={(event) =>
+                        update({ ...retirement, accountNumberMasked: event.target.value || null })
+                      }
+                    />
+                  )}
+                </Field>
+                <Field label="Employer">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      value={retirement.employer ?? ''}
+                      onChange={(event) =>
+                        update({ ...retirement, employer: event.target.value || null })
+                      }
+                    />
+                  )}
+                </Field>
+                <Field label="Annual interest rate (%)">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={retirement.annualInterestRate ?? ''}
+                      onChange={(event) =>
+                        update({
+                          ...retirement,
+                          annualInterestRate: numberOrNull(event.target.value),
+                        })
+                      }
+                    />
+                  )}
+                </Field>
+                <Field label="Last updated">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      type="date"
+                      value={retirement.lastUpdatedOn ?? ''}
+                      onChange={(event) =>
+                        update({ ...retirement, lastUpdatedOn: event.target.value || null })
+                      }
+                    />
+                  )}
+                </Field>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
       {error ? <p className="mt-3 font-body text-caption text-loss">{error}</p> : null}
       <div className="mt-4 flex gap-2">

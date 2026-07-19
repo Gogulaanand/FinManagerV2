@@ -5,6 +5,30 @@ This file carries mid-phase state between sessions; completed phases live in pha
 
 ---
 
+## Latest Handoff: 2026-07-19 (Phase 5.3, session 1)
+
+### Where we are
+
+Phase 5.3 implementation is complete but interactive verification is intentionally pending. Expenses now use six-month window + month page/count PowerSync queries, growing-LIMIT pagination, full-month aggregates, web Load more, and a mobile owning `FlatList` with memoized rows, collapsed uncapped Accounts/Categories, and measured responsive Victory charts. Portfolio hubs now navigate to dedicated holding detail routes on web and mobile; detail owns contextual event/value/edit forms and a merged deletable timeline. Event kinds use shared labels/asset subsets, mobile event/value entry is keypad-first, and raw special-asset metadata JSON has been replaced with typed fields on both platforms. `CI=true pnpm turbo run build test lint` passed 15/15; standalone web/mobile typecheck and lint passed.
+
+### Exact next action
+
+Open Chrome with the existing signed-in test account and execute the numbered Chrome scenarios under `Pending interactive verification` in `phases/phase-5.3-ux-simplification-plan.md`. Then run its Expo Go and airplane-mode/reconnect scenarios. Record screenshots, counts, timestamps, console errors, and synced row IDs. Fix any failures, rerun the full gate, write `phases/briefing/phase-5.3.md`, update STATUS/HANDOFF, and commit the verification close-out.
+
+### Files in flight
+
+No uncommitted implementation should remain after this handoff commit. Phase 5.3's implementation file union is visible in that commit; the missing phase-end deliverable is `phases/briefing/phase-5.3.md`, deliberately deferred until interactive verification passes.
+
+### Open items / warnings
+
+- Do not mark Phase 5.3 complete from automated checks alone. Chrome, Expo Go, and offline/reconnect evidence are required.
+- Chrome was installed with the ChatGPT extension/native host configured, but was not running during this session; no browser claim was made.
+- Expo Go SQL.js is in-memory. Test offline write/read/reconnect on the mounted screen, not relaunch persistence (D-021).
+- `TRANSACTIONS_QUERY` remains exported because Phase 6 Goals still uses it for trailing expense suggestions; the Phase 5.3 expense hooks no longer use it.
+- Phase 6 interactive verification also remains outstanding and should not be conflated with Phase 5.3 closure.
+
+---
+
 ## Latest Handoff: 2026-07-18 (Phase 6, session 1)
 
 ### Where we are

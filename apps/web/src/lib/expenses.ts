@@ -6,6 +6,8 @@ import {
   calculateBudgetProgress,
   calculateCategoryBreakdown,
   calculateMonthlySummary,
+  monthRange,
+  trendWindowStart,
 } from '@finmanager/core';
 import {
   CsvMappingSetSchema,
@@ -22,7 +24,9 @@ import {
   CATEGORIES_QUERY,
   commitCsvImport as repoCommitCsvImport,
   PROFILE_MAPPINGS_QUERY,
-  TRANSACTIONS_QUERY,
+  TRANSACTIONS_MONTH_COUNT_QUERY,
+  TRANSACTIONS_MONTH_PAGE_QUERY,
+  TRANSACTIONS_WINDOW_QUERY,
   deleteAccount as repoDeleteAccount,
   deleteBudget as repoDeleteBudget,
   deleteCategory as repoDeleteCategory,
@@ -48,6 +52,12 @@ import { useAuth } from '@/components/providers';
 interface ProfileRow {
   readonly csv_mappings: string | null;
 }
+
+interface CountRow {
+  readonly count: number;
+}
+
+const TRANSACTION_PAGE_SIZE = 50;
 
 function monthNow(): string {
   return new Date().toISOString().slice(0, 7);
@@ -83,6 +93,10 @@ export interface ExpensesApi {
   readonly accounts: readonly Account[];
   readonly categories: readonly Category[];
   readonly transactions: readonly Transaction[];
+  readonly monthTransactions: readonly Transaction[];
+  readonly monthTransactionCount: number;
+  readonly hasMoreTransactions: boolean;
+  readonly loadMoreTransactions: () => void;
   readonly budgets: readonly Budget[];
   readonly mappings: CsvMappingSet;
   readonly summary: ReturnType<typeof calculateMonthlySummary>;
@@ -109,15 +123,33 @@ export function useExpenses(): ExpensesApi {
   const { session } = useAuth();
   const userId = session?.user.id ?? null;
   const [month, setMonth] = useState(monthNow);
+  const [pagination, setPagination] = useState({ month, limit: TRANSACTION_PAGE_SIZE });
+  const transactionLimit = pagination.month === month ? pagination.limit : TRANSACTION_PAGE_SIZE;
+  const range = useMemo(() => monthRange(month), [month]);
+  const windowStart = useMemo(() => trendWindowStart(month, 6), [month]);
   const accountsResult = useQuery<Account>(ACCOUNTS_QUERY);
   const categoriesResult = useQuery<Category>(CATEGORIES_QUERY);
-  const transactionsResult = useQuery<Transaction>(TRANSACTIONS_QUERY);
+  const windowTransactionsResult = useQuery<Transaction>(TRANSACTIONS_WINDOW_QUERY, [
+    windowStart,
+    range.endExclusive,
+  ]);
+  const monthTransactionsResult = useQuery<Transaction>(TRANSACTIONS_MONTH_PAGE_QUERY, [
+    range.start,
+    range.endExclusive,
+    transactionLimit,
+  ]);
+  const transactionCountResult = useQuery<CountRow>(TRANSACTIONS_MONTH_COUNT_QUERY, [
+    range.start,
+    range.endExclusive,
+  ]);
   const budgetsResult = useQuery<Budget>(BUDGETS_QUERY);
   const mappingsResult = useQuery<ProfileRow>(PROFILE_MAPPINGS_QUERY);
   const loading = [
     accountsResult.data,
     categoriesResult.data,
-    transactionsResult.data,
+    windowTransactionsResult.data,
+    monthTransactionsResult.data,
+    transactionCountResult.data,
     budgetsResult.data,
     mappingsResult.data,
   ].some((data) => data === undefined);
@@ -130,10 +162,21 @@ export function useExpenses(): ExpensesApi {
     () => mapCategoryRows(rowRecords(categoriesResult.data ?? [])),
     [categoriesResult.data],
   );
-  const transactions = useMemo(
-    () => mapTransactionRows(rowRecords(transactionsResult.data ?? [])),
-    [transactionsResult.data],
+  const windowTransactions = useMemo(
+    () => mapTransactionRows(rowRecords(windowTransactionsResult.data ?? [])),
+    [windowTransactionsResult.data],
   );
+  const monthTransactions = useMemo(
+    () => mapTransactionRows(rowRecords(monthTransactionsResult.data ?? [])),
+    [monthTransactionsResult.data],
+  );
+  const currentMonthTransactions = useMemo(
+    () => windowTransactions.filter((transaction) => transaction.occurredOn.startsWith(month)),
+    [month, windowTransactions],
+  );
+  const monthTransactionCount = Number(transactionCountResult.data?.[0]?.count ?? 0);
+  const hasMoreTransactions = monthTransactions.length < monthTransactionCount;
+
   const budgets = useMemo(
     () => mapBudgetRows(rowRecords(budgetsResult.data ?? [])),
     [budgetsResult.data],
@@ -151,23 +194,23 @@ export function useExpenses(): ExpensesApi {
   useEffect(() => {
     if (!userId) return;
     void ensureRecurringThrough(db, userId, month).catch(() => undefined);
-  }, [db, month, transactions.length, userId]);
+  }, [db, month, monthTransactionCount, userId]);
 
   const summary = useMemo(
-    () => calculateMonthlySummary(transactions, categories, month),
-    [categories, month, transactions],
+    () => calculateMonthlySummary(currentMonthTransactions, categories, month),
+    [categories, currentMonthTransactions, month],
   );
   const categoryBreakdown = useMemo(
-    () => calculateCategoryBreakdown(transactions, categories, month),
-    [categories, month, transactions],
+    () => calculateCategoryBreakdown(currentMonthTransactions, categories, month),
+    [categories, currentMonthTransactions, month],
   );
   const budgetProgress = useMemo(
-    () => calculateBudgetProgress(budgets, transactions, categories, month),
-    [budgets, categories, month, transactions],
+    () => calculateBudgetProgress(budgets, currentMonthTransactions, categories, month),
+    [budgets, categories, currentMonthTransactions, month],
   );
   const monthlyTrend = useMemo(
-    () => buildMonthlyTrend(transactions, categories, month, 6),
-    [categories, month, transactions],
+    () => buildMonthlyTrend(windowTransactions, categories, month, 6),
+    [categories, month, windowTransactions],
   );
   const budgetChart = useMemo(() => buildBudgetVsActual(budgetProgress), [budgetProgress]);
 
@@ -229,7 +272,16 @@ export function useExpenses(): ExpensesApi {
     nextMonth: () => setMonth((current) => shiftMonth(current, 1)),
     accounts,
     categories,
-    transactions,
+    transactions: monthTransactions,
+    monthTransactions,
+    monthTransactionCount,
+    hasMoreTransactions,
+    loadMoreTransactions: () =>
+      setPagination((current) => ({
+        month,
+        limit:
+          (current.month === month ? current.limit : TRANSACTION_PAGE_SIZE) + TRANSACTION_PAGE_SIZE,
+      })),
     budgets,
     mappings,
     summary,

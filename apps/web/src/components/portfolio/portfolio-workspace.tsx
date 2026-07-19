@@ -5,8 +5,8 @@ import {
   effectiveHoldingValue,
   formatInr,
   latestValuation,
-  valuationValueInr,
 } from '@finmanager/core';
+import Link from 'next/link';
 import { useState } from 'react';
 
 import { Amount } from '@/components/amount';
@@ -14,10 +14,8 @@ import { useInitialSkeleton, WorkspaceSkeleton } from '@/components/motion/skele
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-import { HoldingEventForm } from './holding-event-form';
 import { HoldingForm } from './holding-form';
 import { PortfolioImport } from './portfolio-import';
-import { ValuationForm } from './valuation-form';
 import { usePortfolio } from '@/lib/portfolio';
 
 function xirrLabel(status: string, rate: number | null): string {
@@ -35,6 +33,7 @@ export function PortfolioWorkspace() {
   const initialSkeleton = useInitialSkeleton();
   const [editing, setEditing] = useState<string | null>(null);
   const [showHoldingForm, setShowHoldingForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const editingHolding = api.holdings.find((holding) => holding.id === editing) ?? null;
@@ -70,6 +69,9 @@ export function PortfolioWorkspace() {
             onClick={() => void refresh()}
           >
             {refreshing ? 'Refreshing…' : 'Refresh prices'}
+          </Button>
+          <Button variant="outline" type="button" onClick={() => setShowImport((open) => !open)}>
+            {showImport ? 'Hide import' : 'Import'}
           </Button>
           <Button
             type="button"
@@ -136,8 +138,9 @@ export function PortfolioWorkspace() {
             <div className="flex flex-col gap-3">
               {api.holdings.map((holding) => {
                 return (
-                  <div
+                  <Link
                     key={holding.id}
+                    href={`/portfolio/${holding.id}`}
                     className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3 last:border-0 last:pb-0"
                   >
                     <div className="min-w-0 flex-1">
@@ -160,54 +163,10 @@ export function PortfolioWorkspace() {
                         }
                       />
                       <p className="font-body text-caption text-foreground-muted">
-                        {assetClassForType(holding.type).replace('_', ' ')}
+                        {assetClassForType(holding.type).replace('_', ' ')} · View details
                       </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      type="button"
-                      onClick={() => {
-                        setEditing(holding.id ?? null);
-                        setShowHoldingForm(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      type="button"
-                      onClick={() =>
-                        void api
-                          .deleteHolding(holding.id!)
-                          .then(() =>
-                            setNotice('Holding deleted locally; sync will follow when online.'),
-                          )
-                      }
-                    >
-                      Delete
-                    </Button>
-                    {holding.manualPriceOverride !== null ||
-                    holding.manualValueOverride !== null ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        type="button"
-                        onClick={() =>
-                          void api
-                            .saveHolding({
-                              ...holding,
-                              manualPriceOverride: null,
-                              manualValueOverride: null,
-                            })
-                            .then(() => setNotice('Manual override cleared.'))
-                        }
-                      >
-                        Clear override
-                      </Button>
-                    ) : null}
-                  </div>
+                  </Link>
                 );
               })}
             </div>
@@ -255,93 +214,15 @@ export function PortfolioWorkspace() {
           onCancel={() => setShowHoldingForm(false)}
         />
       ) : null}
-      {api.canWrite ? (
-        <>
-          <HoldingEventForm
-            holdings={api.holdings}
-            onSave={async (event) => {
-              await api.saveEvent(event);
-              setNotice('Event saved locally and included in XIRR.');
-            }}
-          />
-          <ValuationForm
-            holdings={api.holdings}
-            onSave={async (valuation) => {
-              await api.saveValuation(valuation);
-              setNotice('Valuation saved locally.');
-            }}
-          />
-          <PortfolioImport
-            onImport={async (preview) => {
-              const result = await api.importRows(preview.rows);
-              setNotice(
-                `Imported ${result.created}; skipped ${result.skipped}; failed ${result.failed}.`,
-              );
-            }}
-          />
-          <Card>
-            <CardHeader>
-              <CardTitle>Ledger history</CardTitle>
-            </CardHeader>
-            <div className="flex flex-col gap-2">
-              {api.events.slice(-10).map((event) => (
-                <div
-                  key={event.id}
-                  className="flex items-center justify-between gap-3 border-b border-border/60 pb-2"
-                >
-                  <span className="font-body text-caption text-foreground-muted">
-                    {event.occurredOn} · {event.kind} · {event.currency}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Amount value={event.amount} />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      type="button"
-                      onClick={() => void api.deleteEvent(event.id!)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              {api.events.length === 0 ? (
-                <p className="font-body text-caption text-foreground-muted">No events yet.</p>
-              ) : null}
-            </div>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Valuation history</CardTitle>
-            </CardHeader>
-            <div className="flex flex-col gap-2">
-              {api.valuations.slice(0, 10).map((valuation) => (
-                <div
-                  key={valuation.id}
-                  className="flex items-center justify-between gap-3 border-b border-border/60 pb-2"
-                >
-                  <span className="font-body text-caption text-foreground-muted">
-                    {valuation.asOf} · {valuation.currency} · {valuation.source ?? 'manual'}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Amount value={valuationValueInr(valuation) ?? 0} />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      type="button"
-                      onClick={() => void api.deleteValuation(valuation.id!)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              {api.valuations.length === 0 ? (
-                <p className="font-body text-caption text-foreground-muted">No valuations yet.</p>
-              ) : null}
-            </div>
-          </Card>
-        </>
+      {api.canWrite && showImport ? (
+        <PortfolioImport
+          onImport={async (preview) => {
+            const result = await api.importRows(preview.rows);
+            setNotice(
+              `Imported ${result.created}; skipped ${result.skipped}; failed ${result.failed}.`,
+            );
+          }}
+        />
       ) : null}
     </div>
   );

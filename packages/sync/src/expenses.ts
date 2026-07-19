@@ -36,6 +36,25 @@ export const TRANSACTIONS_QUERY = `
     recurrence_end_on, recurrence_generated_through, occurrence_key, import_hash, created_at, updated_at
   FROM transactions ORDER BY occurred_on DESC, created_at DESC`;
 
+const TRANSACTION_COLUMNS = `id, user_id, account_id, category_id, amount, direction, currency, occurred_on,
+    note, merchant, is_recurring, recurring_id, recurrence_frequency, recurrence_interval,
+    recurrence_end_on, recurrence_generated_through, occurrence_key, import_hash, created_at, updated_at`;
+
+export const TRANSACTIONS_WINDOW_QUERY = `SELECT ${TRANSACTION_COLUMNS}
+  FROM transactions
+  WHERE occurred_on >= ? AND occurred_on < ?
+  ORDER BY occurred_on DESC, created_at DESC`;
+
+export const TRANSACTIONS_MONTH_PAGE_QUERY = `SELECT ${TRANSACTION_COLUMNS}
+  FROM transactions
+  WHERE occurred_on >= ? AND occurred_on < ?
+  ORDER BY occurred_on DESC, created_at DESC
+  LIMIT ?`;
+
+export const TRANSACTIONS_MONTH_COUNT_QUERY = `SELECT COUNT(*) AS count
+  FROM transactions
+  WHERE occurred_on >= ? AND occurred_on < ?`;
+
 const RECURRING_SOURCES_QUERY = `
   SELECT id, user_id, account_id, category_id, amount, direction, currency, occurred_on,
     note, merchant, is_recurring, recurring_id, recurrence_frequency, recurrence_interval,

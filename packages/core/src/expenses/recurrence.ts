@@ -41,6 +41,25 @@ export function endOfMonthDate(month: string): string {
   return formatDate(endOfMonth(month));
 }
 
+export function monthRange(month: string): {
+  readonly start: string;
+  readonly endExclusive: string;
+} {
+  const year = Number(month.slice(0, 4));
+  const monthIndex = Number(month.slice(5, 7)) - 1;
+  const start = new Date(Date.UTC(year, monthIndex, 1));
+  const endExclusive = new Date(Date.UTC(year, monthIndex + 1, 1));
+  return { start: formatDate(start), endExclusive: formatDate(endExclusive) };
+}
+
+export function trendWindowStart(month: string, months: number): string {
+  if (!Number.isInteger(months) || months < 1)
+    throw new RangeError('Months must be a positive integer');
+  const year = Number(month.slice(0, 4));
+  const monthIndex = Number(month.slice(5, 7)) - 1;
+  return formatDate(new Date(Date.UTC(year, monthIndex - months + 1, 1)));
+}
+
 function occurrenceDate(
   source: Date,
   index: number,

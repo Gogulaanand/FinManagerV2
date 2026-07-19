@@ -171,71 +171,74 @@ export function ExpensesWorkspace() {
         <CardHeader>
           <CardTitle>Transactions</CardTitle>
           <CardLabel>
-            {
-              api.transactions.filter((transaction) => transaction.occurredOn.startsWith(api.month))
-                .length
-            }{' '}
-            this month
+            {api.monthTransactions.length} of {api.monthTransactionCount} this month
           </CardLabel>
         </CardHeader>
-        {api.transactions.filter((transaction) => transaction.occurredOn.startsWith(api.month))
-          .length === 0 ? (
+        {api.monthTransactions.length === 0 ? (
           <p className="font-body text-body-md text-foreground-muted">
             No transactions yet. Add your first expense to start the month.
           </p>
         ) : (
           <ul className="divide-y divide-border/60">
-            {api.transactions
-              .filter((transaction) => transaction.occurredOn.startsWith(api.month))
-              .map((transaction) => {
-                const category = api.categories.find((item) => item.id === transaction.categoryId);
-                return (
-                  <li
-                    key={transaction.id}
-                    className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-body text-body-md text-foreground">
-                        {transaction.merchant || transaction.note || 'Transaction'}
-                      </p>
-                      <p className="font-body text-caption text-foreground-muted">
-                        {category?.name ?? 'Uncategorised'} · {transaction.occurredOn}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Amount value={displayAmount(transaction)} signed />
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setEditing(transaction);
-                          setShowTransactionForm(true);
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          if (
-                            transaction.id &&
-                            window.confirm('Delete this transaction? This cannot be undone.')
-                          ) {
-                            void api.deleteTransaction(transaction.id);
-                          }
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </li>
-                );
-              })}
+            {api.monthTransactions.map((transaction) => {
+              const category = api.categories.find((item) => item.id === transaction.categoryId);
+              return (
+                <li
+                  key={transaction.id}
+                  className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-body text-body-md text-foreground">
+                      {transaction.merchant || transaction.note || 'Transaction'}
+                    </p>
+                    <p className="font-body text-caption text-foreground-muted">
+                      {category?.name ?? 'Uncategorised'} · {transaction.occurredOn}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Amount value={displayAmount(transaction)} signed />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setEditing(transaction);
+                        setShowTransactionForm(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        if (
+                          transaction.id &&
+                          window.confirm('Delete this transaction? This cannot be undone.')
+                        ) {
+                          void api.deleteTransaction(transaction.id);
+                        }
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
+        {api.hasMoreTransactions ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4 w-full"
+            onClick={api.loadMoreTransactions}
+          >
+            Load more (showing {api.monthTransactions.length} of {api.monthTransactionCount})
+          </Button>
+        ) : null}
       </Card>
       <BudgetSection
         month={api.month}

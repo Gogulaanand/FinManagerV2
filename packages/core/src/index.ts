@@ -41,10 +41,12 @@ export {
   calculateCategoryBreakdown,
   calculateMonthlySummary,
   endOfMonthDate,
+  monthRange,
   expandOccurrences,
   parseCsv,
   previewCsv,
   reduceKeypad,
+  trendWindowStart,
 } from './expenses/index.js';
 export type {
   BudgetChartPoint,
@@ -61,6 +63,13 @@ export type {
   RecurrenceExpansionInput,
 } from './expenses/index.js';
 export type { KeypadAction } from './expenses/index.js';
+export {
+  EVENT_KIND_LABELS,
+  allowedEventKinds,
+  mergeHoldingTimeline,
+  showsQuantityPrice,
+} from './portfolio-ux.js';
+export type { HoldingTimelineEntry } from './portfolio-ux.js';
 export {
   assetClassForType,
   buildHoldingCashFlows,
