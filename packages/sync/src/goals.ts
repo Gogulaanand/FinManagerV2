@@ -39,6 +39,16 @@ function integerValue(value: unknown): number | null {
   return parsed === null ? null : Math.trunc(parsed);
 }
 
+/**
+ * Lean multiplier must be below 1 (the schema enforces `< 1`). Legacy rows may
+ * hold 1 or more; coerce those to null so the row still parses and falls back to
+ * the default lean multiplier instead of throwing when the page loads.
+ */
+function leanMultiplierValue(value: unknown): number | null {
+  const parsed = numberValue(value);
+  return parsed !== null && parsed > 0 && parsed < 1 ? parsed : null;
+}
+
 function jsonArrayValue(value: unknown): string[] {
   if (typeof value !== 'string' || value.length === 0) return [];
   try {
@@ -99,7 +109,7 @@ export function mapFireSettingsRows(rows: readonly RawRow[]): FireSettings | nul
     inflation: numberValue(row.inflation),
     currentAge: integerValue(row.current_age),
     retirementAge: integerValue(row.retirement_age),
-    leanMultiplier: numberValue(row.lean_multiplier),
+    leanMultiplier: leanMultiplierValue(row.lean_multiplier),
     fatMultiplier: numberValue(row.fat_multiplier),
     monthlyInvestment: numberValue(row.monthly_investment),
   });

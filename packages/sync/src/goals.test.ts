@@ -91,6 +91,14 @@ describe('goal mappers', () => {
     expect(settings?.retirementAge).toBe(50);
     expect(settings?.monthlyInvestment).toBe(45_000);
   });
+
+  it('coerces a legacy lean multiplier of one or more to null instead of throwing', () => {
+    const settings = mapFireSettingsRows([
+      { id: goalId, user_id: userId, withdrawal_rate: 4, lean_multiplier: 1, fat_multiplier: 1.8 },
+    ]);
+    expect(settings?.leanMultiplier).toBeNull();
+    expect(settings?.fatMultiplier).toBe(1.8);
+  });
 });
 
 describe('goal repositories', () => {
