@@ -84,29 +84,39 @@ export function Amount({
 
   useGSAP(
     () => {
-      const media = gsap.matchMedia();
-      media.add({ reduceMotion: '(prefers-reduced-motion: reduce)' }, ({ conditions }) => {
-        const start = previousValue.current;
-        previousValue.current = value;
-        if (conditions?.reduceMotion) {
-          counter.current.value = value;
-          setDisplayValue(value);
-          return;
-        }
-        gsap.fromTo(
-          counter.current,
-          { value: start },
-          {
-            value,
-            duration: 0.65,
-            ease: 'power2.out',
-            onUpdate: () => setDisplayValue(counter.current.value),
-          },
-        );
-      });
-      return () => media.revert();
+      const start = previousValue.current;
+      previousValue.current = value;
+
+      // Skip the tween when it would be a no-op (mount with a zero value, or an
+      // unchanged value) or when the user prefers reduced motion. In every one of
+      // those cases the display must still land on `value` so a figure that
+      // hydrates asynchronously after mount (the offline-first default) is never
+      // left showing its initial zero.
+      const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion || start === value) {
+        counter.current.value = value;
+        setDisplayValue(value);
+        return;
+      }
+
+      const tween = gsap.fromTo(
+        counter.current,
+        { value: start },
+        {
+          value,
+          duration: 0.65,
+          ease: 'power2.out',
+          onUpdate: () => setDisplayValue(counter.current.value),
+          // Guarantee the final frame is the exact value, not a rounding of the
+          // last animation tick.
+          onComplete: () => setDisplayValue(value),
+        },
+      );
+      return () => tween.kill();
     },
-    { dependencies: [value], revertOnUpdate: true },
+    { dependencies: [value] },
   );
 
   return (
