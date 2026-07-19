@@ -1,16 +1,34 @@
 'use client';
 
 import { formatInr, type FireProjection, type GoalProjection } from '@finmanager/core';
+import { useStatus } from '@powersync/react';
 import { useState } from 'react';
 
 import { Amount } from '@/components/amount';
 import { useInitialSkeleton, WorkspaceSkeleton } from '@/components/motion/skeleton';
+import { useAuth } from '@/components/providers';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { useGoals } from '@/lib/goals';
 
 import { FireSettingsForm } from './fire-settings-form';
 import { GoalForm } from './goal-form';
+
+/**
+ * Hold the workspace behind the skeleton until the first PowerSync sync
+ * completes, then mount the data-querying content. The queries must not mount
+ * during the initial connect: they would attach to an empty local DB and render
+ * zeros, and the live queries do not re-emit the rows that stream in afterwards
+ * (only a remount re-attaches them). Signed-out users skip the wait.
+ */
+export function GoalsWorkspace() {
+  const status = useStatus();
+  const { session, loading: authLoading } = useAuth();
+  if (authLoading || (session !== null && !status.hasSynced)) {
+    return <WorkspaceSkeleton label="Loading goals" />;
+  }
+  return <GoalsWorkspaceContent />;
+}
 
 const STATUS_LABEL: Record<GoalProjection['status'], string> = {
   achieved: 'Achieved',
@@ -88,7 +106,7 @@ function fireStatusLabel(projection: FireProjection): string {
   return `About ${years.toFixed(1)} years to FIRE${ageText}`;
 }
 
-export function GoalsWorkspace() {
+function GoalsWorkspaceContent() {
   const api = useGoals();
   const initialSkeleton = useInitialSkeleton();
   const [editing, setEditing] = useState<string | null>(null);

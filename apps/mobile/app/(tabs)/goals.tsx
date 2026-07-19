@@ -1,4 +1,5 @@
 import { formatInr, type FireProjection, type GoalProjection } from '@finmanager/core';
+import { useStatus } from '@powersync/react';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +9,7 @@ import { Card, CardLabel, CardTitle } from '../../components/card';
 import { MobileFireSettingsForm } from '../../components/goals/fire-settings-form';
 import { MobileGoalForm } from '../../components/goals/goal-form';
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
+import { useAuth } from '../../components/providers';
 import { useGoals } from '../../lib/goals';
 
 const STATUS_LABEL: Record<GoalProjection['status'], string> = {
@@ -69,7 +71,20 @@ function fireStatusText(projection: FireProjection): string {
   return `About ${projection.yearsToFire.toFixed(1)} years to FIRE${ageText}.`;
 }
 
+// Mount the data-querying content only after the first PowerSync sync completes,
+// so the queries read a populated local DB instead of attaching to an empty one
+// during the initial connect (which renders zeros and does not self-correct
+// without a remount). Signed-out users skip the wait.
 export default function GoalsScreen() {
+  const status = useStatus();
+  const { session, loading: authLoading } = useAuth();
+  if (authLoading || (session !== null && !status.hasSynced)) {
+    return <MobileWorkspaceSkeleton label="Loading goals" />;
+  }
+  return <GoalsContent />;
+}
+
+function GoalsContent() {
   const api = useGoals();
   const initialSkeleton = useInitialSkeleton();
   const [editingId, setEditingId] = useState<string | null>(null);

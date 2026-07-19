@@ -38,7 +38,7 @@ import {
   saveFireSettings as repoSaveFireSettings,
   saveGoal as repoSaveGoal,
 } from '@finmanager/sync';
-import { usePowerSync, useQuery, useStatus } from '@powersync/react';
+import { usePowerSync, useQuery } from '@powersync/react';
 import { useCallback, useMemo } from 'react';
 
 import { useAuth } from '../components/providers';
@@ -98,7 +98,6 @@ export interface MobileGoalsApi {
 
 export function useGoals(): MobileGoalsApi {
   const db = usePowerSync();
-  const status = useStatus();
   const { session } = useAuth();
   const userId = session?.user.id ?? null;
 
@@ -110,7 +109,7 @@ export function useGoals(): MobileGoalsApi {
   const accountsResult = useQuery<Account>(ACCOUNTS_QUERY);
   const transactionsResult = useQuery<Transaction>(TRANSACTIONS_QUERY);
 
-  const queriesResolving = [
+  const loading = [
     goalsResult.data,
     fireResult.data,
     holdingsResult.data,
@@ -119,17 +118,6 @@ export function useGoals(): MobileGoalsApi {
     accountsResult.data,
     transactionsResult.data,
   ].some((data) => data === undefined);
-  // On a cold session the local queries resolve to empty arrays before the first
-  // PowerSync sync finishes, which would render the FIRE tiles as 0. Keep the
-  // skeleton until the first sync completes while there is genuinely no data yet.
-  const hasAnyData = [
-    goalsResult.data,
-    fireResult.data,
-    holdingsResult.data,
-    accountsResult.data,
-    transactionsResult.data,
-  ].some((data) => (data?.length ?? 0) > 0);
-  const loading = queriesResolving || (userId !== null && !status.hasSynced && !hasAnyData);
 
   const goals = useMemo(() => mapGoalRows(rowRecords(goalsResult.data ?? [])), [goalsResult.data]);
   const holdings = useMemo(
