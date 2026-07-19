@@ -22,6 +22,7 @@
 ### Task 1: Add the web motion dependencies and shared motion wrapper
 
 **Files:**
+
 - Modify: `apps/web/package.json`
 - Modify: `pnpm-lock.yaml`
 - Create: `apps/web/src/components/motion/animated-page.tsx`
@@ -50,6 +51,7 @@ Expected: both pass.
 ### Task 2: Fix labels and sticky desktop navigation
 
 **Files:**
+
 - Modify: `apps/web/src/components/portfolio/holding-event-form.tsx`
 - Modify: `apps/mobile/components/portfolio/holding-event-form.tsx`
 - Modify: `apps/web/src/components/sidebar.tsx`
@@ -71,6 +73,7 @@ Expected: all pass.
 ### Task 3: Add web loading skeletons and number/progress transitions
 
 **Files:**
+
 - Create: `apps/web/src/components/motion/skeleton.tsx`
 - Modify: `apps/web/src/components/amount.tsx`
 - Modify: `apps/web/src/components/providers.tsx`
@@ -101,6 +104,7 @@ Expected: no lint/type/build errors.
 ### Task 4: Add mobile-native entrance, progress, and amount motion
 
 **Files:**
+
 - Create: `apps/mobile/components/motion.tsx`
 - Modify: `apps/mobile/components/amount.tsx`
 - Modify: `apps/mobile/components/card.tsx`
@@ -130,6 +134,7 @@ Expected: both pass.
 ### Task 5: Full automated verification and manual-QA handoff
 
 **Files:**
+
 - Modify: none unless verification reveals a defect.
 
 - [ ] **Step 1: Run focused and repository tests**

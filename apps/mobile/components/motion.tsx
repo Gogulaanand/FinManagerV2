@@ -52,13 +52,7 @@ export function MotionView({
   );
 }
 
-export function MotionProgress({
-  value,
-  className = '',
-}: {
-  value: number;
-  className?: string;
-}) {
+export function MotionProgress({ value, className = '' }: { value: number; className?: string }) {
   const reduceMotion = useReducedMotion();
   const progress = useSharedValue(reduceMotion ? value : 0);
 
@@ -73,15 +67,17 @@ export function MotionProgress({
     width: `${progress.value * 100}%`,
   }));
 
-  return (
-    <Animated.View className={`h-full rounded-full bg-primary ${className}`} style={style} />
-  );
+  return <Animated.View className={`h-full rounded-full bg-primary ${className}`} style={style} />;
 }
 
 export function MobileWorkspaceSkeleton({ label }: { label: string }) {
   return (
     <View className="flex-1 bg-background p-4">
-      <View className="items-center gap-3 py-8" accessibilityLabel={label} accessibilityRole="progressbar">
+      <View
+        className="items-center gap-3 py-8"
+        accessibilityLabel={label}
+        accessibilityRole="progressbar"
+      >
         <ActivityIndicator color="#2d9b72" />
         <Text className="font-body text-body-md text-foreground-muted">{label}</Text>
       </View>

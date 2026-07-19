@@ -10,11 +10,7 @@ export interface CardProps {
 
 /** A raised surface. Mirrors apps/web's Card, down to the 16px mobile inset. */
 export function Card({ children, className = '' }: CardProps) {
-  return (
-    <MotionView className={`rounded-lg bg-surface p-4 ${className}`}>
-      {children}
-    </MotionView>
-  );
+  return <MotionView className={`rounded-lg bg-surface p-4 ${className}`}>{children}</MotionView>;
 }
 
 export function CardTitle({ children }: { children: ReactNode }) {

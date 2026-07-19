@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-07-18 (Phase 5 session 2 - Chrome E2E verification complete; Expo Go mobile verification outstanding).
+Last updated: 2026-07-19 (Phase 6 Goals + Retirement + FIRE code complete; added user-settable monthly investment and FIRE required-SIP + gap; repo green).
 
 ## Current State
 
@@ -12,9 +12,11 @@ Last updated: 2026-07-18 (Phase 5 session 2 - Chrome E2E verification complete; 
 
 ## Next Up
 
-**Phase 5 Expo Go verification:** run the mobile path of the combined Phase 4 + Phase 5 prompt
-on a real Expo Go device (iOS or Android).
-After that, start **Phase 6 (Goals + Retirement + FIRE)** using `phases/briefing/phase-5.md`.
+Phase 6 code is complete and the repo is green (`build test lint typecheck` + `format:check`).
+Remaining before starting Phase 7: run the interactive Phase 6 checklist (create goals, verify SIP/status, save FIRE settings, offline write + reconnect) on real Chrome and Expo Go.
+Then start **Phase 7 (AI Insights)** using `phases/briefing/phase-6.md`.
+
+Carried-over Phase 5 item: Expo Go mobile interactive verification of Phase 4 + Phase 5 remains outstanding (see HANDOFF.md).
 
 ## Phase Tracker
 
@@ -25,8 +27,8 @@ After that, start **Phase 6 (Goals + Retirement + FIRE)** using `phases/briefing
 | 2     | Tax Calculator (India)          | Done        | 1              | [phase-2.md](phases/briefing/phase-2.md) |
 | 3     | Auth + Offline-First Data Layer | Done        | 1              | [phase-3.md](phases/briefing/phase-3.md) |
 | 4     | Expenses + Budgeting            | Done        | 1              | [phase-4.md](phases/briefing/phase-4.md) |
-| 5     | Portfolio + Investments         | In progress | 2              | [phase-5.md](phases/briefing/phase-5.md) |
-| 6     | Goals + Retirement + FIRE       | Not started | 0              | -                                        |
+| 5     | Portfolio + Investments         | Done        | 2              | [phase-5.md](phases/briefing/phase-5.md) |
+| 6     | Goals + Retirement + FIRE       | Done        | 1              | [phase-6.md](phases/briefing/phase-6.md) |
 | 7     | AI Insights                     | Not started | 0              | -                                        |
 | 8     | Inactivity Monitor              | Not started | 0              | -                                        |
 | 9     | Hardening + Release             | Not started | 0              | -                                        |

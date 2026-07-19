@@ -41,3 +41,6 @@ ios/
 
 # PowerSync worker assets copied by powersync-web copy-assets (generated)
 apps/web/public/@powersync/
+
+# Local pnpm content-addressable store
+.pnpm-store/

@@ -230,6 +230,7 @@ const fire_settings = new Table({
   retirement_age: column.integer,
   lean_multiplier: column.real,
   fat_multiplier: column.real,
+  monthly_investment: column.real,
   created_at: column.text,
   updated_at: column.text,
 });

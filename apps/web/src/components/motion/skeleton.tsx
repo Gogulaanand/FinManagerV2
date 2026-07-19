@@ -16,7 +16,12 @@ export function useInitialSkeleton(duration = 240): boolean {
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden="true" className={cn('animate-pulse rounded-md bg-surface-muted', className)} />;
+  return (
+    <div
+      aria-hidden="true"
+      className={cn('animate-pulse rounded-md bg-surface-muted', className)}
+    />
+  );
 }
 
 export function WorkspaceSkeleton({ label }: { label: string }) {

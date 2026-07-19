@@ -171,12 +171,32 @@ export async function saveAccount(
     await db.execute(
       `INSERT INTO accounts (id, user_id, name, type, institution, currency, current_balance, is_active, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, userId, account.name, account.type, account.institution, account.currency, account.currentBalance, account.isActive ? 1 : 0, now, now],
+      [
+        id,
+        userId,
+        account.name,
+        account.type,
+        account.institution,
+        account.currency,
+        account.currentBalance,
+        account.isActive ? 1 : 0,
+        now,
+        now,
+      ],
     );
   } else {
     await db.execute(
       `UPDATE accounts SET name = ?, type = ?, institution = ?, currency = ?, current_balance = ?, is_active = ?, updated_at = ? WHERE id = ?`,
-      [account.name, account.type, account.institution, account.currency, account.currentBalance, account.isActive ? 1 : 0, now, id],
+      [
+        account.name,
+        account.type,
+        account.institution,
+        account.currency,
+        account.currentBalance,
+        account.isActive ? 1 : 0,
+        now,
+        id,
+      ],
     );
   }
 }
@@ -227,12 +247,34 @@ export async function saveCategory(
     await db.execute(
       `INSERT INTO categories (id, user_id, name, kind, icon, color, parent_id, is_system, sort_order, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, userId, category.name, category.kind, category.icon, category.color, category.parentId, category.isSystem ? 1 : 0, category.sortOrder, now, now],
+      [
+        id,
+        userId,
+        category.name,
+        category.kind,
+        category.icon,
+        category.color,
+        category.parentId,
+        category.isSystem ? 1 : 0,
+        category.sortOrder,
+        now,
+        now,
+      ],
     );
   } else {
     await db.execute(
       `UPDATE categories SET name = ?, kind = ?, icon = ?, color = ?, parent_id = ?, is_system = ?, sort_order = ?, updated_at = ? WHERE id = ?`,
-      [category.name, category.kind, category.icon, category.color, category.parentId, category.isSystem ? 1 : 0, category.sortOrder, now, id],
+      [
+        category.name,
+        category.kind,
+        category.icon,
+        category.color,
+        category.parentId,
+        category.isSystem ? 1 : 0,
+        category.sortOrder,
+        now,
+        id,
+      ],
     );
   }
 }
@@ -261,14 +303,54 @@ export async function saveTransaction(
         is_recurring, recurring_id, recurrence_frequency, recurrence_interval, recurrence_end_on, recurrence_generated_through,
         occurrence_key, import_hash, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, userId, transaction.accountId, transaction.categoryId, transaction.amount, transaction.direction, transaction.currency, transaction.occurredOn, transaction.note, transaction.merchant, transaction.isRecurring ? 1 : 0, transaction.recurringId, transaction.recurrenceFrequency, transaction.recurrenceInterval, transaction.recurrenceEndOn, transaction.recurrenceGeneratedThrough, transaction.occurrenceKey, transaction.importHash, now, now],
+      [
+        id,
+        userId,
+        transaction.accountId,
+        transaction.categoryId,
+        transaction.amount,
+        transaction.direction,
+        transaction.currency,
+        transaction.occurredOn,
+        transaction.note,
+        transaction.merchant,
+        transaction.isRecurring ? 1 : 0,
+        transaction.recurringId,
+        transaction.recurrenceFrequency,
+        transaction.recurrenceInterval,
+        transaction.recurrenceEndOn,
+        transaction.recurrenceGeneratedThrough,
+        transaction.occurrenceKey,
+        transaction.importHash,
+        now,
+        now,
+      ],
     );
   } else {
     await db.execute(
       `UPDATE transactions SET account_id = ?, category_id = ?, amount = ?, direction = ?, currency = ?, occurred_on = ?,
         note = ?, merchant = ?, is_recurring = ?, recurring_id = ?, recurrence_frequency = ?, recurrence_interval = ?,
         recurrence_end_on = ?, recurrence_generated_through = ?, occurrence_key = ?, import_hash = ?, updated_at = ? WHERE id = ?`,
-      [transaction.accountId, transaction.categoryId, transaction.amount, transaction.direction, transaction.currency, transaction.occurredOn, transaction.note, transaction.merchant, transaction.isRecurring ? 1 : 0, transaction.recurringId, transaction.recurrenceFrequency, transaction.recurrenceInterval, transaction.recurrenceEndOn, transaction.recurrenceGeneratedThrough, transaction.occurrenceKey, transaction.importHash, now, id],
+      [
+        transaction.accountId,
+        transaction.categoryId,
+        transaction.amount,
+        transaction.direction,
+        transaction.currency,
+        transaction.occurredOn,
+        transaction.note,
+        transaction.merchant,
+        transaction.isRecurring ? 1 : 0,
+        transaction.recurringId,
+        transaction.recurrenceFrequency,
+        transaction.recurrenceInterval,
+        transaction.recurrenceEndOn,
+        transaction.recurrenceGeneratedThrough,
+        transaction.occurrenceKey,
+        transaction.importHash,
+        now,
+        id,
+      ],
     );
   }
 }

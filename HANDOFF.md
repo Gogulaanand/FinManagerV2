@@ -5,7 +5,33 @@ This file carries mid-phase state between sessions; completed phases live in pha
 
 ---
 
-## Latest Handoff: 2026-07-18 (Phase 5, session 2)
+## Latest Handoff: 2026-07-18 (Phase 6, session 1)
+
+### Where we are
+
+Phase 6 (Goals + Retirement + FIRE) is code-complete and the whole repo is green: `CI=true pnpm turbo run build test lint typecheck` passes 21/21 and `CI=true pnpm format:check` is clean.
+The goal/FIRE/retirement math is entirely in `packages/core/src/goals` with Vitest suites (core is now 140 tests). Schema (`packages/schema/src/goals.ts`) and sync repositories (`packages/sync/src/goals.ts`) are added and exported. Web and mobile both ship a full Goals & FIRE workspace replacing the placeholder.
+No migration was needed: the `goals` and `fire_settings` tables (RLS + indexes) and the PowerSync client schema/`JSON_COLUMNS` were already scaffolded (see D-035).
+Separately, a repo-wide `prettier --write` fixed the CI failure on `main` that came from unformatted files in the phase 5.2 merge (mobile portfolio/card/motion, web motion components, `packages/sync/src/expenses.ts`, and a motion plan doc).
+
+### Exact next action
+
+Run the Phase 6 interactive checklist on real Chrome and Expo Go with the signed-in test account: create an education goal with a target date, confirm the inflation-adjusted future cost, monthly SIP, funding bar, and on/off-track status; link a holding and confirm current funding folds it in; save FIRE settings and confirm the FIRE number (expenses / withdrawal rate), lean/coast/fat variants, and years-to-FIRE; add an EPF/PPF/NPS holding and confirm the retirement corpus; then do an offline goal write + reconnect + sync. After that passes, start Phase 7 (AI Insights) using `phases/briefing/phase-6.md`.
+
+### Files in flight
+
+All Phase 6 files are written and green but not yet committed. See `phases/briefing/phase-6.md` for the exact file list. Nothing is intentionally incomplete.
+
+### Open items / warnings
+
+- **Phase 6 interactive verification outstanding** (as above); the no-touch simulator and Chrome connector limits from Phase 5 still apply.
+- **FIRE current corpus = portfolio net worth.** **Monthly savings** now uses the explicit `fire_settings.monthly_investment` when set, else the derived rate (average of trailing months' credit − debit, floored at zero). A user with only expenses logged and no explicit investment still sees 0 until they set a monthly investment or log income (D-037). The projection also exposes `requiredMonthlyContribution` (SIP to reach FIRE by retirement age, in today's rupees) and `contributionGap` vs the current rate; both are null until current + retirement age are set. Migration `20260718000003` adds the column and was applied to `vkivzhbckfsjtvzatuiz`.
+- **FIRE annual expenses are auto-suggested** from the trailing 12 months of debit transactions only until the user saves an explicit value; the saved value then wins.
+- Phase 5 carry-over below still applies (Expo Go Phase 4+5 pass, SMTP, test-account cleanup, native adapter swap).
+
+---
+
+## Prior Handoff: 2026-07-18 (Phase 5, session 2)
 
 ### Where we are
 

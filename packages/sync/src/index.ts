@@ -23,6 +23,15 @@ export type { Scenario, ScenarioInput } from './scenarios';
 export { logActivity } from './activity';
 export type { ActivityKind, Platform } from './activity';
 export {
+  FIRE_SETTINGS_QUERY,
+  GOALS_QUERY,
+  deleteGoal,
+  mapFireSettingsRows,
+  mapGoalRows,
+  saveFireSettings,
+  saveGoal,
+} from './goals';
+export {
   HOLDING_EVENTS_QUERY,
   HOLDINGS_QUERY,
   VALUATIONS_QUERY,

@@ -261,3 +261,21 @@ When the network is blocked before the token refreshes, `getSession()` cannot re
 Safe offline simulation sequence: restore network, wait for the token to auto-refresh (Supabase refreshes at roughly 60 seconds before expiry), then block the network.
 Why: PowerSync's credential fetch is on the hot path for every local write, not just for sync upload; even purely local inserts fail if the credential promise rejects.
 Consequence: offline E2E tests must allow a token-refresh window before enabling the offline block.
+
+## D-035: Phase 6 goals reuse the pre-scaffolded schema; only app/core/sync layers were new (2026-07-18)
+
+The `goals` and `fire_settings` Postgres tables (with RLS, indexes, and the updated-at trigger) already existed in `20260717000001_full_data_model.sql`, and the PowerSync client schema plus `JSON_COLUMNS` (`goals.linked_holding_ids`) were already declared. Phase 6 therefore added no migration and no schema-table changes; it added the Zod contracts, the `packages/core/goals` engine, the sync repositories, and the web/mobile UI.
+Why: the data model was designed up front in Phase 0/3, so the offline-first contract and RLS were already correct; re-declaring them would risk drift.
+Consequence: goal money and rates follow the same float-rupee/whole-percentage conventions as the rest of the app, and `saveGoal` uses the `isNew = !input.id` branch safely because the goal forms (unlike `saveTransaction`, see D-033) do not pre-assign UUIDs. `fire_settings` writes use UPDATE-then-INSERT keyed on the unique `user_id`.
+
+## D-036: goal and FIRE math live entirely in packages/core and target today's rupees (2026-07-18)
+
+Goal projections inflate the target to its date and grow current funding at the expected return; FIRE projections discount with a real (inflation-adjusted) return so the FIRE number, coast number, and years-to-FIRE are all expressed in today's rupees. Linked-holding values reuse the portfolio engine's `effectiveHoldingValue` precedence, and the FIRE expense baseline is auto-suggested from the trailing 12 months of debit transactions until the user saves an explicit value.
+Why: keeping all business math in core (UI never computes) is a hard project rule, and a single real-return convention avoids mixing nominal and real figures across the FIRE variants.
+Consequence: the engine is exhaustively unit-tested (core +28 tests); the UI only formats. Required SIP is an ordinary-annuity solve, and unreachable FIRE (no growth, no savings) returns a null months-to-FIRE rather than infinity.
+
+## D-037: monthly investment is user-settable and the FIRE required-SIP uses the real return (2026-07-19)
+
+FIRE now derives "monthly savings" from the explicit `fire_settings.monthly_investment` when set, falling back to the transaction-derived rate (average of trailing months' credits minus debits, floored at zero). A new `requiredMonthlyContribution` on the FIRE projection solves the SIP that grows the current corpus into the FIRE number by the retirement age, and `contributionGap` is that required SIP minus the current monthly savings.
+Why: the derived rate reads 0 whenever a user logs expenses but no income (the common case early on), which is correct but unhelpful; an explicit field makes the input visible and controllable and feeds the required-vs-actual comparison the user asked for. The required-SIP solve uses the same real (inflation-adjusted) monthly rate the rest of the FIRE engine uses, because the FIRE number is expressed in today's rupees - solving with the nominal expected return would understate the SIP needed to hit a target that itself inflates. The horizon is years-to-retirement (`retirementAge - currentAge`), so the required SIP is null until both ages are set.
+Consequence: added `monthly_investment double precision` to `fire_settings` (migration `20260718000003`, applied to `vkivzhbckfsjtvzatuiz`) and to the PowerSync client schema; schema/sync/core/UI on both platforms carry the field. The number shown is a today's-rupees SIP, not a nominal one.

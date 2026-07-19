@@ -107,7 +107,9 @@ export default function PortfolioScreen() {
               <CardLabel>Net worth</CardLabel>
               <Amount value={api.summary.netWorth} size="tile" />
               <Text className="font-body text-caption text-foreground-muted">
-                {api.summary.isComplete ? 'Complete' : `${api.summary.unvaluedHoldingCount} unvalued`}
+                {api.summary.isComplete
+                  ? 'Complete'
+                  : `${api.summary.unvaluedHoldingCount} unvalued`}
               </Text>
             </Card>
             <Card className="min-w-0 flex-1">
@@ -126,7 +128,11 @@ export default function PortfolioScreen() {
             </Card>
             <Card className="min-w-0 flex-1">
               <CardLabel>XIRR</CardLabel>
-              <Text className="font-display text-headline-lg text-foreground" numberOfLines={1} adjustsFontSizeToFit>
+              <Text
+                className="font-display text-headline-lg text-foreground"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
                 {xirrText(api.summary.xirr.status, api.summary.xirr.rate)}
               </Text>
               <Text className="font-body text-caption text-foreground-muted">
