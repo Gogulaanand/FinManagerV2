@@ -136,8 +136,19 @@ function InsightsWorkspaceContent() {
       ) : null}
 
       {error ? (
-        <Card>
-          <CardTitle>
+        <Card
+          role="status"
+          aria-live="polite"
+          className={`border-l-4 bg-surface-muted ${
+            error.code === 'budget_exceeded' ? 'border-primary' : 'border-loss'
+          }`}
+        >
+          <CardTitle
+            className={`flex items-center gap-2 ${
+              error.code === 'budget_exceeded' ? 'text-primary' : 'text-loss'
+            }`}
+          >
+            <span aria-hidden="true">{error.code === 'budget_exceeded' ? 'ⓘ' : '⚠'}</span>
             {error.code === 'budget_exceeded' ? 'Monthly allowance used' : 'Could not answer'}
           </CardTitle>
           <p className="mt-2 font-body text-body-md text-foreground-muted">{error.message}</p>
