@@ -45,3 +45,5 @@ apps/web/public/@powersync/
 # Local pnpm content-addressable store
 .pnpm-store/
 .mcp.json
+.vercel
+.env*
