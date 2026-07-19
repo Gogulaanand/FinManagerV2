@@ -5,6 +5,32 @@ This file carries mid-phase state between sessions; completed phases live in pha
 
 ---
 
+## Latest Handoff: 2026-07-19 (Phase 7, session 1)
+
+### Where we are
+
+Phase 7 implementation is code-complete on `phase-7-ai-insights` after fast-forwarding to current `main` (`9e447b5`, Phase 5.3). It adds the private metering/synced-summary migration, authenticated Anthropic SSE Edge Function, shared schema/digest/SSE parser and tests, PowerSync summary repository, matching web/mobile Insights workspaces, offline monthly health cards, and the five-slot mobile tab bar with a More sheet. The full automated gate and Expo iOS export pass. No Chrome or real Expo Go result is claimed, and the migration/function/secret/PowerSync rule have not been deployed from this worktree.
+
+### Exact next action
+
+Follow `Pending deployment` and the numbered Chrome scenarios in `phases/phase-7-ai-insights-plan.md`. Start by applying migration `20260719000004_phase7_ai_insights.sql`, setting `ANTHROPIC_API_KEY`, deploying `ai-insights`, and deploying the PowerSync rule. Then verify the grounded Budget answer, scope isolation, ephemeral reload, summary upsert/offline read, 429 allowance state, auth/validation, usage accounting, and visual/accessibility states. Run the Expo Go navigation/streaming/summary checks afterward.
+
+### Files in flight
+
+The implementation and automated-test changes are committed with this handoff. `phases/briefing/phase-7.md` lists the subsystem/file groups. The only intentionally incomplete Phase 7 work is external deployment and interactive evidence/fixes.
+
+### Open items / warnings
+
+- Do not mark Phase 7 done until deployment and the plan's Chrome/Expo Go scenarios pass.
+- The Supabase worktree is not locally linked. Confirm the intended project before applying migration/function changes.
+- `ANTHROPIC_API_KEY` belongs only in Supabase secrets. `ai_usage` must remain server-written and unsynced; only `ai_summaries` is in PowerSync.
+- Normal allowance defaults to 1,000,000 tokens/month. Restore it after deliberately testing the 429 state.
+- Chat is intentionally ephemeral. A reload clearing chat is correct; monthly summaries are the only persisted AI content.
+- Expo Go uses SQL.js in-memory storage. Verify offline behavior on the mounted screen and reconnect, not relaunch persistence (D-021).
+- Phase 5.3, Phase 6, and older Expo Go interactive carryovers remain separate pending verification items below.
+
+---
+
 ## Latest Handoff: 2026-07-19 (Phase 5.3, session 1)
 
 ### Where we are

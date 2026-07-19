@@ -235,6 +235,17 @@ const fire_settings = new Table({
   updated_at: column.text,
 });
 
+const ai_summaries = new Table(
+  {
+    user_id: column.text,
+    month: column.text,
+    scope: column.text,
+    content: column.text,
+    generated_at: column.text,
+  },
+  { indexes: { by_user: ['user_id'], by_month: ['month'] } },
+);
+
 export const AppSchema = new Schema({
   profiles,
   trusted_contacts,
@@ -249,6 +260,7 @@ export const AppSchema = new Schema({
   valuations,
   goals,
   fire_settings,
+  ai_summaries,
 });
 
 /** The row types the on-device tables produce, keyed by table name. */

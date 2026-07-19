@@ -123,6 +123,13 @@ export {
   todayIso,
   yearsBetween,
 } from './goals/index.js';
+export { buildFinancialDigest } from './insights/index.js';
+export { createAnthropicSseParser } from './insights/index.js';
+export type {
+  AnthropicSseParser,
+  BuildFinancialDigestInput,
+  TaxDigestInput,
+} from './insights/index.js';
 export type {
   FireProjection,
   FireProjectionInput,

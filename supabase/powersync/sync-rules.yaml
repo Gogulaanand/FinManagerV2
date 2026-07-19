@@ -28,3 +28,4 @@ streams:
       - SELECT * FROM valuations WHERE user_id = auth.user_id()
       - SELECT * FROM goals WHERE user_id = auth.user_id()
       - SELECT * FROM fire_settings WHERE user_id = auth.user_id()
+      - SELECT * FROM ai_summaries WHERE user_id = auth.user_id()

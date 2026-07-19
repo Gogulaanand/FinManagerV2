@@ -27,6 +27,22 @@ export type { CsvField, CsvImportRow, CsvMapping, CsvMappingSet } from './csv';
 export { FireSettingsSchema, GoalKindSchema, GoalSchema } from './goals';
 export type { FireSettings, Goal, GoalKind } from './goals';
 export {
+  AiInsightsErrorSchema,
+  AiInsightsRequestSchema,
+  AiSummarySchema,
+  ChatMessageSchema,
+  FinancialDigestSchema,
+  InsightScopeSchema,
+} from './insights';
+export type {
+  AiInsightsError,
+  AiInsightsRequest,
+  AiSummary,
+  ChatMessage,
+  FinancialDigest,
+  InsightScope,
+} from './insights';
+export {
   HoldingEventKindSchema,
   HoldingEventSchema,
   HoldingMetadataSchema,

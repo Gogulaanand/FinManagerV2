@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { AppSchema, JSON_COLUMNS } from './schema';
 
-// A drift guard: the client schema must mirror the 13 Postgres tables from
+// A drift guard: the client schema must mirror the 14 synced Postgres tables from
 // supabase/migrations. If a migration adds or removes a table, this fails until
 // packages/sync/schema.ts is updated to match.
 const EXPECTED_TABLES = [
@@ -19,10 +19,11 @@ const EXPECTED_TABLES = [
   'valuations',
   'goals',
   'fire_settings',
+  'ai_summaries',
 ] as const;
 
 describe('AppSchema', () => {
-  it('defines exactly the 13 synced tables', () => {
+  it('defines exactly the 14 synced tables', () => {
     const names = AppSchema.tables.map((t) => t.name).sort();
     expect(names).toEqual([...EXPECTED_TABLES].sort());
   });

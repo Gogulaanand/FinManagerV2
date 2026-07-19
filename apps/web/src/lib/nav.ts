@@ -5,10 +5,11 @@ import {
   TrendingUp,
   Target,
   Settings,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 
-/** The six top-level modules. Order is deliberate and matches mobile's tab bar. */
+/** The seven top-level modules. Order is deliberate and mirrors mobile navigation. */
 export interface NavItem {
   href: string;
   label: string;
@@ -20,6 +21,7 @@ export const navItems: readonly NavItem[] = [
   { href: '/tax', label: 'Tax', icon: Landmark },
   { href: '/expenses', label: 'Expenses', icon: Receipt },
   { href: '/portfolio', label: 'Portfolio', icon: TrendingUp },
+  { href: '/insights', label: 'Insights', icon: Sparkles },
   { href: '/goals', label: 'Goals', icon: Target },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Amount, Delta } from '../../components/amount';
 import { Card, CardLabel, CardTitle } from '../../components/card';
 import { MotionProgress } from '../../components/motion';
+import { FinancialHealthCard } from '../../components/insights/financial-health-card';
 import {
   fireCurrent,
   fireProgress,
@@ -48,6 +49,8 @@ export default function DashboardScreen() {
             <Text className="font-body text-label text-foreground-muted">this month</Text>
           </View>
         </Card>
+
+        <FinancialHealthCard />
 
         <View className="flex-row gap-4">
           <StatTile label="This month spend" value={monthSpend} delta={monthSpendDelta} />

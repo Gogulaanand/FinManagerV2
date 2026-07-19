@@ -1,0 +1,4 @@
+project_id = "finmanager-v2"
+
+[functions.ai-insights]
+verify_jwt = true

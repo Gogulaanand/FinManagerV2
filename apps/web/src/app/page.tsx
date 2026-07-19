@@ -1,5 +1,6 @@
 import { Amount, Delta } from '@/components/amount';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
+import { FinancialHealthCard } from '@/components/insights/financial-health-card';
 import {
   fireCurrent,
   fireProgress,
@@ -36,6 +37,8 @@ export default function DashboardPage() {
           <span className="font-body text-label text-foreground-muted">this month</span>
         </div>
       </Card>
+
+      <FinancialHealthCard />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <StatTile label="This month spend" value={monthSpend} delta={monthSpendDelta} />

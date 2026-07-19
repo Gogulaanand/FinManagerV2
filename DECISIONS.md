@@ -301,3 +301,27 @@ Web uses `/portfolio/[holdingId]` and mobile uses `/holding/[id]` as a sibling r
 ## D-042: global portfolio history UI is retained as dead component code (2026-07-19)
 
 The portfolio hubs no longer import or render the global event form, valuation form, ledger history card, or valuation history card. The form components remain and are reworked for contextual reuse on holding detail; no schema or event-kind capability was removed. This intentionally follows the owner decision to simplify render paths without deleting reusable or potentially recoverable code.
+
+## D-043: Phase 7 uses a client-built digest and a thin authenticated LLM proxy (2026-07-19)
+
+Web and mobile assemble the scoped financial digest from their local PowerSync data using shared core analytics, then send only that compact digest to the authenticated `ai-insights` Edge Function. The function verifies the Supabase JWT, supplies the grounded Indian-personal-finance system prompt, enforces the monthly token allowance, holds the Anthropic key, and proxies SSE bytes. It does not independently reread Postgres.
+Why: on-device SQLite is the state the user actually sees, including local offline writes. A server-side financial read would create a second path that can lag or disagree, and putting the Anthropic key in either client would expose the owner-paid credential.
+Consequence: AI Insights is the sanctioned direct-network feature alongside auth, but all deterministic financial calculations stay in `packages/core`; the model receives rounded, top-N, scope-filtered facts rather than the raw database.
+
+## D-044: chat is ephemeral; only a monthly health summary syncs (2026-07-19)
+
+User and assistant turns live only in component memory and the request carries at most the last ten turns. Reloading clears the thread. The generated monthly health summary is upserted by user/month/scope into `ai_summaries`, which is private under RLS and included in PowerSync so Dashboard and Insights can render it offline.
+Why: persisted free-form financial conversations add privacy, retention, sync, and deletion complexity without improving the primary monthly-health use case.
+Consequence: `ai_usage` remains server-written and unsynced, while `ai_summaries` is the only persisted AI content. Offline chat is disabled explicitly rather than pretending a local model exists.
+
+## D-045: Anthropic SSE is parsed once in shared core and assistant text stays plain (2026-07-19)
+
+The Edge Function passes Anthropic SSE through unchanged. Both clients use `createAnthropicSseParser` from `@finmanager/core` to handle frames split across arbitrary network chunks; web uses native streaming fetch and mobile uses `expo/fetch`. Assistant text renders as quiet, whitespace-preserving prose rather than dependency-heavy Markdown.
+Why: one tested incremental parser prevents platform drift, while plain prose meets the current answer format without adding a renderer or accepting model-produced HTML.
+Consequence: Expo Go must verify streaming interactively. A mobile-only non-streaming fallback is allowed only if the observed failure is recorded first.
+
+## D-046: mobile navigation keeps Insights visible in a five-slot tab bar (2026-07-19)
+
+The visible mobile tabs are Dashboard, Expenses, Portfolio, Insights, and More. More opens a bottom sheet using existing tokens and routes to Tax, Goals, and Settings; those routes remain real and deep-linkable but have `href: null` in the tab bar.
+Why: seven visible tabs forced unreadably small labels, while Insights must remain a first-class destination.
+Consequence: tab labels return to the shared label typography token instead of the previous 10px squeeze, and the sheet must be included in light/dark, accessibility, and Expo Go verification.

@@ -4,6 +4,54 @@ This document is the authoritative spec for Phase 7 (AI Insights).
 It expands the Phase 7 section of PRODUCTION_PLAN.md into an executable plan and encodes decisions already made with the owner.
 Read STATUS.md, HANDOFF.md, and phases/briefing/phase-6.md first, per the session protocol, then implement this plan.
 
+## Implementation status (2026-07-19)
+
+Phase 7 implementation is **code-complete and merged with the latest Phase 5.3 work from `main`**, but the phase remains **in progress** until deployment and interactive verification are complete.
+
+Implemented:
+
+- Migration `20260719000004_phase7_ai_insights.sql` adds private, metered `ai_usage` plus synced, offline-readable `ai_summaries` with constraints, indexes, grants, and RLS.
+- The authenticated `ai-insights` Edge Function validates requests, enforces the monthly token allowance, calls `claude-sonnet-5` without sampling parameters, proxies Anthropic SSE, and records usage after streaming.
+- Shared schemas cover scopes, digests, ephemeral messages, requests, errors, and persisted summaries. Shared core builds compact deterministic digests from existing expense, budget, portfolio, goal/FIRE, retirement, and tax analytics and parses split SSE frames.
+- PowerSync includes `ai_summaries`, a newest-first query, validated row mapping, and UPDATE-then-INSERT persistence keyed by user/month/scope.
+- Web and mobile ship the Insights workspace, scope picker, suggested prompts, streaming chat, offline/budget/error states, and an offline monthly-summary card. Only the dashboard AI card reads live local data; existing dashboard sample data is unchanged.
+- Mobile exposes Dashboard, Expenses, Portfolio, Insights, and More as the five visible slots. More opens a token-styled sheet containing the still-deep-linkable Tax, Goals, and Settings routes.
+
+Automated verification completed before the integration commit:
+
+- `CI=true pnpm turbo run build test lint typecheck`: 21/21 tasks passed after rebasing onto current `main`.
+- `CI=true pnpm format:check`: clean.
+- Package tests: schema 31, core 156, sync 36.
+- Web production build generated `/insights`; Expo iOS export bundled successfully.
+
+### Pending deployment
+
+1. Link the intended Supabase project in this worktree if needed, apply `20260719000004_phase7_ai_insights.sql`, and inspect both tables, unique constraints, indexes, grants, and RLS policies.
+2. Set `ANTHROPIC_API_KEY` as a Supabase secret; never expose it through a `NEXT_PUBLIC_` or `EXPO_PUBLIC_` variable.
+3. Deploy `ai-insights`, then deploy the updated PowerSync sync rules and confirm `ai_summaries` downloads while `ai_usage` does not.
+4. Keep `INSIGHTS_MONTHLY_TOKEN_BUDGET` at its default 1,000,000 for normal use; temporarily set a tiny value only for the budget-exceeded scenario, then restore it.
+
+### Pending Chrome verification scenarios
+
+Use the existing signed-in test account without printing credentials. Record the commit SHA, browser, migration/function/sync-rule deployment state, timestamps, screenshots, console errors, and relevant row IDs.
+
+1. **Grounded budget answer:** ensure the selected month has at least one named expense category and monthly budget with known amounts. Open `/insights`, select Budget, ask exactly “how am I doing on my budget this month?”, and confirm text streams incrementally and cites the real category, spend, budget, and over/under state. It must identify missing data instead of inventing figures.
+2. **Scope isolation:** ask a budget question under Budget, then switch to Portfolio and ask for portfolio health. Confirm the second answer uses portfolio/net-worth/allocation values and does not leak unrelated transaction or goal details. Capture the outgoing digest sizes and verify they remain a few KB.
+3. **Ephemeral thread:** exchange at least two turns and confirm the recent assistant/user context is coherent. Reload `/insights`; the chat must clear and no chat-history row may exist in Supabase or PowerSync.
+4. **Monthly summary persistence:** generate the monthly health summary from the Insights screen or dashboard. Confirm exactly one `ai_summaries` row exists for the user/month/`everything`, Refresh updates that row rather than inserting a duplicate, and the dashboard shows content plus generated-at time.
+5. **Offline behavior:** after the summary has synced locally, disconnect PowerSync and block network access. Reload/navigate while remaining signed in: chat controls must be disabled with the friendly offline explanation, while the cached monthly summary still renders on both Insights and Dashboard. Reconnect and confirm no duplicate summary is created.
+6. **Budget exhausted:** temporarily configure a tiny monthly allowance or seed usage above the limit. Ask a question and confirm the function returns 429, the UI shows “Monthly allowance used” with friendly copy, no raw error leaks, and the cached summary remains visible. Restore the normal allowance afterward.
+7. **Authentication and validation:** call the function without a bearer token and with an invalid scope/body. Confirm 401 and 400 responses respectively, with no Anthropic request and no usage row increment.
+8. **Usage accounting:** complete one successful streamed request and confirm `ai_usage` increments request count plus non-negative input/output tokens for the current `YYYY-MM`; confirm the table is absent from the PowerSync client schema and download stream.
+9. **Visual/accessibility pass:** inspect light and dark themes, keyboard-only scope/composer operation, focus visibility, streaming without layout jump, the standard card/spacing rhythm, and the unchanged non-AI dashboard sections.
+
+### Pending Expo Go verification scenarios
+
+1. Confirm the visible tab order is Dashboard, Expenses, Portfolio, Insights, More with readable token-sized labels; Insights must never collapse into More.
+2. Open More and verify its sheet lists Tax, Goals, and Settings, closes by backdrop/close action, and each item reaches its existing real route.
+3. Ask the grounded Budget question and confirm `expo/fetch` streams text in place. If Expo Go streaming is unreliable, capture the failure before adopting the documented mobile-only non-streaming fallback and record that decision.
+4. Generate/refresh the monthly summary and confirm it appears on the mobile dashboard. Test live-screen offline read plus reconnect only; do not claim persistence across app relaunch because Expo Go uses the SQL.js in-memory adapter (D-021).
+
 ## Goal and exit criteria
 
 Deliver the AI Insights module: an `ai-insights` Supabase Edge Function that receives a compact financial digest, calls Anthropic, and streams the answer back, plus a chat UI on web and mobile with a scope picker and suggested prompts, and a proactive monthly "financial health" card on the dashboard.

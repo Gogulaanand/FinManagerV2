@@ -75,3 +75,4 @@ export {
   saveTransaction,
   seedDefaultCategories,
 } from './expenses';
+export { AI_SUMMARIES_QUERY, mapAiSummaryRows, saveAiSummary } from './insights';
