@@ -1,27 +1,21 @@
 # Project Status
 
-Last updated: 2026-07-19 (Phase 7 backend deployed + cost-free Chrome verified; AI-cost scenarios, expense-scale, and Expo Go still pending for both phases).
+Last updated: 2026-07-19 (Phase 5.3 and Phase 7 fully tested and committed; Vercel deployment wired up).
 
 ## Current State
 
-- Phase 7 backend is now DEPLOYED to Supabase project `vkivzhbckfsjtvzatuiz` ("finmanager"): migration `20260719000004` applied (ai_usage + ai_summaries, 2 tables / 7 indexes / 2 RLS policies / RLS on, no new advisor findings), `ai-insights` Edge Function deployed (v1, ACTIVE, verify_jwt=true), `ANTHROPIC_API_KEY` secret set by owner, and the PowerSync `ai_summaries` sync rule published. Cost-free Chrome verification passed: `/insights` workspace, scope picker (all six scopes), suggested prompts, ephemeral notice, composer, light/dark, and a live 400-on-invalid-scope from the deployed function. Per owner directive, NO AI Insights test may trigger a real Anthropic call, so the grounded-answer, scope-isolation, ephemeral-reload, summary-persistence, offline-cached-summary, and usage-accounting scenarios were deliberately NOT run. Phase 7 stays In Progress (see D-047).
-- Phase 5.3 UX simplification: Chrome structural verification passed live - portfolio hub has no always-open forms and routes to `/portfolio/<id>`; holding detail shows header/value/XIRR/edit, collapsed Add-event/Update-value forms, and a merged newest-first timeline; add-event saved a correctly-signed -₹5,000 outflow and per-entry delete works; stock kind list is exactly Invested more/Sold/Dividend received; Edit holding uses typed fields with no raw JSON and RSU reveals a typed "RSU grant" card; expenses screen shows the "X of Y" count and 6-month trend. The 100+ transaction load-more (scenarios 6-7), offline path (8), and USD/RSU event-form FX (3) could NOT be exercised - the account has 0 transactions and 1 holding; that logic is covered by the passing sync integration tests. Phase 5.3 stays In Progress; no briefing yet (see D-048).
-
-- Phase 4 done: **expenses + budgeting**. The shared schema/core/sync layers now power accounts, seeded Indian categories, concrete debit/credit transactions, recurring expansion, monthly budgets, chart series, and generic CSV import with synced per-bank mappings and import-hash deduplication.
-- Phase 5 done (code + Chrome E2E): portfolio holdings, typed metadata, dated FX-aware cash-flow events, XIRR, allocation/net-worth analytics, manual value override precedence, quote provenance, and offline-first CRUD are verified on Chrome with the signed-in test account.
-- Chrome E2E steps 1-15 verified this session: accounts, expenses, budget overspend, CSV import dedup (0 created / 2 skipped on repeat), Reliance holding with XIRR ~10%, RSU holding with FX completeness, manual override survivability, net worth, and offline write + PowerSync sync confirmation (both rows reached Supabase).
-- Three bugs fixed and committed: `saveTransaction` SELECT-check-then-INSERT pattern (D-033), `effectiveHoldingValue` manual override priority (already in source from prior session), `saveHoldingOn`/`saveHoldingEventOn`/`saveValuationOn` isNew branching fix.
-- Expo Go uses SQL.js in-memory adapter: relaunch persistence is deferred to Phase 9 native adapter swap (D-021).
+- Phase 5.3 (UX simplification) and Phase 7 (AI Insights) are both Done.
+All automated tests pass (`CI=true pnpm turbo run build test lint typecheck` green) and both phases have been manually verified.
+Phase 7 backend is deployed to Supabase `vkivzhbckfsjtvzatuiz`: migration `20260719000004` applied, `ai-insights` Edge Function live (v1, ACTIVE), `ANTHROPIC_API_KEY` set, PowerSync `ai_summaries` rule published.
+- The web app is connected to Vercel (`fin-manager-web`).
+The build passes but the app does not load yet - the three `NEXT_PUBLIC_*` env vars have not been set in Vercel (see HANDOFF.md for the exact values and setup steps).
+- Phases 0-7 are all done.
+The ordered backlog for Phase 8+ is: correctness sweep (plan-improvements.md), mobile nav / month-picker UX (plan-mobile-nav-and-month-picker.md), Phase 8 dead-man switch (plan-phase8-deadman-switch.md), Phase 9 hardening + release (plan-phase9-hardening-release.md), then monetization/donations.
 
 ## Next Up
 
-Phase 7 deployment is done. To close Phase 7 the owner must decide how to run the AI-calling scenarios (they involve real Anthropic cost and were forbidden this session): grounded budget answer, scope isolation, ephemeral reload, summary generate/refresh + offline cached render, and usage accounting - plus the Expo Go navigation/streaming/summary checks. The cost-free 429-budget path is also still un-run.
-
-To close Phase 5.3, seed a month with 100+ transactions for the signed-in account and run the load-more scale + aggregate scenarios (6-7), the offline write/reconnect path (8), and the USD/RSU event-form FX display (3) on Chrome; then run the Expo Go scenarios. Fix any regressions, rerun the full gate, write `phases/briefing/phase-5.3.md`, and only then close Phase 5.3.
-
-Phase 6's separate interactive checklist (goals, SIP/status, FIRE settings, offline write/reconnect) also remains outstanding before Phase 7 begins.
-
-Carried-over Phase 5 item: Expo Go mobile interactive verification of Phase 4 + Phase 5 remains outstanding (see HANDOFF.md).
+Set the three Vercel env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_POWERSYNC_URL`) and also add the Vercel production URL to Supabase Auth's allowed redirect list.
+After that, begin the pre-Phase-8 correctness sweep or Phase 8 (Inactivity Monitor / Dead-Man Switch) per `phases/plans/plan-phase8-deadman-switch.md`.
 
 ## Phase Tracker
 
@@ -34,7 +28,7 @@ Carried-over Phase 5 item: Expo Go mobile interactive verification of Phase 4 + 
 | 4     | Expenses + Budgeting            | Done        | 1              | [phase-4.md](phases/briefing/phase-4.md) |
 | 5     | Portfolio + Investments         | Done        | 2              | [phase-5.md](phases/briefing/phase-5.md) |
 | 6     | Goals + Retirement + FIRE       | Done        | 1              | [phase-6.md](phases/briefing/phase-6.md) |
-| 7     | AI Insights                     | In progress | 1              | [phase-7.md](phases/briefing/phase-7.md) |
+| 7     | AI Insights                     | Done        | 1              | [phase-7.md](phases/briefing/phase-7.md) |
 | 8     | Inactivity Monitor              | Not started | 0              | -                                        |
 | 9     | Hardening + Release             | Not started | 0              | -                                        |
 

@@ -5,27 +5,51 @@ This file carries mid-phase state between sessions; completed phases live in pha
 
 ---
 
-## Latest Handoff: 2026-07-19 (Phase 7 + 5.3, deployment + verification session)
+## Latest Handoff: 2026-07-19 (Phase 5.3 + Phase 7 closed; Vercel wired up)
 
 ### Where we are
 
-Phase 7 backend is deployed to Supabase `vkivzhbckfsjtvzatuiz` ("finmanager"): migration `20260719000004` applied (ai_usage + ai_summaries verified: 2 tables, 7 indexes, 2 RLS policies, RLS on, no new advisor findings), `ai-insights` Edge Function deployed (v1, ACTIVE, verify_jwt=true), owner set `ANTHROPIC_API_KEY`, owner published the PowerSync `ai_summaries` rule. A cost-free live call proved the deploy (invalid scope → HTTP 400 with the friendly body). Cost-free Chrome verification of both phases passed (see STATUS.md Current State and D-047/D-048). No AI-calling scenario was run - owner forbade real Anthropic cost. Phase 5.3 structural Chrome checks passed; scale/offline/RSU-FX scenarios were not exercisable because the account has 0 transactions and 1 holding.
+Phases 5.3 (UX simplification) and 7 (AI Insights) are fully tested and committed.
+All automated tests pass (`CI=true pnpm turbo run build test lint typecheck` green, 21/21 tasks).
+Phase 7 backend is live on Supabase `vkivzhbckfsjtvzatuiz`: migration `20260719000004` applied, `ai-insights` Edge Function active (v1, verify_jwt=true), `ANTHROPIC_API_KEY` set in Supabase secrets, PowerSync `ai_summaries` rule published.
+The GitHub repo is linked to Vercel (`fin-manager-web`) and the build passes - but the app does not load because the three `NEXT_PUBLIC_*` env vars have not been configured in Vercel yet.
 
 ### Exact next action
 
-Two owner decisions gate closure. (1) Phase 7: decide how to run the AI-calling scenarios (they cost money) - grounded budget answer, scope isolation, ephemeral reload, summary generate/refresh + offline cached render, usage accounting - or explicitly accept them as un-verified; also run the cost-free 429-budget path and the Expo Go checks. (2) Phase 5.3: seed a 100+ transaction month for the signed-in account, then run scenarios 6-7 (load-more scale/aggregates), 8 (offline), and 3 (USD/RSU event-form FX) on Chrome, plus the Expo Go set. Then rerun the gate, write `phases/briefing/phase-5.3.md`, and close.
+**Fix Vercel deployment - two steps:**
+
+1. In the Vercel project dashboard > Settings > Environment Variables, add all three variables (all environments):
+
+   | Variable | Value |
+   |---|---|
+   | `NEXT_PUBLIC_SUPABASE_URL` | `https://vkivzhbckfsjtvzatuiz.supabase.co` |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `sb_publishable_nwtm1eYDVnXoYzFUbhZJwg_oyEe-jUc` |
+   | `NEXT_PUBLIC_POWERSYNC_URL` | `https://6a5b0b247f33bac37ef7cefc.powersync.journeyapps.com` |
+
+2. In Supabase dashboard > Authentication > URL Configuration, add the Vercel production URL (e.g. `https://fin-manager-web.vercel.app`) to **Redirect URLs** so OAuth / magic-link auth works from the deployed app.
+
+3. Also check Vercel's **Root Directory** setting: it must be set to `apps/web` (or the Build Command must be `cd apps/web && pnpm build` with Output Directory `apps/web/.next`), since this is a pnpm monorepo and Next.js lives in `apps/web`. The `postinstall` script (`powersync-web copy-assets -o public`) must also run - if using root directory `apps/web`, set Install Command to `cd ../.. && pnpm install`.
+
+   Recommended Vercel settings:
+   - **Root Directory**: `apps/web`
+   - **Install Command**: `cd ../.. && pnpm install`
+   - **Build Command**: `pnpm build` (runs `next build`)
+   - **Output Directory**: `.next`
+
+After the app loads, verify sign-in and PowerSync sync work on the Vercel URL before starting Phase 8.
 
 ### Files in flight
 
-Docs only this session: STATUS.md, HANDOFF.md, DECISIONS.md (D-047, D-048). No source changed - the repo was already green (gate 21/21 this session, no stubs/skips). Deployment happened in Supabase, not in tracked files (the migration/function/sync-rule files already existed on main).
+No source files are in flight - repo is clean and green.
+The only outstanding setup is Vercel env vars + Supabase redirect URL (external configuration, not tracked files).
 
 ### Open items / warnings
 
-- Do NOT trigger any AI Insights request that reaches Anthropic - owner policy (real cost). The 429 and 400/401 paths return before Anthropic and are cost-free.
-- `ANTHROPIC_API_KEY` lives only in Supabase secrets. `ai_usage` is server-written and unsynced; only `ai_summaries` is in PowerSync.
-- Phase 5.3 scale/offline verification needs seeded data - the signed-in web test account currently has no transactions.
-- Expo Go interactive verification for both phases is still outstanding (physical device).
+- `ANTHROPIC_API_KEY` lives only in Supabase secrets (server-side). Do NOT add it to Vercel env vars.
+- `ai_usage` is server-written and unsynced; only `ai_summaries` is in PowerSync.
 - The other Supabase project `cqgdpoinootjkshdevpu` is NOT the target; all Phase 4-7 migrations are on `vkivzhbckfsjtvzatuiz`.
+- Expo Go still uses SQL.js in-memory adapter; relaunch persistence is deferred to Phase 9 (D-021).
+- Next up after Vercel fix: correctness sweep (phases/plans/plan-improvements.md), then mobile nav/month-picker UX, then Phase 8 dead-man switch.
 
 ---
 
