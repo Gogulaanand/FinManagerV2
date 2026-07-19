@@ -17,6 +17,7 @@ import { Collapsible } from '../../components/collapsible';
 import { MobileExpenseCharts } from '../../components/expenses/expense-charts';
 import { TransactionRow } from '../../components/expenses/transaction-row';
 import { MobileTransactionForm } from '../../components/expenses/transaction-form';
+import { Fab } from '../../components/fab';
 import { Field, Segmented } from '../../components/field';
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
 import { useExpenses } from '../../lib/expenses';
@@ -261,17 +262,6 @@ export default function ExpensesScreen() {
             Track spending, income, and the month ahead.
           </Text>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => {
-            setEditingId(null);
-            setFormOpen(true);
-          }}
-          disabled={!api.canWrite}
-          className="rounded-md bg-primary px-3 py-2 disabled:opacity-50"
-        >
-          <Text className="font-body text-label text-primary-foreground">Add</Text>
-        </Pressable>
       </View>
       {!api.canWrite ? (
         <Card>
@@ -541,7 +531,16 @@ export default function ExpensesScreen() {
           if (api.hasMoreTransactions) api.loadMoreTransactions();
         }}
         onEndReachedThreshold={0.4}
-        contentContainerClassName="pb-12"
+        contentContainerClassName="pb-28"
+      />
+      <Fab
+        icon="receipt"
+        label="Add transaction"
+        onPress={() => {
+          setEditingId(null);
+          setFormOpen(true);
+        }}
+        disabled={!api.canWrite}
       />
     </SafeAreaView>
   );

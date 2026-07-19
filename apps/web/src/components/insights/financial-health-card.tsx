@@ -24,12 +24,25 @@ export function FinancialHealthCard() {
   return <FinancialHealthCardContent />;
 }
 
+/** Local preference: skip the rerun cost-confirmation once the user opts out. */
+const SKIP_REFRESH_CONFIRM_KEY = 'finmanager.insights.skipRefreshConfirm';
+
+function readSkipRefreshConfirm(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(SKIP_REFRESH_CONFIRM_KEY) === '1';
+}
+
 function FinancialHealthCardContent() {
   const api = useInsights();
   const [generating, setGenerating] = useState(false);
   const [streaming, setStreaming] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [dontAskAgain, setDontAskAgain] = useState(false);
   const content = streaming || api.latestSummary?.content;
+  // A "rerun" is a refresh over an already-saved summary; the very first
+  // generation has nothing to re-spend and does not need the cost warning.
+  const isRerun = Boolean(api.latestSummary);
 
   async function generate() {
     setGenerating(true);
@@ -45,6 +58,23 @@ function FinancialHealthCardContent() {
     }
   }
 
+  function requestGenerate() {
+    if (isRerun && !readSkipRefreshConfirm()) {
+      setDontAskAgain(false);
+      setConfirming(true);
+      return;
+    }
+    void generate();
+  }
+
+  function confirmGenerate() {
+    if (dontAskAgain && typeof window !== 'undefined') {
+      window.localStorage.setItem(SKIP_REFRESH_CONFIRM_KEY, '1');
+    }
+    setConfirming(false);
+    void generate();
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -56,12 +86,37 @@ function FinancialHealthCardContent() {
           type="button"
           size="sm"
           variant={content ? 'outline' : 'primary'}
-          disabled={!api.canChat || generating || api.loading}
-          onClick={() => void generate()}
+          disabled={!api.canChat || generating || api.loading || confirming}
+          onClick={requestGenerate}
         >
           {generating ? 'Generating…' : content ? 'Refresh' : 'Generate'}
         </Button>
       </CardHeader>
+      {confirming ? (
+        <div className="mb-4 rounded-md border-l-4 border-primary bg-surface-muted p-3">
+          <p className="font-body text-body-md text-foreground">
+            Refreshing re-runs the AI analysis and uses your monthly AI allowance, which has a cost.
+            Only refresh if your finances changed meaningfully this month.
+          </p>
+          <label className="mt-3 flex items-center gap-2 font-body text-caption text-foreground-muted">
+            <input
+              type="checkbox"
+              checked={dontAskAgain}
+              onChange={(event) => setDontAskAgain(event.target.checked)}
+              className="h-4 w-4 accent-primary"
+            />
+            Don&rsquo;t show this again
+          </label>
+          <div className="mt-3 flex gap-2">
+            <Button type="button" size="sm" variant="primary" onClick={confirmGenerate}>
+              Refresh anyway
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setConfirming(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : null}
       {content ? (
         <p className="font-body text-body-md whitespace-pre-wrap text-foreground">{content}</p>
       ) : (

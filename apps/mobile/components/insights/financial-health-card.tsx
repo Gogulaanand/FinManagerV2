@@ -1,11 +1,15 @@
-import { useState } from 'react';
-import { Text, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { useStatus } from '@powersync/react';
 
 import { useInsights } from '../../lib/insights';
 import { Card, CardLabel, CardTitle } from '../card';
 import { useAuth } from '../providers';
 import { InsightAction } from './chat-message';
+
+/** Local preference: skip the rerun cost-confirmation once the user opts out. */
+const SKIP_REFRESH_CONFIRM_KEY = 'finmanager.insights.skipRefreshConfirm';
 
 export function FinancialHealthCard() {
   const status = useStatus();
@@ -28,7 +32,23 @@ function FinancialHealthCardContent() {
   const [generating, setGenerating] = useState(false);
   const [streaming, setStreaming] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [dontAskAgain, setDontAskAgain] = useState(false);
+  const skipConfirm = useRef(false);
   const content = streaming || api.latestSummary?.content;
+  // A "rerun" is a refresh over an already-saved summary; the very first
+  // generation has nothing to re-spend and does not need the cost warning.
+  const isRerun = Boolean(api.latestSummary);
+
+  useEffect(() => {
+    let active = true;
+    void AsyncStorage.getItem(SKIP_REFRESH_CONFIRM_KEY).then((value) => {
+      if (active) skipConfirm.current = value === '1';
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function generate() {
     setGenerating(true);
@@ -44,6 +64,24 @@ function FinancialHealthCardContent() {
     }
   }
 
+  function requestGenerate() {
+    if (isRerun && !skipConfirm.current) {
+      setDontAskAgain(false);
+      setConfirming(true);
+      return;
+    }
+    void generate();
+  }
+
+  function confirmGenerate() {
+    if (dontAskAgain) {
+      skipConfirm.current = true;
+      void AsyncStorage.setItem(SKIP_REFRESH_CONFIRM_KEY, '1');
+    }
+    setConfirming(false);
+    void generate();
+  }
+
   return (
     <Card>
       <View className="mb-3 flex-row items-start justify-between gap-3">
@@ -53,10 +91,51 @@ function FinancialHealthCardContent() {
         </View>
         <InsightAction
           label={generating ? 'Generating…' : content ? 'Refresh' : 'Generate'}
-          disabled={!api.canChat || generating || api.loading}
-          onPress={() => void generate()}
+          disabled={!api.canChat || generating || api.loading || confirming}
+          onPress={requestGenerate}
         />
       </View>
+      {confirming ? (
+        <View className="mb-3 rounded-md border-l-4 border-primary bg-surface-muted p-3">
+          <Text className="font-body text-body-md text-foreground">
+            Refreshing re-runs the AI analysis and uses your monthly AI allowance, which has a cost.
+            Only refresh if your finances changed meaningfully this month.
+          </Text>
+          <Pressable
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: dontAskAgain }}
+            onPress={() => setDontAskAgain((current) => !current)}
+            className="mt-3 flex-row items-center gap-2"
+          >
+            <View
+              className={`h-5 w-5 items-center justify-center rounded border ${
+                dontAskAgain ? 'border-primary bg-primary' : 'border-border bg-surface'
+              }`}
+            >
+              {dontAskAgain ? <Text className="text-caption text-primary-foreground">✓</Text> : null}
+            </View>
+            <Text className="font-body text-caption text-foreground-muted">
+              Don&rsquo;t show this again
+            </Text>
+          </Pressable>
+          <View className="mt-3 flex-row gap-2">
+            <Pressable
+              accessibilityRole="button"
+              onPress={confirmGenerate}
+              className="rounded-md bg-primary px-3 py-2"
+            >
+              <Text className="text-primary-foreground">Refresh anyway</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setConfirming(false)}
+              className="rounded-md bg-surface-muted px-3 py-2"
+            >
+              <Text className="text-foreground">Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
       <Text
         className={`font-body text-body-md ${content ? 'text-foreground' : 'text-foreground-muted'}`}
       >

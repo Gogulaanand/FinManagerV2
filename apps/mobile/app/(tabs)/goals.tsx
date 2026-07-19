@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Amount } from '../../components/amount';
 import { Card, CardLabel, CardTitle } from '../../components/card';
+import { Fab } from '../../components/fab';
 import { MobileFireSettingsForm } from '../../components/goals/fire-settings-form';
 import { MobileGoalForm } from '../../components/goals/goal-form';
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
@@ -121,25 +122,12 @@ function GoalsContent() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView className="flex-1" contentContainerClassName="gap-4 p-4 pb-12">
-        <View className="flex-row items-end justify-between gap-3">
-          <View className="flex-1">
-            <Text className="font-display text-headline-lg text-foreground">Goals &amp; FIRE</Text>
-            <Text className="font-body text-body-md text-foreground-muted">
-              Targets, the SIP to close each gap, and your path to independence.
-            </Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            disabled={!api.canWrite}
-            onPress={() => {
-              setEditingId(null);
-              setShowForm(true);
-            }}
-            className="rounded-md bg-primary px-3 py-2 disabled:opacity-50"
-          >
-            <Text className="font-body text-label text-primary-foreground">Add</Text>
-          </Pressable>
+      <ScrollView className="flex-1" contentContainerClassName="gap-4 p-4 pb-28">
+        <View className="flex-1">
+          <Text className="font-display text-headline-lg text-foreground">Goals &amp; FIRE</Text>
+          <Text className="font-body text-body-md text-foreground-muted">
+            Targets, the SIP to close each gap, and your path to independence.
+          </Text>
         </View>
 
         {!api.canWrite ? (
@@ -322,6 +310,15 @@ function GoalsContent() {
           />
         ) : null}
       </ScrollView>
+      <Fab
+        icon="flag"
+        label="Add goal"
+        onPress={() => {
+          setEditingId(null);
+          setShowForm(true);
+        }}
+        disabled={!api.canWrite}
+      />
     </SafeAreaView>
   );
 }

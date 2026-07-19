@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Amount } from '../../components/amount';
 import { Card, CardLabel, CardTitle } from '../../components/card';
+import { Fab } from '../../components/fab';
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
 import { MobileHoldingForm } from '../../components/portfolio/holding-form';
 import { MobilePortfolioImport } from '../../components/portfolio/portfolio-import';
@@ -50,7 +51,7 @@ export default function PortfolioScreen() {
     );
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView contentContainerClassName="gap-4 p-4 pb-12">
+      <ScrollView contentContainerClassName="gap-4 p-4 pb-28">
         <View className="flex-row items-end justify-between gap-3">
           <View className="flex-1">
             <Text className="font-display text-headline-lg text-foreground">Portfolio</Text>
@@ -58,24 +59,14 @@ export default function PortfolioScreen() {
               Value and return across every asset.
             </Text>
           </View>
-          <View className="gap-2">
-            <Pressable
-              accessibilityRole="button"
-              disabled={!api.canWrite}
-              onPress={() => setShowForm(true)}
-              className="rounded-md bg-primary px-3 py-2 disabled:opacity-50"
-            >
-              <Text className="text-primary-foreground">Add</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              disabled={!api.canWrite}
-              onPress={() => void refresh()}
-              className="rounded-md bg-surface-muted px-3 py-2 disabled:opacity-50"
-            >
-              <Text className="text-foreground">Refresh</Text>
-            </Pressable>
-          </View>
+          <Pressable
+            accessibilityRole="button"
+            disabled={!api.canWrite}
+            onPress={() => void refresh()}
+            className="rounded-md bg-surface-muted px-3 py-2 disabled:opacity-50"
+          >
+            <Text className="text-foreground">Refresh</Text>
+          </Pressable>
         </View>
         {!api.canWrite ? (
           <Card>
@@ -175,6 +166,12 @@ export default function PortfolioScreen() {
           />
         ) : null}
       </ScrollView>
+      <Fab
+        icon="trending-up"
+        label="Add holding"
+        onPress={() => setShowForm(true)}
+        disabled={!api.canWrite}
+      />
     </SafeAreaView>
   );
 }
