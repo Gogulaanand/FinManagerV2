@@ -5,6 +5,30 @@ This file carries mid-phase state between sessions; completed phases live in pha
 
 ---
 
+## Latest Handoff: 2026-07-19 (Phase 7 + 5.3, deployment + verification session)
+
+### Where we are
+
+Phase 7 backend is deployed to Supabase `vkivzhbckfsjtvzatuiz` ("finmanager"): migration `20260719000004` applied (ai_usage + ai_summaries verified: 2 tables, 7 indexes, 2 RLS policies, RLS on, no new advisor findings), `ai-insights` Edge Function deployed (v1, ACTIVE, verify_jwt=true), owner set `ANTHROPIC_API_KEY`, owner published the PowerSync `ai_summaries` rule. A cost-free live call proved the deploy (invalid scope → HTTP 400 with the friendly body). Cost-free Chrome verification of both phases passed (see STATUS.md Current State and D-047/D-048). No AI-calling scenario was run - owner forbade real Anthropic cost. Phase 5.3 structural Chrome checks passed; scale/offline/RSU-FX scenarios were not exercisable because the account has 0 transactions and 1 holding.
+
+### Exact next action
+
+Two owner decisions gate closure. (1) Phase 7: decide how to run the AI-calling scenarios (they cost money) - grounded budget answer, scope isolation, ephemeral reload, summary generate/refresh + offline cached render, usage accounting - or explicitly accept them as un-verified; also run the cost-free 429-budget path and the Expo Go checks. (2) Phase 5.3: seed a 100+ transaction month for the signed-in account, then run scenarios 6-7 (load-more scale/aggregates), 8 (offline), and 3 (USD/RSU event-form FX) on Chrome, plus the Expo Go set. Then rerun the gate, write `phases/briefing/phase-5.3.md`, and close.
+
+### Files in flight
+
+Docs only this session: STATUS.md, HANDOFF.md, DECISIONS.md (D-047, D-048). No source changed - the repo was already green (gate 21/21 this session, no stubs/skips). Deployment happened in Supabase, not in tracked files (the migration/function/sync-rule files already existed on main).
+
+### Open items / warnings
+
+- Do NOT trigger any AI Insights request that reaches Anthropic - owner policy (real cost). The 429 and 400/401 paths return before Anthropic and are cost-free.
+- `ANTHROPIC_API_KEY` lives only in Supabase secrets. `ai_usage` is server-written and unsynced; only `ai_summaries` is in PowerSync.
+- Phase 5.3 scale/offline verification needs seeded data - the signed-in web test account currently has no transactions.
+- Expo Go interactive verification for both phases is still outstanding (physical device).
+- The other Supabase project `cqgdpoinootjkshdevpu` is NOT the target; all Phase 4-7 migrations are on `vkivzhbckfsjtvzatuiz`.
+
+---
+
 ## Latest Handoff: 2026-07-19 (Phase 7, session 1)
 
 ### Where we are

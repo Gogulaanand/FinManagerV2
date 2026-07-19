@@ -1,11 +1,11 @@
 # Project Status
 
-Last updated: 2026-07-19 (Phase 7 AI Insights code complete on current main; deployment and Chrome/Expo Go verification pending).
+Last updated: 2026-07-19 (Phase 7 backend deployed + cost-free Chrome verified; AI-cost scenarios, expense-scale, and Expo Go still pending for both phases).
 
 ## Current State
 
-- Phase 7 AI Insights is code-complete on top of Phase 5.3: client-built compact digests, authenticated/metered Anthropic SSE proxy, ephemeral chat, synced offline monthly summaries, web/mobile Insights workspaces, dashboard health cards, and the five-slot mobile navigation are implemented. Automated gates and Expo iOS export are green; deployment plus interactive Chrome/Expo Go scenarios remain pending, so Phase 7 is still in progress.
-- Phase 5.3 UX simplification implementation is committed-ready: holding-centric web/mobile portfolio detail routes, contextual keypad/forms, typed metadata, month-bounded expense pagination, mobile FlatList/collapsibles/responsive charts, and web load-more are implemented. `CI=true pnpm turbo run build test lint` passes 15/15. Interactive Chrome + Expo Go + offline/reconnect verification remains pending, so Phase 5.3 is not yet closed and has no briefing.
+- Phase 7 backend is now DEPLOYED to Supabase project `vkivzhbckfsjtvzatuiz` ("finmanager"): migration `20260719000004` applied (ai_usage + ai_summaries, 2 tables / 7 indexes / 2 RLS policies / RLS on, no new advisor findings), `ai-insights` Edge Function deployed (v1, ACTIVE, verify_jwt=true), `ANTHROPIC_API_KEY` secret set by owner, and the PowerSync `ai_summaries` sync rule published. Cost-free Chrome verification passed: `/insights` workspace, scope picker (all six scopes), suggested prompts, ephemeral notice, composer, light/dark, and a live 400-on-invalid-scope from the deployed function. Per owner directive, NO AI Insights test may trigger a real Anthropic call, so the grounded-answer, scope-isolation, ephemeral-reload, summary-persistence, offline-cached-summary, and usage-accounting scenarios were deliberately NOT run. Phase 7 stays In Progress (see D-047).
+- Phase 5.3 UX simplification: Chrome structural verification passed live - portfolio hub has no always-open forms and routes to `/portfolio/<id>`; holding detail shows header/value/XIRR/edit, collapsed Add-event/Update-value forms, and a merged newest-first timeline; add-event saved a correctly-signed -₹5,000 outflow and per-entry delete works; stock kind list is exactly Invested more/Sold/Dividend received; Edit holding uses typed fields with no raw JSON and RSU reveals a typed "RSU grant" card; expenses screen shows the "X of Y" count and 6-month trend. The 100+ transaction load-more (scenarios 6-7), offline path (8), and USD/RSU event-form FX (3) could NOT be exercised - the account has 0 transactions and 1 holding; that logic is covered by the passing sync integration tests. Phase 5.3 stays In Progress; no briefing yet (see D-048).
 
 - Phase 4 done: **expenses + budgeting**. The shared schema/core/sync layers now power accounts, seeded Indian categories, concrete debit/credit transactions, recurring expansion, monthly budgets, chart series, and generic CSV import with synced per-bank mappings and import-hash deduplication.
 - Phase 5 done (code + Chrome E2E): portfolio holdings, typed metadata, dated FX-aware cash-flow events, XIRR, allocation/net-worth analytics, manual value override precedence, quote provenance, and offline-first CRUD are verified on Chrome with the signed-in test account.
@@ -15,9 +15,9 @@ Last updated: 2026-07-19 (Phase 7 AI Insights code complete on current main; dep
 
 ## Next Up
 
-Deploy the Phase 7 migration, Edge Function secret/function, and PowerSync rule, then execute the numbered Chrome and Expo Go scenarios in `phases/phase-7-ai-insights-plan.md`. Record evidence and fix any observed failures before marking Phase 7 done.
+Phase 7 deployment is done. To close Phase 7 the owner must decide how to run the AI-calling scenarios (they involve real Anthropic cost and were forbidden this session): grounded budget answer, scope isolation, ephemeral reload, summary generate/refresh + offline cached render, and usage accounting - plus the Expo Go navigation/streaming/summary checks. The cost-free 429-budget path is also still un-run.
 
-Start the next session with the Chrome scenarios in `phases/phase-5.3-ux-simplification-plan.md`, then run the Expo Go and offline/reconnect scenarios. Fix any observed regressions, rerun the full gate, write `phases/briefing/phase-5.3.md`, and only then close Phase 5.3.
+To close Phase 5.3, seed a month with 100+ transactions for the signed-in account and run the load-more scale + aggregate scenarios (6-7), the offline write/reconnect path (8), and the USD/RSU event-form FX display (3) on Chrome; then run the Expo Go scenarios. Fix any regressions, rerun the full gate, write `phases/briefing/phase-5.3.md`, and only then close Phase 5.3.
 
 Phase 6's separate interactive checklist (goals, SIP/status, FIRE settings, offline write/reconnect) also remains outstanding before Phase 7 begins.
 
