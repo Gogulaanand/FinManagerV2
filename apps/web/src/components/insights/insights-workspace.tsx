@@ -204,6 +204,11 @@ function InsightsWorkspaceContent() {
           <Button type="submit" disabled={!api.canChat || sending || !question.trim()}>
             {sending ? 'Answering…' : 'Send'}
           </Button>
+          {sending ? (
+            <Button type="button" variant="outline" onClick={api.cancel}>
+              Stop
+            </Button>
+          ) : null}
         </form>
       </Card>
     </div>

@@ -1,5 +1,5 @@
 import type { RegimeResult } from '@finmanager/core';
-import { formatInr } from '@finmanager/core';
+import { formatInr, formatPercent } from '@finmanager/core';
 import { Text, View } from 'react-native';
 
 import { Amount } from '../amount';
@@ -48,7 +48,7 @@ export function RegimeCard({ result, best, shortfall, compact = false }: RegimeC
         <Row label="Annual in-hand" value={formatInr(result.annualInHand)} />
         <Row label="Taxable income" value={formatInr(result.taxableIncome)} />
         <Row label="Total tax" value={formatInr(result.totalTax)} />
-        <Row label="Effective rate" value={`${(result.effectiveRate * 100).toFixed(1)}%`} />
+        <Row label="Effective rate" value={formatPercent(result.effectiveRate)} />
         {!best && shortfall > 0 ? (
           <Row label="Costs you" value={`${formatInr(shortfall)}/yr`} />
         ) : null}

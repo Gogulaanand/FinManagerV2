@@ -52,6 +52,26 @@ export function formatDelta(ratio: number, fractionDigits = 1): string {
   return `${sign}${Math.abs(percent).toFixed(fractionDigits)}%`;
 }
 
+/** Formats an unsigned ratio as a percentage, e.g. 0.0481 -> 4.81%. */
+export function formatPercent(ratio: number, fractionDigits = 1): string {
+  return `${(ratio * 100).toFixed(fractionDigits)}%`;
+}
+
+/** Returns actual spending as a budget ratio; an empty budget has no progress. */
+export function budgetRatio(actual: number, budget: number): number {
+  return budget > 0 ? actual / budget : 0;
+}
+
+/** Converts a storage ratio into a stable numeric percentage input value. */
+export function ratioToPercent(ratio: number, precision = 4): number {
+  return Number((ratio * 100).toFixed(precision));
+}
+
+/** Converts a user-entered percentage into a non-negative storage ratio. */
+export function percentToRatio(percent: number): number {
+  return Number.isFinite(percent) && percent >= 0 ? percent / 100 : 0;
+}
+
 /** Converts storage-style enum labels into readable UI copy. */
 export function formatChoiceLabel(value: string): string {
   return value

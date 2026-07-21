@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-07-21 (mobile navigation/month-picker plan implemented; awaiting native-device evidence and commit approval).
+Last updated: 2026-07-21 (repo-wide improvements implemented and Supabase-verified; awaiting commit approval).
 
 ## Current State
 
@@ -10,13 +10,15 @@ Last updated: 2026-07-21 (mobile navigation/month-picker plan implemented; await
 - The web app is connected to Vercel (`fin-manager-web`).
   The build passes but the app does not load yet - the three `NEXT_PUBLIC_*` env vars have not been set in Vercel (see HANDOFF.md for the exact values and setup steps).
 - Phases 0-7 are all done.
-- The mobile navigation/month-picker plan is implemented on the current uncommitted worktree. Automated gates and local Chrome verification pass; iOS/Android simulator/device evidence is still pending because CoreSimulatorService is unavailable and adb is not installed.
-  The remaining ordered backlog is: correctness sweep (plan-improvements.md), Phase 8 dead-man switch (plan-phase8-deadman-switch.md), Phase 9 hardening + release (plan-phase9-hardening-release.md), then monetization/donations.
+- The repo-wide improvements plan (`phases/plans/plan-improvements.md`) is implemented in the current worktree: AI usage reservation is atomic, stream cancellation/timeouts and sync gates are in place, domain math is shared in core, and the largest setup/metadata forms have been extracted. Local package builds, tests, typechecks, linters, formatting checks, and the web production build pass. Both Supabase migrations are applied locally and remotely; local and linked pgTAP tests pass, and the concurrent reserve/release flow was verified through Supabase MCP. Owner review is pending before commit.
+  The remaining ordered backlog is Phase 8 dead-man switch, Phase 9 hardening + release, then monetization/donations.
 
 ## Next Up
 
 Set the three Vercel env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_POWERSYNC_URL`) and also add the Vercel production URL to Supabase Auth's allowed redirect list.
-After native verification and commit approval for the mobile navigation/month-picker plan, begin the pre-Phase-8 correctness sweep or Phase 8 (Inactivity Monitor / Dead-Man Switch) per `phases/plans/plan-phase8-deadman-switch.md`.
+After verification and commit approval for the improvements plan, begin Phase 8 (Inactivity Monitor / Dead-Man Switch) per `phases/plans/plan-phase8-deadman-switch.md`.
+
+Plan index: [improvements](phases/plans/plan-improvements.md) · [mobile navigation/month picker](phases/plans/plan-mobile-nav-and-month-picker.md) · [Phase 8](phases/plans/plan-phase8-deadman-switch.md) · [Phase 9](phases/plans/plan-phase9-hardening-release.md) · [monetization](phases/plans/plan-monetization.md).
 
 ## Phase Tracker
 

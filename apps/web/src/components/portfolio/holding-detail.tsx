@@ -4,6 +4,7 @@ import {
   EVENT_KIND_LABELS,
   calculatePortfolioSummary,
   effectiveHoldingValue,
+  formatPercent,
   latestValuation,
   mergeHoldingTimeline,
   valuationValueInr,
@@ -74,7 +75,7 @@ export function HoldingDetail({ holdingId }: { readonly holdingId: string }) {
           <p className="font-display text-display-md text-foreground">
             {holdingSummary.xirr.rate === null
               ? 'Not available'
-              : `${(holdingSummary.xirr.rate * 100).toFixed(2)}%`}
+              : formatPercent(holdingSummary.xirr.rate, 2)}
           </p>
         </Card>
       </div>

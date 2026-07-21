@@ -157,18 +157,20 @@ export async function saveScenario(
   const now = new Date().toISOString();
   const inputJson = JSON.stringify(scenario.input);
 
-  const updated = await db.execute(
-    `UPDATE tax_scenarios SET name = ?, fy = ?, input = ?, updated_at = ? WHERE id = ?`,
-    [scenario.name, scenario.input.fy, inputJson, now, scenario.id],
-  );
-
-  if (!updated.rowsAffected) {
-    await db.execute(
-      `INSERT INTO tax_scenarios (id, user_id, name, fy, input, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [scenario.id, userId, scenario.name, scenario.input.fy, inputJson, now, now],
+  await db.writeTransaction(async (tx) => {
+    const updated = await tx.execute(
+      `UPDATE tax_scenarios SET name = ?, fy = ?, input = ?, updated_at = ? WHERE id = ?`,
+      [scenario.name, scenario.input.fy, inputJson, now, scenario.id],
     );
-  }
+
+    if (!updated.rowsAffected) {
+      await tx.execute(
+        `INSERT INTO tax_scenarios (id, user_id, name, fy, input, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [scenario.id, userId, scenario.name, scenario.input.fy, inputJson, now, now],
+      );
+    }
+  });
 }
 
 /** Deletes a scenario by id. RLS still applies on the eventual sync. */

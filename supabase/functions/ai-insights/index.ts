@@ -105,34 +105,32 @@ function messagesFor(request: InsightsRequest): readonly Record<string, unknown>
   ];
 }
 
-async function accountUsage(
+async function recordUsage(
   admin: ReturnType<typeof createClient>,
   userId: string,
   inputTokens: number,
   outputTokens: number,
-): Promise<void> {
-  const month = monthKey();
-  const { data } = await admin
-    .from('ai_usage')
-    .select('input_tokens, output_tokens, request_count')
-    .eq('user_id', userId)
-    .eq('month', month)
-    .maybeSingle();
-  await admin.from('ai_usage').upsert(
-    {
-      user_id: userId,
-      month,
-      input_tokens: Number(data?.input_tokens ?? 0) + inputTokens,
-      output_tokens: Number(data?.output_tokens ?? 0) + outputTokens,
-      request_count: Number(data?.request_count ?? 0) + 1,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id,month' },
-  );
+  requestCount: number,
+  budgetTokens: number,
+  enforceBudget: boolean,
+): Promise<boolean> {
+  const { data, error } = await admin.rpc('record_ai_usage', {
+    p_user_id: userId,
+    p_month: monthKey(),
+    p_input_tokens: inputTokens,
+    p_output_tokens: outputTokens,
+    p_request_count: requestCount,
+    p_budget_tokens: budgetTokens,
+    p_enforce_budget: enforceBudget,
+  });
+  if (error) throw error;
+  return data === true;
 }
 
 function meteredStream(
   body: ReadableStream<Uint8Array>,
+  reservedInputTokens: number,
+  reservedOutputTokens: number,
   onUsage: (inputTokens: number, outputTokens: number) => Promise<void>,
 ): ReadableStream<Uint8Array> {
   const reader = body.getReader();
@@ -140,6 +138,13 @@ function meteredStream(
   let pending = '';
   let inputTokens = 0;
   let outputTokens = 0;
+  let settled = false;
+
+  async function settle(actualInput: number, actualOutput: number): Promise<void> {
+    if (settled) return;
+    settled = true;
+    await onUsage(actualInput - reservedInputTokens, actualOutput - reservedOutputTokens);
+  }
 
   function inspect(text: string): void {
     pending += text;
@@ -165,7 +170,7 @@ function meteredStream(
       const { done, value } = await reader.read();
       if (done) {
         inspect(decoder.decode());
-        const accounting = onUsage(inputTokens, outputTokens);
+        const accounting = settle(inputTokens, outputTokens);
         if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(accounting);
         else await accounting;
         controller.close();
@@ -175,6 +180,8 @@ function meteredStream(
       controller.enqueue(value);
     },
     cancel(reason) {
+      const accounting = settle(0, 0);
+      if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(accounting);
       return reader.cancel(reason);
     },
   });
@@ -217,14 +224,25 @@ Deno.serve(async (request) => {
   }
 
   const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-  const month = monthKey();
-  const { data: usage } = await admin
-    .from('ai_usage')
-    .select('input_tokens, output_tokens')
-    .eq('user_id', authData.user.id)
-    .eq('month', month)
-    .maybeSingle();
-  if (Number(usage?.input_tokens ?? 0) + Number(usage?.output_tokens ?? 0) >= parseBudget()) {
+  const messages = messagesFor(insightsRequest);
+  const maxTokens = insightsRequest.mode === 'chat' ? 4096 : 1024;
+  const reservedInputTokens = Math.max(1, Math.ceil(JSON.stringify(messages).length / 4));
+  const reservedOutputTokens = maxTokens;
+  let reserved = false;
+  try {
+    reserved = await recordUsage(
+      admin,
+      authData.user.id,
+      reservedInputTokens,
+      reservedOutputTokens,
+      1,
+      parseBudget(),
+      true,
+    );
+  } catch {
+    return jsonError(500, 'upstream', 'AI Insights metering is temporarily unavailable.');
+  }
+  if (!reserved) {
     return jsonError(
       429,
       'budget_exceeded',
@@ -244,11 +262,20 @@ Deno.serve(async (request) => {
       max_tokens: insightsRequest.mode === 'chat' ? 4096 : 1024,
       stream: true,
       system: systemPrompt,
-      messages: messagesFor(insightsRequest),
+      messages,
     }),
   });
 
   if (!anthropicResponse.ok || !anthropicResponse.body) {
+    await recordUsage(
+      admin,
+      authData.user.id,
+      -reservedInputTokens,
+      -reservedOutputTokens,
+      -1,
+      0,
+      false,
+    );
     return jsonError(
       anthropicResponse.status >= 400 && anthropicResponse.status < 500
         ? anthropicResponse.status
@@ -259,8 +286,12 @@ Deno.serve(async (request) => {
   }
 
   return new Response(
-    meteredStream(anthropicResponse.body, (inputTokens, outputTokens) =>
-      accountUsage(admin, authData.user.id, inputTokens, outputTokens),
+    meteredStream(
+      anthropicResponse.body,
+      reservedInputTokens,
+      reservedOutputTokens,
+      (inputTokens, outputTokens) =>
+        recordUsage(admin, authData.user.id, inputTokens, outputTokens, 0, 0, false),
     ),
     {
       status: 200,

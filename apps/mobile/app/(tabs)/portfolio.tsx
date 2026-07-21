@@ -1,5 +1,6 @@
-import { effectiveHoldingValue, latestValuation } from '@finmanager/core';
+import { effectiveHoldingValue, formatPercent, latestValuation } from '@finmanager/core';
 import { router, type Href } from 'expo-router';
+import { useStatus } from '@powersync/react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,10 +11,11 @@ import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/mo
 import { MobilePortfolioImport } from '../../components/portfolio/portfolio-import';
 import { usePortfolio } from '../../lib/portfolio';
 import { setNotice, useNotice } from '../../lib/notice';
+import { useAuth } from '../../components/providers';
 
 function xirrText(status: string, rate: number | null): string {
   return status === 'ok' && rate !== null
-    ? `${(rate * 100).toFixed(2)}%`
+    ? formatPercent(rate, 2)
     : status === 'insufficient-sign-diversity'
       ? 'Need inflow + outflow'
       : status === 'missing-fx'
@@ -22,6 +24,15 @@ function xirrText(status: string, rate: number | null): string {
 }
 
 export default function PortfolioScreen() {
+  const status = useStatus();
+  const { session, loading } = useAuth();
+  if (loading || (session !== null && !status.hasSynced)) {
+    return <MobileWorkspaceSkeleton label="Loading portfolio" />;
+  }
+  return <PortfolioScreenContent />;
+}
+
+function PortfolioScreenContent() {
   const api = usePortfolio();
   const initialSkeleton = useInitialSkeleton();
   const notice = useNotice();
@@ -133,7 +144,9 @@ export default function PortfolioScreen() {
             {api.summary.allocation.map((item) => (
               <View key={item.assetClass} className="flex-row justify-between">
                 <Text className="text-foreground">{item.assetClass.replace('_', ' ')}</Text>
-                <Text className="text-foreground-muted">{item.percentage.toFixed(1)}%</Text>
+                <Text className="text-foreground-muted">
+                  {formatPercent(item.percentage / 100, 1)}
+                </Text>
               </View>
             ))}
           </View>

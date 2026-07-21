@@ -3,11 +3,13 @@
 import {
   assetClassForType,
   effectiveHoldingValue,
+  formatPercent,
   formatInr,
   latestValuation,
 } from '@finmanager/core';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useStatus } from '@powersync/react';
 
 import { Amount } from '@/components/amount';
 import { useInitialSkeleton, WorkspaceSkeleton } from '@/components/motion/skeleton';
@@ -17,9 +19,10 @@ import { Button } from '@/components/ui/button';
 import { HoldingForm } from './holding-form';
 import { PortfolioImport } from './portfolio-import';
 import { usePortfolio } from '@/lib/portfolio';
+import { useAuth } from '@/components/providers';
 
 function xirrLabel(status: string, rate: number | null): string {
-  if (status === 'ok' && rate !== null) return `${(rate * 100).toFixed(2)}%`;
+  if (status === 'ok' && rate !== null) return formatPercent(rate, 2);
   if (status === 'insufficient-sign-diversity') return 'Need inflow + outflow';
   if (status === 'insufficient-date-span') return 'Need dated history';
   if (status === 'missing-fx') return 'Missing FX';
@@ -29,6 +32,15 @@ function xirrLabel(status: string, rate: number | null): string {
 }
 
 export function PortfolioWorkspace() {
+  const status = useStatus();
+  const { session, loading } = useAuth();
+  if (loading || (session !== null && !status.hasSynced)) {
+    return <WorkspaceSkeleton label="Loading portfolio" />;
+  }
+  return <PortfolioWorkspaceContent />;
+}
+
+function PortfolioWorkspaceContent() {
   const api = usePortfolio();
   const initialSkeleton = useInitialSkeleton();
   const [editing, setEditing] = useState<string | null>(null);
@@ -186,7 +198,7 @@ export function PortfolioWorkspace() {
                 <div key={item.assetClass}>
                   <div className="flex justify-between font-body text-body-md text-foreground">
                     <span>{item.assetClass.replace('_', ' ')}</span>
-                    <span>{item.percentage.toFixed(1)}%</span>
+                    <span>{formatPercent(item.percentage / 100, 1)}</span>
                   </div>
                   <div className="mt-1 h-2 rounded-full bg-surface-muted">
                     <div

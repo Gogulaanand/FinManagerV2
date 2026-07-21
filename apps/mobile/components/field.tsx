@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { percentToRatio, ratioToPercent } from '@finmanager/core';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 export interface FieldProps {
@@ -70,12 +71,12 @@ export function PercentField({ label, value, onChange }: PercentFieldProps) {
       <View className="flex-row items-center rounded-md border border-border bg-background px-3">
         <TextInput
           // Without the fixed precision, 0.0481 renders as 4.8100000000000005.
-          value={String(Number((value * 100).toFixed(4)))}
+          value={String(ratioToPercent(value))}
           keyboardType="decimal-pad"
           inputMode="decimal"
           onChangeText={(text) => {
             const next = Number.parseFloat(text.replace(/[^0-9.]/g, ''));
-            onChange(Number.isFinite(next) && next >= 0 ? next / 100 : 0);
+            onChange(percentToRatio(next));
           }}
           className="h-11 flex-1 font-body text-body-md text-foreground"
           style={{ fontVariant: ['tabular-nums'] }}

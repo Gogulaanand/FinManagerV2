@@ -41,6 +41,7 @@ ios/
 
 # Supabase CLI temp state
 supabase/.temp/
+supabase/.branches/
 
 # PowerSync worker assets copied by powersync-web copy-assets (generated)
 apps/web/public/@powersync/

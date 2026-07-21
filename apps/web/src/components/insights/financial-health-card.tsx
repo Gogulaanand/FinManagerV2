@@ -91,6 +91,11 @@ function FinancialHealthCardContent() {
         >
           {generating ? 'Generating…' : content ? 'Refresh' : 'Generate'}
         </Button>
+        {generating ? (
+          <Button type="button" size="sm" variant="outline" onClick={api.cancel}>
+            Stop
+          </Button>
+        ) : null}
       </CardHeader>
       {confirming ? (
         <div className="mb-4 rounded-md border-l-4 border-primary bg-surface-muted p-3">

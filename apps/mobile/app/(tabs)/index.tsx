@@ -1,3 +1,4 @@
+import { formatPercent, ratioToPercent } from '@finmanager/core';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -64,14 +65,14 @@ export default function DashboardScreen() {
               className="font-display text-headline-md text-primary"
               style={{ fontVariant: ['tabular-nums'] }}
             >
-              {Math.round(fireProgress * 100)}%
+              {formatPercent(fireProgress, 0)}
             </Text>
           </View>
 
           <View
             className="h-2 w-full overflow-hidden rounded-full bg-surface-muted"
             accessibilityRole="progressbar"
-            accessibilityValue={{ min: 0, max: 100, now: Math.round(fireProgress * 100) }}
+            accessibilityValue={{ min: 0, max: 100, now: Math.round(ratioToPercent(fireProgress)) }}
           >
             <MotionProgress value={fireProgress} />
           </View>

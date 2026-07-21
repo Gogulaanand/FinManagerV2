@@ -3,7 +3,22 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
-## Latest Handoff: 2026-07-21 (Mobile navigation and month-picker plan)
+## Latest Handoff: 2026-07-21 (Repo-wide improvements)
+
+### Where we are
+
+`phases/plans/plan-improvements.md` I1, I2, and I3 are implemented. AI usage now reserves the estimated request budget through the atomic `record_ai_usage` RPC and settles actual usage afterward; both Insights clients have a 60-second idle timeout and visible Stop controls. Goals, Portfolio, and Expenses wait for the first PowerSync sync before mounting query hooks on web and mobile. Savings, percentage, SWR, and budget math is shared through `@finmanager/core`; scenario update/insert writes run inside `writeTransaction`. The largest expense, portfolio, tax, and goals sections are extracted into focused components, and the five plan documents are indexed from `STATUS.md`.
+
+### Verification state
+
+Core tests (166) and sync tests (37) pass; schema/core/sync/tokens builds, package and app TypeScript checks, package/app ESLint, changed-file Prettier checks, and the web production build all pass. The pgTAP file is at `supabase/tests/database/ai_usage.test.sql`; both `supabase test db --local` and `supabase test db --linked` pass all 4 tests. Supabase MCP also verified 8 concurrent reservations aggregate to `80/160/8`, then release atomically back to `0/0/0`; the isolated test row was deleted. No commit has been made.
+
+### Open items
+
+- Review the final diff and confirm the direct verification results above.
+- Owner approval is required before committing.
+
+## Previous Handoff: 2026-07-21 (Mobile navigation and month-picker plan)
 
 ### Where we are
 
