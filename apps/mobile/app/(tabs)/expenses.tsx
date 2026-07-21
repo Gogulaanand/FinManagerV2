@@ -1,12 +1,5 @@
-import {
-  AccountSchema,
-  BudgetSchema,
-  CategorySchema,
-  type Account,
-  type Budget,
-  type Category,
-  type Transaction,
-} from '@finmanager/schema';
+import { AccountSchema, CategorySchema, type Account, type Transaction } from '@finmanager/schema';
+import { router, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,19 +9,12 @@ import { Card, CardLabel, CardTitle } from '../../components/card';
 import { Collapsible } from '../../components/collapsible';
 import { MobileExpenseCharts } from '../../components/expenses/expense-charts';
 import { TransactionRow } from '../../components/expenses/transaction-row';
-import { MobileTransactionForm } from '../../components/expenses/transaction-form';
+import { MonthPickerSheet } from '../../components/expenses/month-picker-sheet';
 import { Fab } from '../../components/fab';
 import { Field, Segmented } from '../../components/field';
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
 import { useExpenses } from '../../lib/expenses';
-
-function monthLabel(month: string): string {
-  return new Date(`${month}-01T00:00:00.000Z`).toLocaleDateString('en-IN', {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-}
+import { useNotice } from '../../lib/notice';
 
 function TextField({
   label,
@@ -89,99 +75,17 @@ function ChoiceRow({
   );
 }
 
-function MobileBudgetForm({
-  month,
-  categories,
-  existing,
-  onSave,
-  onCancel,
-}: {
-  readonly month: string;
-  readonly categories: readonly Category[];
-  readonly existing: readonly { categoryId: string | null; budgetId: string | null }[];
-  readonly onSave: (budget: Budget) => Promise<void>;
-  readonly onCancel: () => void;
-}) {
-  const expenseCategories = categories.filter((category) => category.kind === 'expense');
-  const [categoryId, setCategoryId] = useState(expenseCategories[0]?.id ?? '');
-  const [amount, setAmount] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  async function submit() {
-    const parsed = BudgetSchema.safeParse({
-      categoryId: categoryId || null,
-      period: 'monthly',
-      periodStart: `${month}-01`,
-      amount: Number.parseFloat(amount),
-      id: existing.find((item) => item.categoryId === (categoryId || null))?.budgetId ?? undefined,
-    });
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Enter a positive budget');
-      return;
-    }
-    setError(null);
-    await onSave(parsed.data);
-  }
-  return (
-    <ScrollView className="flex-1" contentContainerClassName="gap-4 p-4 pb-12">
-      <View>
-        <Text className="font-display text-headline-lg text-foreground">Set monthly budget</Text>
-        <Text className="font-body text-body-md text-foreground-muted">{month}</Text>
-      </View>
-      <Card className="gap-4">
-        <ChoiceRow
-          label="Category"
-          value={categoryId}
-          options={expenseCategories.map((category) => ({
-            value: category.id!,
-            label: category.name,
-          }))}
-          onChange={setCategoryId}
-        />
-        <TextField
-          label="Budget"
-          value={amount}
-          onChangeText={setAmount}
-          placeholder="₹ amount"
-          keyboardType="decimal-pad"
-        />
-        {error ? <Text className="font-body text-caption text-loss">{error}</Text> : null}
-        <View className="flex-row gap-2">
-          <Pressable
-            accessibilityRole="button"
-            onPress={onCancel}
-            className="flex-1 rounded-md bg-surface-muted py-3"
-          >
-            <Text className="text-center text-foreground">Cancel</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => void submit()}
-            className="flex-1 rounded-md bg-primary py-3"
-          >
-            <Text className="text-center text-primary-foreground">Save</Text>
-          </Pressable>
-        </View>
-      </Card>
-    </ScrollView>
-  );
-}
-
 export default function ExpensesScreen() {
   const api = useExpenses();
   const initialSkeleton = useInitialSkeleton();
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
-  const [budgetOpen, setBudgetOpen] = useState(false);
+  const notice = useNotice();
   const [accountName, setAccountName] = useState('');
   const [accountType, setAccountType] = useState<Account['type']>('bank');
   const [accountBalance, setAccountBalance] = useState('');
   const [categoryName, setCategoryName] = useState('');
   const [categoryKind, setCategoryKind] = useState<'expense' | 'income'>('expense');
-  const editing = api.monthTransactions.find((transaction) => transaction.id === editingId) ?? null;
-
   const editTransaction = useCallback((transaction: Transaction) => {
-    setEditingId(transaction.id ?? null);
-    setFormOpen(true);
+    if (transaction.id) router.push(`/transaction/${transaction.id}` as Href);
   }, []);
   const deleteTransaction = useCallback(
     (transaction: Transaction) => {
@@ -217,42 +121,6 @@ export default function ExpensesScreen() {
   }
 
   if (api.loading || initialSkeleton) return <MobileWorkspaceSkeleton label="Loading expenses" />;
-  if (formOpen)
-    return (
-      <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-        <MobileTransactionForm
-          key={editing?.id ?? 'new'}
-          accounts={api.accounts}
-          categories={api.categories}
-          initialTransaction={editing}
-          onSave={async (transaction) => {
-            await api.saveTransaction(transaction);
-            setFormOpen(false);
-            setEditingId(null);
-          }}
-          onCancel={() => {
-            setFormOpen(false);
-            setEditingId(null);
-          }}
-        />
-      </SafeAreaView>
-    );
-  if (budgetOpen)
-    return (
-      <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-        <MobileBudgetForm
-          month={api.month}
-          categories={api.categories}
-          existing={api.budgetProgress}
-          onSave={async (budget) => {
-            await api.saveBudget(budget);
-            setBudgetOpen(false);
-          }}
-          onCancel={() => setBudgetOpen(false)}
-        />
-      </SafeAreaView>
-    );
-
   const header = (
     <View className="gap-4 p-4 pb-0">
       <View className="flex-row items-end justify-between gap-3">
@@ -270,6 +138,9 @@ export default function ExpensesScreen() {
           </Text>
         </Card>
       ) : null}
+      {notice ? (
+        <Text className="font-body text-caption text-foreground-muted">{notice}</Text>
+      ) : null}
       <View className="flex-row items-center justify-between">
         <Pressable
           accessibilityRole="button"
@@ -279,7 +150,7 @@ export default function ExpensesScreen() {
         >
           <Text className="text-foreground">←</Text>
         </Pressable>
-        <Text className="font-body text-body-md text-foreground">{monthLabel(api.month)}</Text>
+        <MonthPickerSheet month={api.month} onChange={api.setMonth} />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Next month"
@@ -319,7 +190,7 @@ export default function ExpensesScreen() {
           <CardTitle>Budgets</CardTitle>
           <Pressable
             accessibilityRole="button"
-            onPress={() => setBudgetOpen(true)}
+            onPress={() => router.push('/budget' as Href)}
             disabled={!api.canWrite}
             className="rounded-md bg-primary px-3 py-2 disabled:opacity-50"
           >
@@ -536,10 +407,7 @@ export default function ExpensesScreen() {
       <Fab
         icon="receipt"
         label="Add transaction"
-        onPress={() => {
-          setEditingId(null);
-          setFormOpen(true);
-        }}
+        onPress={() => router.push('/transaction/new' as Href)}
         disabled={!api.canWrite}
       />
     </SafeAreaView>

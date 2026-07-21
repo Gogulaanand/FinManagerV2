@@ -19,6 +19,7 @@ import { useExpenses } from '@/lib/expenses';
 import { BudgetSection } from './budget-section';
 import { CsvImport } from './csv-import';
 import { ExpenseCharts } from './expense-charts';
+import { MonthPicker } from './month-picker';
 import { TransactionForm } from './transaction-form';
 
 const accountTypes = [
@@ -28,11 +29,6 @@ const accountTypes = [
   { value: 'credit_card', label: 'Credit card' },
   { value: 'broker', label: 'Broker' },
 ] as const;
-
-function monthLabel(month: string): string {
-  const date = new Date(`${month}-01T00:00:00.000Z`);
-  return date.toLocaleDateString('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-}
 
 function displayAmount(transaction: Transaction): number {
   return transaction.direction === 'debit' ? -transaction.amount : transaction.amount;
@@ -99,9 +95,7 @@ export function ExpensesWorkspace() {
           >
             ←
           </Button>
-          <span className="min-w-32 text-center font-body text-body-md text-foreground">
-            {monthLabel(api.month)}
-          </span>
+          <MonthPicker month={api.month} onChange={api.setMonth} />
           <Button
             type="button"
             variant="outline"

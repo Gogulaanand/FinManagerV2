@@ -20,4 +20,5 @@ export type { CsvDocument, CsvImportPreview, CsvPreviewError } from './csv.js';
 export { endOfMonthDate, expandOccurrences, monthRange, trendWindowStart } from './recurrence.js';
 export type { ExpandedOccurrence, RecurrenceExpansionInput } from './recurrence.js';
 export { reduceKeypad } from './keypad.js';
+export { clampMonth, monthLabel, monthNow, shiftMonth } from './month.js';
 export type { KeypadAction } from './keypad.js';

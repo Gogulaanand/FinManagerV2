@@ -1,6 +1,6 @@
 import { formatInr, type FireProjection, type GoalProjection } from '@finmanager/core';
 import { useStatus } from '@powersync/react';
-import { useState } from 'react';
+import { router, type Href } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,10 +8,10 @@ import { Amount } from '../../components/amount';
 import { Card, CardLabel, CardTitle } from '../../components/card';
 import { Fab } from '../../components/fab';
 import { MobileFireSettingsForm } from '../../components/goals/fire-settings-form';
-import { MobileGoalForm } from '../../components/goals/goal-form';
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
 import { useAuth } from '../../components/providers';
 import { useGoals } from '../../lib/goals';
+import { setNotice, useNotice } from '../../lib/notice';
 
 const STATUS_LABEL: Record<GoalProjection['status'], string> = {
   achieved: 'Achieved',
@@ -88,35 +88,9 @@ export default function GoalsScreen() {
 function GoalsContent() {
   const api = useGoals();
   const initialSkeleton = useInitialSkeleton();
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
-  const editing = api.goals.find((goal) => goal.id === editingId) ?? null;
+  const notice = useNotice();
 
   if (api.loading || initialSkeleton) return <MobileWorkspaceSkeleton label="Loading goals" />;
-
-  if (showForm) {
-    return (
-      <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-        <ScrollView className="flex-1" contentContainerClassName="gap-4 p-4 pb-12">
-          <MobileGoalForm
-            initial={editing}
-            holdings={api.holdings}
-            onSave={async (goal) => {
-              await api.saveGoal(goal);
-              setShowForm(false);
-              setEditingId(null);
-              setNotice('Goal saved locally.');
-            }}
-            onCancel={() => {
-              setShowForm(false);
-              setEditingId(null);
-            }}
-          />
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
 
   const fire = api.fireProjection;
 
@@ -250,10 +224,7 @@ function GoalsContent() {
                   <View className="flex-row gap-2">
                     <Pressable
                       accessibilityRole="button"
-                      onPress={() => {
-                        setEditingId(projection.goalId);
-                        setShowForm(true);
-                      }}
+                      onPress={() => router.push(`/goal/${projection.goalId}` as Href)}
                       className="rounded-md bg-surface-muted px-3 py-2"
                     >
                       <Text className="font-body text-caption text-foreground">Edit</Text>
@@ -313,10 +284,7 @@ function GoalsContent() {
       <Fab
         icon="flag"
         label="Add goal"
-        onPress={() => {
-          setEditingId(null);
-          setShowForm(true);
-        }}
+        onPress={() => router.push('/goal/new' as Href)}
         disabled={!api.canWrite}
       />
     </SafeAreaView>

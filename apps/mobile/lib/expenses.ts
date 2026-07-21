@@ -4,7 +4,9 @@ import {
   calculateBudgetProgress,
   calculateCategoryBreakdown,
   calculateMonthlySummary,
+  monthNow,
   monthRange,
+  shiftMonth,
   trendWindowStart,
 } from '@finmanager/core';
 import {
@@ -56,17 +58,6 @@ interface CountRow {
 }
 
 const TRANSACTION_PAGE_SIZE = 50;
-
-function monthNow(): string {
-  return new Date().toISOString().slice(0, 7);
-}
-
-function shiftMonth(month: string, offset: number): string {
-  const year = Number(month.slice(0, 4));
-  const monthNumber = Number(month.slice(5, 7));
-  const date = new Date(Date.UTC(year, monthNumber - 1 + offset, 1));
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
-}
 
 function rowRecords<T>(rows: readonly T[]): readonly Record<string, unknown>[] {
   return rows as unknown as readonly Record<string, unknown>[];

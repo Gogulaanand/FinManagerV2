@@ -38,16 +38,22 @@ function response(body: unknown) {
 
 describe('YahooFinanceQuoteProvider', () => {
   it('returns a quote for a listed symbol', async () => {
-    const provider = new YahooFinanceQuoteProvider(async () =>
-      response({
-        chart: {
-          result: [
-            {
-              meta: { regularMarketPrice: 1450, currency: 'INR', regularMarketTime: 1_784_000_000 },
-            },
-          ],
-        },
-      }),
+    const provider = new YahooFinanceQuoteProvider(
+      async () =>
+        response({
+          chart: {
+            result: [
+              {
+                meta: {
+                  regularMarketPrice: 1450,
+                  currency: 'INR',
+                  regularMarketTime: 1_784_000_000,
+                },
+              },
+            ],
+          },
+        }),
+      { now: () => 1_784_000_000 * 1000 },
     );
     const result = await provider.quoteFor(holding);
 

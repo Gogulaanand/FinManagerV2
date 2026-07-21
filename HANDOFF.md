@@ -3,6 +3,27 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
+## Latest Handoff: 2026-07-21 (Mobile navigation and month-picker plan)
+
+### Where we are
+
+The plan in `phases/plans/plan-mobile-nav-and-month-picker.md` is implemented and remains uncommitted for owner approval. Mobile transaction, goal, holding, and budget forms are stack routes with native back behavior; success notices use the shared mobile notice store. Both platforms have bounded month/year pickers backed by shared core month helpers. The exact escalated `CI=true pnpm turbo run build test lint typecheck` gate passes 21/21, and `CI=true pnpm format:check` passes. Local Chrome verified the web picker, bounds, January 2024 jump, trend re-anchoring, reset, Escape close, and no console errors.
+
+### Exact next action
+
+Review the uncommitted diff and approve the commit. Before phase closure, run the plan’s iOS/Android route, edge-swipe/hardware-back, save-notice, month-picker, and offline/reconnect scenarios on an available simulator/device, then write the plan-specific briefing entry.
+
+### Files in flight
+
+The source and test files shown by `git status --short`, including the six mobile routes, mobile budget form, notice store, both month-picker components, core month helpers/test, platform expense hook changes, web ESLint compatibility adjustment, deterministic quote-test clock. No generated build output is intended to be committed.
+
+### Open items / warnings
+
+- CoreSimulatorService is unavailable in this environment; `adb` is not installed, so native interactive evidence is not claimed.
+- Expo web export bundles the app but static rendering reaches a native bridge error; use Expo Go/simulator for the intended mobile verification.
+- The quote test’s injected clock is a deterministic test-only fix for a stale fixture; no quote production behavior changed.
+- Do not commit until the owner reviews and approves the full diff.
+
 ---
 
 ## Latest Handoff: 2026-07-19 (Phase 5.3 + Phase 7 closed; Vercel wired up)

@@ -1,6 +1,5 @@
 import { effectiveHoldingValue, latestValuation } from '@finmanager/core';
 import { router, type Href } from 'expo-router';
-import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,9 +7,9 @@ import { Amount } from '../../components/amount';
 import { Card, CardLabel, CardTitle } from '../../components/card';
 import { Fab } from '../../components/fab';
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
-import { MobileHoldingForm } from '../../components/portfolio/holding-form';
 import { MobilePortfolioImport } from '../../components/portfolio/portfolio-import';
 import { usePortfolio } from '../../lib/portfolio';
+import { setNotice, useNotice } from '../../lib/notice';
 
 function xirrText(status: string, rate: number | null): string {
   return status === 'ok' && rate !== null
@@ -25,8 +24,7 @@ function xirrText(status: string, rate: number | null): string {
 export default function PortfolioScreen() {
   const api = usePortfolio();
   const initialSkeleton = useInitialSkeleton();
-  const [showForm, setShowForm] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+  const notice = useNotice();
   async function refresh() {
     const count = await api.refreshPrices();
     setNotice(
@@ -34,21 +32,6 @@ export default function PortfolioScreen() {
     );
   }
   if (api.loading || initialSkeleton) return <MobileWorkspaceSkeleton label="Loading portfolio" />;
-  if (showForm)
-    return (
-      <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-        <ScrollView contentContainerClassName="gap-4 p-4 pb-12">
-          <MobileHoldingForm
-            onSave={async (holding) => {
-              await api.saveHolding(holding);
-              setShowForm(false);
-              setNotice('Holding saved locally.');
-            }}
-            onCancel={() => setShowForm(false)}
-          />
-        </ScrollView>
-      </SafeAreaView>
-    );
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView contentContainerClassName="gap-4 p-4 pb-28">
@@ -169,7 +152,7 @@ export default function PortfolioScreen() {
       <Fab
         icon="trending-up"
         label="Add holding"
-        onPress={() => setShowForm(true)}
+        onPress={() => router.push('/holding/new' as Href)}
         disabled={!api.canWrite}
       />
     </SafeAreaView>

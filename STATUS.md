@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-07-19 (Phase 5.3 and Phase 7 fully tested and committed; Vercel deployment wired up).
+Last updated: 2026-07-21 (mobile navigation/month-picker plan implemented; awaiting native-device evidence and commit approval).
 
 ## Current State
 
@@ -10,12 +10,13 @@ Last updated: 2026-07-19 (Phase 5.3 and Phase 7 fully tested and committed; Verc
 - The web app is connected to Vercel (`fin-manager-web`).
   The build passes but the app does not load yet - the three `NEXT_PUBLIC_*` env vars have not been set in Vercel (see HANDOFF.md for the exact values and setup steps).
 - Phases 0-7 are all done.
-  The ordered backlog for Phase 8+ is: correctness sweep (plan-improvements.md), mobile nav / month-picker UX (plan-mobile-nav-and-month-picker.md), Phase 8 dead-man switch (plan-phase8-deadman-switch.md), Phase 9 hardening + release (plan-phase9-hardening-release.md), then monetization/donations.
+- The mobile navigation/month-picker plan is implemented on the current uncommitted worktree. Automated gates and local Chrome verification pass; iOS/Android simulator/device evidence is still pending because CoreSimulatorService is unavailable and adb is not installed.
+  The remaining ordered backlog is: correctness sweep (plan-improvements.md), Phase 8 dead-man switch (plan-phase8-deadman-switch.md), Phase 9 hardening + release (plan-phase9-hardening-release.md), then monetization/donations.
 
 ## Next Up
 
 Set the three Vercel env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_POWERSYNC_URL`) and also add the Vercel production URL to Supabase Auth's allowed redirect list.
-After that, begin the pre-Phase-8 correctness sweep or Phase 8 (Inactivity Monitor / Dead-Man Switch) per `phases/plans/plan-phase8-deadman-switch.md`.
+After native verification and commit approval for the mobile navigation/month-picker plan, begin the pre-Phase-8 correctness sweep or Phase 8 (Inactivity Monitor / Dead-Man Switch) per `phases/plans/plan-phase8-deadman-switch.md`.
 
 ## Phase Tracker
 
