@@ -73,13 +73,13 @@ function InsightsContent() {
   async function ask(value: string) {
     const trimmed = value.trim();
     if (!trimmed || sending) return;
-    const assistantId = `${Date.now()}-assistant`;
+    const assistantId = crypto.randomUUID();
     setQuestion('');
     setSending(true);
     setError(null);
     setMessages((current) => [
       ...current,
-      { id: `${Date.now()}-user`, role: 'user', content: trimmed },
+      { id: crypto.randomUUID(), role: 'user', content: trimmed },
       { id: assistantId, role: 'assistant', content: '' },
     ]);
     try {
@@ -196,6 +196,7 @@ function InsightsContent() {
             disabled={!api.canChat || sending || !question.trim()}
             onPress={() => void ask(question)}
           />
+          {sending ? <InsightAction label="Stop" onPress={api.cancel} /> : null}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

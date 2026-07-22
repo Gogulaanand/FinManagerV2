@@ -350,3 +350,21 @@ The owner declared phases 0-7 complete and re-ordered the remaining work: the tw
 Key calls made in those plans: form routes use `presentation: 'card'` because the requirement is edge-swipe-back (iOS modal presentation dismisses by swipe-down); the dead-man escalation state is derived from `activity_log` + `escalation_events`, never stored as a mutable status; Resend is built in Phase 8a and shared with the D-024 auth-email fix; monetization is staged - donations (Razorpay link, nothing gated) after Phase 9, subscriptions only if roughly 50+ external MAU or repeated willingness-to-pay appears, and the dead-man switch stays free permanently.
 Why: entitlement/payment code is pure liability at zero external users, and the app's honest moat (privacy custody + dead-man switch + unified India engine) serves a narrow audience that convenience-first AA incumbents already serve for free.
 Rejected: building subscriptions now; donations-only forever (the trigger keeps the door open); paywalling any safety feature.
+
+## D-051: AI allowance reservations use a shared atomic RPC (2026-07-21)
+
+AI requests reserve an input estimate plus the model output ceiling through `record_ai_usage` before opening the Anthropic stream, then settle the reservation to observed usage when the stream ends or is cancelled. The RPC performs the budget predicate and `INSERT ... ON CONFLICT DO UPDATE` in one statement family.
+Why: a read-before-stream check and a post-stream increment allow concurrent requests to pass the same stale allowance and undercount usage. Reservations make the budget gate and increment indivisible while settlement avoids charging the maximum ceiling when the real response is smaller.
+Consequence: the migration must be deployed before the updated Edge Function; service-role execute is granted only to the function path, and `ai_usage` remains server-written and unsynced.
+
+## D-053: AI usage settlements update existing reservations atomically (2026-07-21)
+
+The settlement branch of `record_ai_usage` uses a guarded atomic `UPDATE` for negative deltas. A negative insert cannot reach `ON CONFLICT` because the `ai_usage` nonnegative check constraints reject it first.
+Why: streamed requests commonly settle below their reserved ceiling, and cancellation releases the reservation; both paths must preserve the table constraints while remaining race-safe.
+Consequence: migration `20260721000002_fix_ai_usage_settlement.sql` is applied locally and remotely. The linked test verified eight concurrent reservations (`80/160/8`) and an atomic release to zero.
+
+## D-052: Component audit keeps referenced contextual forms (2026-07-21)
+
+The improvements pass extracted oversized setup and metadata sections into focused components. The remaining contextual holding-event and valuation forms were retained because route/detail references still use them; no unreferenced component was deleted.
+Why: deleting only files proven unused avoids breaking deep-link and detail-route flows while still reducing the largest component surfaces.
+Consequence: the audit result is recorded here, and future cleanup should re-run reference search before removing those forms.

@@ -1,81 +1,33 @@
 import { AccountSchema, CategorySchema, type Account, type Transaction } from '@finmanager/schema';
+import { budgetRatio } from '@finmanager/core';
+import { useStatus } from '@powersync/react';
 import { router, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Amount } from '../../components/amount';
 import { Card, CardLabel, CardTitle } from '../../components/card';
-import { Collapsible } from '../../components/collapsible';
 import { MobileExpenseCharts } from '../../components/expenses/expense-charts';
 import { TransactionRow } from '../../components/expenses/transaction-row';
 import { MonthPickerSheet } from '../../components/expenses/month-picker-sheet';
 import { Fab } from '../../components/fab';
-import { Field, Segmented } from '../../components/field';
+import { ExpenseSetupSections } from '../../components/expenses/expense-setup-sections';
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
 import { useExpenses } from '../../lib/expenses';
 import { useNotice } from '../../lib/notice';
-
-function TextField({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  keyboardType = 'default',
-}: {
-  readonly label: string;
-  readonly value: string;
-  readonly onChangeText: (value: string) => void;
-  readonly placeholder?: string;
-  readonly keyboardType?: 'default' | 'decimal-pad' | 'number-pad';
-}) {
-  return (
-    <Field label={label}>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        keyboardType={keyboardType}
-        className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
-      />
-    </Field>
-  );
-}
-
-function ChoiceRow({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  readonly label: string;
-  readonly value: string;
-  readonly options: readonly { value: string; label: string }[];
-  readonly onChange: (value: string) => void;
-}) {
-  return (
-    <Field label={label}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerClassName="gap-2"
-      >
-        {options.map((option) => (
-          <Text
-            key={option.value}
-            onPress={() => onChange(option.value)}
-            accessibilityRole="button"
-            className={`rounded-full px-3 py-2 font-body text-label ${option.value === value ? 'bg-primary text-primary-foreground' : 'bg-surface-muted text-foreground'}`}
-          >
-            {option.label}
-          </Text>
-        ))}
-      </ScrollView>
-    </Field>
-  );
-}
+import { useAuth } from '../../components/providers';
 
 export default function ExpensesScreen() {
+  const status = useStatus();
+  const { session, loading } = useAuth();
+  if (loading || (session !== null && !status.hasSynced)) {
+    return <MobileWorkspaceSkeleton label="Loading expenses" />;
+  }
+  return <ExpensesScreenContent />;
+}
+
+function ExpensesScreenContent() {
   const api = useExpenses();
   const initialSkeleton = useInitialSkeleton();
   const notice = useNotice();
@@ -219,7 +171,9 @@ export default function ExpensesScreen() {
                 <View className="h-2 overflow-hidden rounded-full bg-surface-muted">
                   <View
                     className={`h-full rounded-full ${item.status === 'overspent' ? 'bg-loss' : item.status === 'nearLimit' ? 'bg-warning' : 'bg-gain'}`}
-                    style={{ width: `${Math.min(item.ratio * 100, 100)}%` }}
+                    style={{
+                      width: `${Math.min(budgetRatio(item.actual, item.budget), 1) * 100}%`,
+                    }}
                   />
                 </View>
                 {item.budgetId ? (
@@ -244,128 +198,21 @@ export default function ExpensesScreen() {
           </View>
         )}
       </Card>
-      <Card>
-        <Collapsible title="Accounts" count={api.accounts.length}>
-          <TextField
-            label="Name"
-            value={accountName}
-            onChangeText={setAccountName}
-            placeholder="Bank account"
-          />
-          <ChoiceRow
-            label="Type"
-            value={accountType}
-            options={[
-              { value: 'bank', label: 'Bank' },
-              { value: 'wallet', label: 'Wallet' },
-              { value: 'cash', label: 'Cash' },
-              { value: 'credit_card', label: 'Card' },
-              { value: 'broker', label: 'Broker' },
-            ]}
-            onChange={(value) => setAccountType(value as Account['type'])}
-          />
-          <TextField
-            label="Current balance"
-            value={accountBalance}
-            onChangeText={setAccountBalance}
-            placeholder="₹ amount"
-            keyboardType="decimal-pad"
-          />
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => void saveAccount()}
-            disabled={!api.canWrite || !accountName.trim()}
-            className="rounded-md bg-primary py-3 disabled:opacity-50"
-          >
-            <Text className="text-center text-primary-foreground">Add account</Text>
-          </Pressable>
-          {api.accounts.map((account) => (
-            <View
-              key={account.id}
-              className="flex-row items-center justify-between border-t border-border/60 pt-2"
-            >
-              <View>
-                <Text className="text-foreground">{account.name}</Text>
-                <Text className="text-caption text-foreground-muted">
-                  {account.type} · ₹{account.currentBalance.toLocaleString('en-IN')}
-                </Text>
-              </View>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() =>
-                  account.id &&
-                  Alert.alert('Delete account?', `Remove ${account.name}?`, [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Delete',
-                      style: 'destructive',
-                      onPress: () => void api.deleteAccount(account.id!),
-                    },
-                  ])
-                }
-              >
-                <Text className="text-loss">Delete</Text>
-              </Pressable>
-            </View>
-          ))}
-        </Collapsible>
-      </Card>
-      <Card>
-        <Collapsible title="Categories" count={api.categories.length}>
-          <TextField
-            label="Name"
-            value={categoryName}
-            onChangeText={setCategoryName}
-            placeholder="Category name"
-          />
-          <Segmented
-            label="Kind"
-            value={categoryKind}
-            options={[
-              { value: 'expense', label: 'Expense' },
-              { value: 'income', label: 'Income' },
-            ]}
-            onChange={setCategoryKind}
-          />
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => void saveCategory()}
-            disabled={!api.canWrite || !categoryName.trim()}
-            className="rounded-md bg-primary py-3 disabled:opacity-50"
-          >
-            <Text className="text-center text-primary-foreground">Add category</Text>
-          </Pressable>
-          {api.categories.map((category) => (
-            <View
-              key={category.id}
-              className="flex-row items-center justify-between border-t border-border/60 pt-2"
-            >
-              <View>
-                <Text className="text-foreground">{category.name}</Text>
-                <Text className="text-caption text-foreground-muted">{category.kind}</Text>
-              </View>
-              {!category.isSystem ? (
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() =>
-                    category.id &&
-                    Alert.alert('Delete category?', `Remove ${category.name}?`, [
-                      { text: 'Cancel', style: 'cancel' },
-                      {
-                        text: 'Delete',
-                        style: 'destructive',
-                        onPress: () => void api.deleteCategory(category.id!),
-                      },
-                    ])
-                  }
-                >
-                  <Text className="text-loss">Delete</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          ))}
-        </Collapsible>
-      </Card>
+      <ExpenseSetupSections
+        api={api}
+        accountName={accountName}
+        accountType={accountType}
+        accountBalance={accountBalance}
+        categoryName={categoryName}
+        categoryKind={categoryKind}
+        setAccountName={setAccountName}
+        setAccountType={setAccountType}
+        setAccountBalance={setAccountBalance}
+        setCategoryName={setCategoryName}
+        setCategoryKind={(value) => setCategoryKind(value as 'expense' | 'income')}
+        saveAccount={saveAccount}
+        saveCategory={saveCategory}
+      />
       <MobileExpenseCharts
         monthlyTrend={api.monthlyTrend}
         categoryBreakdown={api.categoryBreakdown}

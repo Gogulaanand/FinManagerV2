@@ -1,3 +1,4 @@
+import { formatPercent, ratioToPercent } from '@finmanager/core';
 import { Amount, Delta } from '@/components/amount';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { FinancialHealthCard } from '@/components/insights/financial-health-card';
@@ -50,14 +51,14 @@ export default function DashboardPage() {
         <CardHeader>
           <CardTitle>FIRE progress</CardTitle>
           <span className="tabular font-display text-headline-md text-primary">
-            {Math.round(fireProgress * 100)}%
+            {formatPercent(fireProgress, 0)}
           </span>
         </CardHeader>
 
         <div
           className="h-2 w-full overflow-hidden rounded-full bg-surface-muted"
           role="progressbar"
-          aria-valuenow={Math.round(fireProgress * 100)}
+          aria-valuenow={Math.round(ratioToPercent(fireProgress))}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label="FIRE progress"

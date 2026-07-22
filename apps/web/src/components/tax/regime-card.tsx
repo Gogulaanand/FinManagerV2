@@ -1,7 +1,7 @@
 'use client';
 
 import type { RegimeResult } from '@finmanager/core';
-import { formatInr } from '@finmanager/core';
+import { formatInr, formatPercent } from '@finmanager/core';
 
 import { Amount } from '@/components/amount';
 import { Card } from '@/components/ui/card';
@@ -88,10 +88,7 @@ export function RegimeCard({ result, best, shortfall }: RegimeCardProps) {
         <Row label="Gross salary" value={formatInr(result.gross)} />
         <Row label="Taxable income" value={formatInr(result.taxableIncome)} />
         <Row label="Total tax" value={formatInr(result.totalTax)} emphasis />
-        <Row
-          label="Effective rate"
-          value={`${(result.effectiveRate * 100).toFixed(1)}% of gross`}
-        />
+        <Row label="Effective rate" value={`${formatPercent(result.effectiveRate)} of gross`} />
       </div>
 
       <details className="group mt-4">
@@ -137,7 +134,7 @@ export function RegimeCard({ result, best, shortfall }: RegimeCardProps) {
                 .map((s) => (
                   <Row
                     key={`${String(s.from)}-${String(s.rate)}`}
-                    label={`${formatInr(s.from)} - ${s.to === null ? 'above' : formatInr(s.to)} @ ${String(s.rate * 100)}%`}
+                    label={`${formatInr(s.from)} - ${s.to === null ? 'above' : formatInr(s.to)} @ ${formatPercent(s.rate, 0)}`}
                     value={formatInr(s.tax)}
                   />
                 ))}
@@ -153,7 +150,7 @@ export function RegimeCard({ result, best, shortfall }: RegimeCardProps) {
               )}
               {result.surcharge > 0 && (
                 <Row
-                  label={`Surcharge @ ${String(result.surchargeRate * 100)}%`}
+                  label={`Surcharge @ ${formatPercent(result.surchargeRate, 0)}`}
                   value={formatInr(result.surcharge)}
                 />
               )}

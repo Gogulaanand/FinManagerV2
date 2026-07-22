@@ -4,6 +4,7 @@ import {
   DEFAULT_SCENARIO_INPUT,
   mapScenarioRows,
   newScenarioId,
+  saveScenario,
   toTaxInput,
   type ScenarioInput,
 } from './scenarios';
@@ -56,5 +57,27 @@ describe('newScenarioId', () => {
   it('produces unique ids', () => {
     const ids = new Set(Array.from({ length: 1000 }, () => newScenarioId()));
     expect(ids.size).toBe(1000);
+  });
+});
+
+describe('saveScenario', () => {
+  it('performs the update-then-insert fallback inside one write transaction', async () => {
+    const statements: string[] = [];
+    const db = {
+      writeTransaction: async (callback: (tx: { execute: typeof execute }) => Promise<void>) =>
+        callback({ execute }),
+    };
+    async function execute(sql: string): Promise<{ rowsAffected: number }> {
+      statements.push(sql);
+      return { rowsAffected: statements.length === 1 ? 0 : 1 };
+    }
+    await saveScenario(db as never, 'user', {
+      id: 'scenario',
+      name: 'Offer',
+      input: DEFAULT_SCENARIO_INPUT,
+    });
+    expect(statements).toHaveLength(2);
+    expect(statements[0]).toContain('UPDATE tax_scenarios');
+    expect(statements[1]).toContain('INSERT INTO tax_scenarios');
   });
 });

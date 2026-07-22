@@ -94,6 +94,7 @@ function FinancialHealthCardContent() {
           disabled={!api.canChat || generating || api.loading || confirming}
           onPress={requestGenerate}
         />
+        {generating ? <InsightAction label="Stop" onPress={api.cancel} /> : null}
       </View>
       {confirming ? (
         <View className="mb-3 rounded-md border-l-4 border-primary bg-surface-muted p-3">

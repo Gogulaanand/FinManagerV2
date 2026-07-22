@@ -1,5 +1,14 @@
 export { roundToPaise } from './money.js';
-export { directionOf, formatChoiceLabel, formatDelta, formatInr } from './format.js';
+export {
+  budgetRatio,
+  directionOf,
+  formatChoiceLabel,
+  formatDelta,
+  formatInr,
+  formatPercent,
+  percentToRatio,
+  ratioToPercent,
+} from './format.js';
 export type { Direction, FormatInrOptions } from './format.js';
 
 export { computeTax, slabTax, taxOnTaxableIncome } from './tax/compute.js';
@@ -117,12 +126,15 @@ export {
   DEFAULT_WITHDRAWAL_RATE,
   RETIREMENT_HOLDING_TYPES,
   calculateFireProjection,
+  averageMonthlySavings,
+  monthlyExpenseTotals,
   calculateGoalProjection,
   calculateGoalProjections,
   calculateRetirementCorpus,
   growthFactor,
   requiredMonthlySip,
   suggestAnnualExpenses,
+  swrMultiplier,
   sumLinkedHoldingValue,
   todayIso,
   yearsBetween,

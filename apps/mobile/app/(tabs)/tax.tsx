@@ -5,8 +5,9 @@ import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card, CardTitle } from '../../components/card';
-import { CheckField, CurrencyField, PercentField, Segmented } from '../../components/field';
+import { CurrencyField, Segmented } from '../../components/field';
 import { RegimeCard } from '../../components/tax/regime-card';
+import { TaxAdvancedForm } from '../../components/tax/tax-advanced-form';
 import type { ScenarioInput } from '../../lib/tax-scenario';
 import { DEFAULT_SCENARIO_INPUT, toTaxInput, useScenarios } from '../../lib/tax-scenario';
 
@@ -107,124 +108,7 @@ export default function TaxScreen() {
           ) : null}
         </Card>
 
-        {mode === 'advanced' ? (
-          <>
-            <Card className="gap-4">
-              <CardTitle>Salary composition</CardTitle>
-              <PercentField
-                label="Basic (of CTC)"
-                value={input.basicRate}
-                onChange={(v) => {
-                  set('basicRate', v);
-                }}
-              />
-              <PercentField
-                label="HRA (of basic)"
-                value={input.hraRate}
-                onChange={(v) => {
-                  set('hraRate', v);
-                }}
-              />
-              <PercentField
-                label="Employer PF (of basic)"
-                value={input.employerPfRate}
-                onChange={(v) => {
-                  set('employerPfRate', v);
-                }}
-              />
-              <PercentField
-                label="Employer NPS (of basic)"
-                value={input.employerNpsRate}
-                onChange={(v) => {
-                  set('employerNpsRate', v);
-                }}
-              />
-              <PercentField
-                label="Gratuity (of basic)"
-                value={input.gratuityRate}
-                onChange={(v) => {
-                  set('gratuityRate', v);
-                }}
-              />
-            </Card>
-
-            <Card className="gap-4">
-              <CardTitle>Deductions</CardTitle>
-              <Text className="font-body text-caption text-foreground-muted">
-                The new regime allows none of these except employer NPS, so they only move the old
-                regime&apos;s number.
-              </Text>
-              <CurrencyField
-                label="Annual rent paid"
-                value={input.rentPaid}
-                onChange={(v) => {
-                  set('rentPaid', v);
-                }}
-                hint="For the HRA exemption."
-              />
-              <CurrencyField
-                label="80C investments"
-                value={input.section80C}
-                onChange={(v) => {
-                  set('section80C', v);
-                }}
-                hint={`Capped at ${formatInr(caps.section80C)}. Your EPF is added automatically.`}
-              />
-              <CurrencyField
-                label="80CCD(1B) NPS"
-                value={input.section80CCD1B}
-                onChange={(v) => {
-                  set('section80CCD1B', v);
-                }}
-                hint={`Capped at ${formatInr(caps.section80CCD1B)}, over and above 80C.`}
-              />
-              <CurrencyField
-                label="80D self and family"
-                value={input.section80DSelf}
-                onChange={(v) => {
-                  set('section80DSelf', v);
-                }}
-              />
-              <CurrencyField
-                label="80D parents"
-                value={input.section80DParents}
-                onChange={(v) => {
-                  set('section80DParents', v);
-                }}
-              />
-              <CurrencyField
-                label="Preventive health check-up"
-                value={input.section80DPreventive}
-                onChange={(v) => {
-                  set('section80DPreventive', v);
-                }}
-                hint={`Capped at ${formatInr(caps.section80DPreventive)}, inside the 80D limit.`}
-              />
-              <CheckField
-                label="I am a senior citizen"
-                checked={input.isSelfSenior}
-                onChange={(v) => {
-                  set('isSelfSenior', v);
-                }}
-              />
-              <CheckField
-                label="My parents are senior citizens"
-                checked={input.areParentsSenior}
-                onChange={(v) => {
-                  set('areParentsSenior', v);
-                }}
-              />
-              <CurrencyField
-                label="Professional tax"
-                value={input.professionalTax}
-                onChange={(v) => {
-                  set('professionalTax', v);
-                }}
-                hint={`A state levy, capped at ${formatInr(caps.professionalTaxMax)} a year.`}
-              />
-            </Card>
-          </>
-        ) : null}
+        {mode === 'advanced' ? <TaxAdvancedForm input={input} caps={caps} onChange={set} /> : null}
 
         <Card className="border border-primary">
           <Text className="font-body text-body-md text-foreground">

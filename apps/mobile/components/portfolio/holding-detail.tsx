@@ -2,6 +2,7 @@ import {
   EVENT_KIND_LABELS,
   calculatePortfolioSummary,
   effectiveHoldingValue,
+  formatPercent,
   latestValuation,
   mergeHoldingTimeline,
   valuationValueInr,
@@ -77,7 +78,7 @@ export function MobileHoldingDetail({ holdingId }: { readonly holdingId: string 
           <Card className="flex-1">
             <CardLabel>XIRR</CardLabel>
             <Text className="font-display text-headline-lg text-foreground">
-              {summary.xirr.rate === null ? 'N/A' : `${(summary.xirr.rate * 100).toFixed(2)}%`}
+              {summary.xirr.rate === null ? 'N/A' : formatPercent(summary.xirr.rate, 2)}
             </Text>
           </Card>
         </View>

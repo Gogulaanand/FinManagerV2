@@ -1,4 +1,10 @@
-import { formatInr, type FireProjection, type GoalProjection } from '@finmanager/core';
+import {
+  formatInr,
+  formatPercent,
+  ratioToPercent,
+  type FireProjection,
+  type GoalProjection,
+} from '@finmanager/core';
 import { useStatus } from '@powersync/react';
 import { router, type Href } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -24,7 +30,7 @@ function statusClass(status: GoalProjection['status']): string {
 }
 
 function ProgressBar({ ratio }: { ratio: number }) {
-  const percent = Math.max(0, Math.min(100, ratio * 100));
+  const percent = Math.max(0, Math.min(100, ratioToPercent(ratio)));
   return (
     <View className="mt-2 h-2 rounded-full bg-surface-muted">
       <View className="h-2 rounded-full bg-primary" style={{ width: `${percent}%` }} />
@@ -126,7 +132,7 @@ function GoalsContent() {
               <CardLabel>Current corpus</CardLabel>
               <Amount value={fire.currentCorpus} size="tile" />
               <Text className="font-body text-caption text-foreground-muted">
-                {fire.fireNumber > 0 ? `${(fire.progress * 100).toFixed(0)}% of FIRE` : 'Net worth'}
+                {fire.fireNumber > 0 ? `${formatPercent(fire.progress, 0)} of FIRE` : 'Net worth'}
               </Text>
             </Card>
           </View>
@@ -168,7 +174,7 @@ function GoalsContent() {
                     {formatInr(variant.target)}
                   </Text>
                   <Text className="font-body text-caption text-foreground-muted">
-                    {variant.achieved ? 'Reached' : `${(variant.progress * 100).toFixed(0)}%`}
+                    {variant.achieved ? 'Reached' : formatPercent(variant.progress, 0)}
                   </Text>
                 </View>
               </View>
@@ -236,6 +242,7 @@ function GoalsContent() {
                         void api
                           .deleteGoal(projection.goalId)
                           .then(() => setNotice('Goal deleted.'))
+                          .catch(() => setNotice('Could not delete the goal. Please try again.'))
                       }
                       className="rounded-md bg-surface-muted px-3 py-2"
                     >

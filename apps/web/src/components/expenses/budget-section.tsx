@@ -1,6 +1,7 @@
 'use client';
 
 import { BudgetSchema, type Budget, type Category } from '@finmanager/schema';
+import { budgetRatio } from '@finmanager/core';
 import { useState } from 'react';
 
 import { Amount } from '@/components/amount';
@@ -76,7 +77,7 @@ export function BudgetSection({
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {progress.map((item) => {
-            const width = Math.min(item.ratio * 100, 100);
+            const width = Math.min(budgetRatio(item.actual, item.budget), 1) * 100;
             const barColor =
               item.status === 'overspent'
                 ? 'bg-loss'
@@ -115,7 +116,7 @@ export function BudgetSection({
                 <div
                   className="mt-3 h-2 overflow-hidden rounded-full bg-background"
                   role="progressbar"
-                  aria-valuenow={Math.round(item.ratio * 100)}
+                  aria-valuenow={Math.round(width)}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-label={`${item.label} budget progress`}

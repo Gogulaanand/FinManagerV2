@@ -5,6 +5,8 @@ import {
   calculateGoalProjections,
   calculatePortfolioSummary,
   calculateRetirementCorpus,
+  averageMonthlySavings,
+  monthlyExpenseTotals,
   suggestAnnualExpenses,
   type FireProjection,
   type GoalProjection,
@@ -47,36 +49,6 @@ import { useAuth } from '@/components/providers';
 
 function rowRecords<T>(rows: readonly T[]): readonly Record<string, unknown>[] {
   return rows as unknown as readonly Record<string, unknown>[];
-}
-
-/** Sum of debit amounts per calendar month, for the trailing window. */
-function monthlyExpenseTotals(transactions: readonly Transaction[], window = 12): number[] {
-  const byMonth = new Map<string, number>();
-  for (const transaction of transactions) {
-    if (transaction.direction !== 'debit') continue;
-    const month = transaction.occurredOn.slice(0, 7);
-    byMonth.set(month, (byMonth.get(month) ?? 0) + transaction.amount);
-  }
-  return [...byMonth.entries()]
-    .sort((left, right) => right[0].localeCompare(left[0]))
-    .slice(0, window)
-    .map(([, total]) => total);
-}
-
-/** Average monthly net savings (credits minus debits), floored at zero. */
-function averageMonthlySavings(transactions: readonly Transaction[], window = 12): number {
-  const byMonth = new Map<string, number>();
-  for (const transaction of transactions) {
-    const month = transaction.occurredOn.slice(0, 7);
-    const signed = transaction.direction === 'credit' ? transaction.amount : -transaction.amount;
-    byMonth.set(month, (byMonth.get(month) ?? 0) + signed);
-  }
-  const months = [...byMonth.entries()]
-    .sort((left, right) => right[0].localeCompare(left[0]))
-    .slice(0, window)
-    .map(([, total]) => total);
-  if (months.length === 0) return 0;
-  return Math.max(0, months.reduce((sum, total) => sum + total, 0) / months.length);
 }
 
 export interface GoalsApi {

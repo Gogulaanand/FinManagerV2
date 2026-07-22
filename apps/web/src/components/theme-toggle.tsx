@@ -96,4 +96,4 @@ export function ThemeToggle() {
  * not get a white flash on every navigation. Inlined in <head>; must stay
  * dependency-free and synchronous.
  */
-export const themeScript = `(function(){try{var c=localStorage.getItem('${STORAGE_KEY}');if(c==='dark')document.documentElement.classList.add('dark');else if(c==='light')document.documentElement.classList.add('light');}catch(e){}})();`;
+export const themeScript = `(function(){try{var c=localStorage.getItem('${STORAGE_KEY}');if(c==='dark')document.documentElement.classList.add('dark');else if(c==='light')document.documentElement.classList.add('light');}catch(e){console.warn('Could not restore the saved theme preference.',e);}})();`;

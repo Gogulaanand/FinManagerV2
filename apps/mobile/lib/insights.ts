@@ -43,7 +43,7 @@ import {
 } from '@finmanager/sync';
 import { usePowerSync, useQuery, useStatus } from '@powersync/react';
 import { fetch as expoFetch } from 'expo/fetch';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { useAuth } from '../components/providers';
 
@@ -53,6 +53,28 @@ function rows<T>(value: readonly T[] | undefined): readonly Record<string, unkno
 
 function currentMonth(): string {
   return new Date().toISOString().slice(0, 7);
+}
+
+const STREAM_IDLE_TIMEOUT_MS = 60_000;
+
+async function readWithIdleTimeout(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  controller: AbortController,
+): Promise<ReadableStreamReadResult<Uint8Array>> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await new Promise((resolve, reject) => {
+      timer = setTimeout(() => {
+        controller.abort();
+        reject(
+          Object.assign(new Error('AI Insights timed out. Please try again.'), { code: 'timeout' }),
+        );
+      }, STREAM_IDLE_TIMEOUT_MS);
+      void reader.read().then(resolve, reject);
+    });
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
 }
 
 async function friendlyError(response: Response): Promise<Error> {
@@ -69,6 +91,7 @@ export function useInsights() {
   const db = usePowerSync();
   const status = useStatus();
   const { session } = useAuth();
+  const controllerRef = useRef<AbortController | null>(null);
   const accountRows = useQuery<Account>(ACCOUNTS_QUERY);
   const categoryRows = useQuery<Category>(CATEGORIES_QUERY);
   const transactionRows = useQuery<Transaction>(TRANSACTIONS_QUERY);
@@ -155,6 +178,9 @@ export function useInsights() {
           { code: 'offline' },
         );
       }
+      const controller = new AbortController();
+      controllerRef.current?.abort();
+      controllerRef.current = controller;
       const response = await expoFetch(
         `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ai-insights`,
         {
@@ -163,6 +189,7 @@ export function useInsights() {
             Authorization: `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
           },
+          signal: controller.signal,
           body: JSON.stringify(payload),
         },
       );
@@ -173,7 +200,7 @@ export function useInsights() {
       const parser = createAnthropicSseParser();
       let answer = '';
       while (true) {
-        const { done, value } = await reader.read();
+        const { done, value } = await readWithIdleTimeout(reader, controller);
         if (done) break;
         for (const delta of parser.push(decoder.decode(value, { stream: true }))) {
           answer += delta;
@@ -189,6 +216,8 @@ export function useInsights() {
     },
     [session, status],
   );
+
+  const cancel = useCallback(() => controllerRef.current?.abort(), []);
 
   const sendMessage = useCallback(
     (
@@ -243,5 +272,6 @@ export function useInsights() {
     buildDigest,
     sendMessage,
     generateMonthlySummary,
+    cancel,
   };
 }

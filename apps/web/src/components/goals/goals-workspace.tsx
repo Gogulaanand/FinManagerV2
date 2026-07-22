@@ -1,18 +1,24 @@
 'use client';
 
-import { formatInr, type FireProjection, type GoalProjection } from '@finmanager/core';
+import {
+  formatInr,
+  formatPercent,
+  ratioToPercent,
+  swrMultiplier,
+  type FireProjection,
+} from '@finmanager/core';
 import { useStatus } from '@powersync/react';
 import { useState } from 'react';
 
 import { Amount } from '@/components/amount';
 import { useInitialSkeleton, WorkspaceSkeleton } from '@/components/motion/skeleton';
 import { useAuth } from '@/components/providers';
-import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { useGoals } from '@/lib/goals';
 
 import { FireSettingsForm } from './fire-settings-form';
-import { GoalForm } from './goal-form';
+import { GoalsList } from './goals-list';
+import { RetirementSummary } from './retirement-summary';
 
 /**
  * Hold the workspace behind the skeleton until the first PowerSync sync
@@ -30,26 +36,8 @@ export function GoalsWorkspace() {
   return <GoalsWorkspaceContent />;
 }
 
-const STATUS_LABEL: Record<GoalProjection['status'], string> = {
-  achieved: 'Achieved',
-  on_track: 'On track',
-  off_track: 'Off track',
-};
-
-const STATUS_CLASS: Record<GoalProjection['status'], string> = {
-  achieved: 'text-gain',
-  on_track: 'text-gain',
-  off_track: 'text-loss',
-};
-
-function StatusPill({ status }: { status: GoalProjection['status'] }) {
-  return (
-    <span className={`font-body text-label ${STATUS_CLASS[status]}`}>{STATUS_LABEL[status]}</span>
-  );
-}
-
 function ProgressBar({ ratio }: { ratio: number }) {
-  const percent = Math.max(0, Math.min(100, ratio * 100));
+  const percent = Math.max(0, Math.min(100, ratioToPercent(ratio)));
   return (
     <div className="mt-2 h-2 rounded-full bg-surface-muted">
       <div className="h-2 rounded-full bg-primary" style={{ width: `${percent}%` }} />
@@ -144,7 +132,7 @@ function GoalsWorkspaceContent() {
           <Amount value={fire.fireNumber} size="section" />
           <p className="mt-1 font-body text-caption text-foreground-muted">
             {fire.fireNumber > 0
-              ? `${(1 / (api.fireSettings.withdrawalRate / 100)).toFixed(0)}x annual expenses`
+              ? `${swrMultiplier(api.fireSettings.withdrawalRate).toFixed(0)}x annual expenses`
               : 'Set expenses to compute'}
           </p>
         </Card>
@@ -152,9 +140,7 @@ function GoalsWorkspaceContent() {
           <CardLabel>Current corpus</CardLabel>
           <Amount value={fire.currentCorpus} size="section" />
           <p className="mt-1 font-body text-caption text-foreground-muted">
-            {fire.fireNumber > 0
-              ? `${(fire.progress * 100).toFixed(0)}% of FIRE`
-              : 'Net worth today'}
+            {fire.fireNumber > 0 ? `${formatPercent(fire.progress, 0)} of FIRE` : 'Net worth today'}
           </p>
           <ProgressBar ratio={fire.progress} />
         </Card>
@@ -194,7 +180,7 @@ function GoalsWorkspaceContent() {
                 {formatInr(variant.target)}
               </p>
               <p className="font-body text-caption text-foreground-muted">
-                {variant.achieved ? 'Reached' : `${(variant.progress * 100).toFixed(0)}% funded`}
+                {variant.achieved ? 'Reached' : `${formatPercent(variant.progress, 0)} funded`}
               </p>
               <ProgressBar ratio={variant.progress} />
             </div>
@@ -202,162 +188,36 @@ function GoalsWorkspaceContent() {
         </div>
       </Card>
 
-      {/* Goals */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Goals</CardTitle>
-          <div className="flex items-center gap-3">
-            <span className="font-body text-caption text-foreground-muted">
-              {api.goals.length} tracked
-            </span>
-            {api.canWrite && !showForm ? (
-              <Button
-                size="sm"
-                type="button"
-                onClick={() => {
-                  setEditing(null);
-                  setShowForm(true);
-                }}
-              >
-                Add goal
-              </Button>
-            ) : null}
-          </div>
-        </CardHeader>
-        {showForm ? (
-          <div className="mb-4">
-            <GoalForm
-              initial={editingGoal}
-              holdings={api.holdings}
-              onSave={async (goal) => {
-                await api.saveGoal(goal);
-                setShowForm(false);
-                setNotice('Goal saved locally; sync will follow when online.');
-              }}
-              onCancel={() => setShowForm(false)}
-            />
-          </div>
-        ) : null}
-        {api.projections.length === 0 ? (
-          <p className="font-body text-body-md text-foreground-muted">
-            Add a goal to see its inflation-adjusted target and the monthly SIP to reach it.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {api.projections.map((projection) => (
-              <div
-                key={projection.goalId}
-                className="flex flex-col gap-2 border-b border-border/60 pb-4 last:border-0 last:pb-0"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="font-body text-body-md text-foreground">{projection.name}</p>
-                    <p className="font-body text-caption text-foreground-muted capitalize">
-                      {projection.kind.replace('_', ' ')}
-                      {projection.years > 0 ? ` · ${projection.years.toFixed(1)} yrs` : ''}
-                    </p>
-                  </div>
-                  <StatusPill status={projection.status} />
-                </div>
-                <div className="grid gap-2 md:grid-cols-4">
-                  <div>
-                    <CardLabel>Future cost</CardLabel>
-                    <p className="font-display text-title-md text-foreground">
-                      {formatInr(projection.inflatedTarget)}
-                    </p>
-                  </div>
-                  <div>
-                    <CardLabel>Projected</CardLabel>
-                    <p className="font-display text-title-md text-foreground">
-                      {formatInr(projection.projectedValue)}
-                    </p>
-                  </div>
-                  <div>
-                    <CardLabel>{projection.gap > 0 ? 'Shortfall' : 'Surplus'}</CardLabel>
-                    <p className="font-display text-title-md text-foreground">
-                      {formatInr(projection.gap > 0 ? projection.gap : projection.surplus)}
-                    </p>
-                  </div>
-                  <div>
-                    <CardLabel>Monthly SIP needed</CardLabel>
-                    <p className="font-display text-title-md text-foreground">
-                      {formatInr(projection.requiredMonthlySip)}
-                    </p>
-                  </div>
-                </div>
-                <ProgressBar ratio={projection.fundingRatio} />
-                {projection.missingLinkedValueCount > 0 || projection.missingLinkedFxCount > 0 ? (
-                  <p className="font-body text-caption text-loss">
-                    {projection.missingLinkedValueCount} linked holding(s) unvalued ·{' '}
-                    {projection.missingLinkedFxCount} missing FX
-                  </p>
-                ) : null}
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    type="button"
-                    onClick={() => {
-                      setEditing(projection.goalId);
-                      setShowForm(true);
-                    }}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    type="button"
-                    onClick={() =>
-                      projection.goalId &&
-                      void api
-                        .deleteGoal(projection.goalId)
-                        .then(() =>
-                          setNotice('Goal deleted locally; sync will follow when online.'),
-                        )
-                    }
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+      <GoalsList
+        goals={api.projections}
+        trackedGoalCount={api.goals.length}
+        canWrite={api.canWrite}
+        showForm={showForm}
+        editingGoal={editingGoal}
+        holdings={api.holdings}
+        onAdd={() => {
+          setEditing(null);
+          setShowForm(true);
+        }}
+        onSave={async (goal) => {
+          await api.saveGoal(goal);
+          setShowForm(false);
+          setNotice('Goal saved locally; sync will follow when online.');
+        }}
+        onCancel={() => setShowForm(false)}
+        onEdit={(goalId) => {
+          setEditing(goalId);
+          setShowForm(true);
+        }}
+        onDelete={(goalId) =>
+          void api
+            .deleteGoal(goalId)
+            .then(() => setNotice('Goal deleted locally; sync will follow when online.'))
+            .catch(() => setNotice('Could not delete the goal. Please try again.'))
+        }
+      />
 
-      {/* Retirement corpus */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Retirement corpus</CardTitle>
-          <span className="font-body text-caption text-foreground-muted">EPF · PPF · NPS</span>
-        </CardHeader>
-        <Amount value={api.retirement.total} size="section" />
-        {api.retirement.rows.length === 0 ? (
-          <p className="mt-2 font-body text-body-md text-foreground-muted">
-            Add EPF, PPF, or NPS holdings in Portfolio to build your retirement corpus.
-          </p>
-        ) : (
-          <div className="mt-3 flex flex-col gap-2">
-            {api.retirement.rows.map((row) => (
-              <div
-                key={row.holdingId}
-                className="flex items-center justify-between border-b border-border/60 pb-2 last:border-0"
-              >
-                <span className="font-body text-body-md text-foreground">
-                  {row.name} <span className="text-foreground-muted uppercase">{row.type}</span>
-                </span>
-                <Amount value={row.value} />
-              </div>
-            ))}
-          </div>
-        )}
-        {api.retirement.missingValueCount > 0 || api.retirement.missingFxCount > 0 ? (
-          <p className="mt-2 font-body text-caption text-loss">
-            {api.retirement.missingValueCount} unvalued · {api.retirement.missingFxCount} missing FX
-          </p>
-        ) : null}
-      </Card>
+      <RetirementSummary retirement={api.retirement} />
 
       {api.canWrite ? (
         <FireSettingsForm

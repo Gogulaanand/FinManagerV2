@@ -1,7 +1,13 @@
 import type { FireSettings } from '@finmanager/schema';
 import { describe, expect, it } from 'vitest';
 
-import { calculateFireProjection, suggestAnnualExpenses } from './fire.js';
+import {
+  averageMonthlySavings,
+  calculateFireProjection,
+  monthlyExpenseTotals,
+  suggestAnnualExpenses,
+  swrMultiplier,
+} from './fire.js';
 
 function makeSettings(overrides: Partial<FireSettings> = {}): FireSettings {
   return {
@@ -178,5 +184,30 @@ describe('suggestAnnualExpenses', () => {
 
   it('returns null with no data', () => {
     expect(suggestAnnualExpenses([])).toBeNull();
+  });
+});
+
+describe('monthly expense and savings helpers', () => {
+  const transactions = [
+    { direction: 'debit', amount: 100, occurredOn: '2026-07-02' },
+    { direction: 'credit', amount: 500, occurredOn: '2026-07-08' },
+    { direction: 'debit', amount: 50, occurredOn: '2026-06-02' },
+    { direction: 'credit', amount: 200, occurredOn: '2026-06-08' },
+  ] as const;
+
+  it('groups the latest debit months and limits the window', () => {
+    expect(monthlyExpenseTotals(transactions, 1)).toEqual([100]);
+  });
+
+  it('averages monthly net savings and floors negative results at zero', () => {
+    expect(averageMonthlySavings(transactions)).toBe(275);
+    expect(
+      averageMonthlySavings([{ direction: 'debit', amount: 100, occurredOn: '2026-07-02' }]),
+    ).toBe(0);
+  });
+
+  it('converts a withdrawal rate to its FIRE multiplier', () => {
+    expect(swrMultiplier(4)).toBe(25);
+    expect(swrMultiplier(0)).toBe(0);
   });
 });

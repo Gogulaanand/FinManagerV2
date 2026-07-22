@@ -19,7 +19,10 @@ export {
   DEFAULT_LEAN_MULTIPLIER,
   DEFAULT_WITHDRAWAL_RATE,
   calculateFireProjection,
+  averageMonthlySavings,
+  monthlyExpenseTotals,
   suggestAnnualExpenses,
+  swrMultiplier,
 } from './fire.js';
 export type {
   FireProjection,

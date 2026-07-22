@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { directionOf, formatChoiceLabel, formatDelta, formatInr } from './format';
+import {
+  budgetRatio,
+  directionOf,
+  formatChoiceLabel,
+  formatDelta,
+  formatInr,
+  formatPercent,
+  percentToRatio,
+  ratioToPercent,
+} from './format';
 
 describe('formatChoiceLabel', () => {
   it('turns enum values into user-facing title case labels', () => {
@@ -75,5 +84,27 @@ describe('directionOf', () => {
     expect(directionOf(12)).toBe('up');
     expect(directionOf(-12)).toBe('down');
     expect(directionOf(0)).toBe('flat');
+  });
+});
+
+describe('formatPercent', () => {
+  it('formats a ratio as a percentage', () => {
+    expect(formatPercent(0.0481, 2)).toBe('4.81%');
+    expect(formatPercent(0.5, 0)).toBe('50%');
+  });
+});
+
+describe('budgetRatio', () => {
+  it('returns actual spending as a budget ratio and handles empty budgets', () => {
+    expect(budgetRatio(750, 1000)).toBe(0.75);
+    expect(budgetRatio(750, 0)).toBe(0);
+  });
+});
+
+describe('percentage conversion helpers', () => {
+  it('round-trips a ratio through the user-facing percentage value', () => {
+    expect(ratioToPercent(0.0481)).toBe(4.81);
+    expect(percentToRatio(4.81)).toBe(0.0481);
+    expect(percentToRatio(Number.NaN)).toBe(0);
   });
 });

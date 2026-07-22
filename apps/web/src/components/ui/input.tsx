@@ -3,6 +3,7 @@
 import { Upload } from 'lucide-react';
 import type { ChangeEvent, ComponentProps, ReactNode } from 'react';
 import { useId } from 'react';
+import { percentToRatio, ratioToPercent } from '@finmanager/core';
 
 import { cn } from '@/lib/utils';
 import { Select } from '@/components/ui/select';
@@ -129,10 +130,10 @@ export function PercentField({ label, value, onChange, hint }: PercentFieldProps
             step={0.01}
             // Float ratios like 0.0481 render as 4.8100000000000005 without a
             // round-trip through a fixed precision.
-            value={Number((value * 100).toFixed(4))}
+            value={ratioToPercent(value)}
             onChange={(e) => {
               const next = Number.parseFloat(e.target.value);
-              onChange(Number.isFinite(next) && next >= 0 ? next / 100 : 0);
+              onChange(percentToRatio(next));
             }}
             className="tabular pr-7"
           />

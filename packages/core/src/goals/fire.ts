@@ -1,4 +1,4 @@
-import type { FireSettings } from '@finmanager/schema';
+import type { FireSettings, Transaction } from '@finmanager/schema';
 
 import { roundToPaise } from '../money.js';
 
@@ -216,4 +216,45 @@ export function suggestAnnualExpenses(monthlyExpenseTotals: readonly number[]): 
   if (months.length === 0) return null;
   const averageMonthly = months.reduce((sum, total) => sum + total, 0) / months.length;
   return roundToPaise(averageMonthly * 12);
+}
+
+/** Sum debit transaction amounts by month, newest month first. */
+export function monthlyExpenseTotals(
+  transactions: readonly Pick<Transaction, 'direction' | 'amount' | 'occurredOn'>[],
+  window = 12,
+): number[] {
+  const byMonth = new Map<string, number>();
+  for (const transaction of transactions) {
+    if (transaction.direction !== 'debit') continue;
+    const month = transaction.occurredOn.slice(0, 7);
+    byMonth.set(month, (byMonth.get(month) ?? 0) + transaction.amount);
+  }
+  return [...byMonth.entries()]
+    .sort((left, right) => right[0].localeCompare(left[0]))
+    .slice(0, window)
+    .map(([, total]) => roundToPaise(total));
+}
+
+/** Average monthly net savings (credits minus debits), floored at zero. */
+export function averageMonthlySavings(
+  transactions: readonly Pick<Transaction, 'direction' | 'amount' | 'occurredOn'>[],
+  window = 12,
+): number {
+  const byMonth = new Map<string, number>();
+  for (const transaction of transactions) {
+    const month = transaction.occurredOn.slice(0, 7);
+    const signed = transaction.direction === 'credit' ? transaction.amount : -transaction.amount;
+    byMonth.set(month, (byMonth.get(month) ?? 0) + signed);
+  }
+  const months = [...byMonth.entries()]
+    .sort((left, right) => right[0].localeCompare(left[0]))
+    .slice(0, window)
+    .map(([, total]) => total);
+  if (months.length === 0) return 0;
+  return roundToPaise(Math.max(0, months.reduce((sum, total) => sum + total, 0) / months.length));
+}
+
+/** Converts a safe withdrawal rate percentage to the equivalent expense multiplier. */
+export function swrMultiplier(withdrawalRate: number): number {
+  return withdrawalRate > 0 ? 100 / withdrawalRate : 0;
 }
