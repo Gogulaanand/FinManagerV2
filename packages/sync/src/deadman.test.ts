@@ -2,6 +2,7 @@ import type { AbstractPowerSyncDatabase } from '@powersync/common';
 import { describe, expect, it } from 'vitest';
 
 import {
+  mapDeadmanSettingsRows,
   mapEscalationEventRows,
   mapTrustedContactRows,
   saveDeadmanSettings,
@@ -78,5 +79,54 @@ describe('dead-man sync repositories', () => {
         },
       ])[0]?.detail,
     ).toEqual({ simulation: true });
+  });
+
+  // Every escalation_events row is written server-side by the deadman-check
+  // Edge Function, so it reaches the client as PowerSync's rendering of a
+  // Postgres timestamptz: space-separated, with a two-digit UTC offset.
+  it('maps rows carrying PowerSync timestamps rather than JavaScript ISO strings', () => {
+    const events = mapEscalationEventRows([
+      {
+        id: contactId,
+        user_id: userId,
+        kind: 'disclosure',
+        status: 'sent',
+        recipient: 'asha@example.com',
+        detail: '{"scope":"existence"}',
+        created_at: '2026-07-24 06:00:58.054782+00',
+        sent_at: '2026-07-24 06:00:58.365Z',
+      },
+    ]);
+    expect(events[0]?.kind).toBe('disclosure');
+    expect(new Date(events[0]!.createdAt).getTime()).toBe(
+      Date.parse('2026-07-24T06:00:58.054782Z'),
+    );
+
+    expect(
+      mapTrustedContactRows([
+        {
+          id: contactId,
+          user_id: userId,
+          name: 'Asha',
+          email: 'asha@example.com',
+          created_at: '2026-07-24 06:00:58.054782+00',
+          updated_at: '2026-07-24 06:00:58.054782+00',
+        },
+      ])[0]?.name,
+    ).toBe('Asha');
+
+    expect(
+      mapDeadmanSettingsRows([
+        {
+          id: contactId,
+          user_id: userId,
+          is_enabled: 1,
+          threshold_days: 30,
+          disclosure_note: null,
+          created_at: '2026-07-24 06:00:58.054782+00',
+          updated_at: '2026-07-24 06:00:58.054782+00',
+        },
+      ])?.isEnabled,
+    ).toBe(true);
   });
 });

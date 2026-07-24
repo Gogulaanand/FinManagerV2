@@ -391,3 +391,13 @@ Consequence: the freshness check reads local SQLite, so it works offline; a read
 The consequence surfaced during verification: leftover events from an earlier test run suppress a replay, because those rows are newer than any activity timestamp that is also stale enough to be due.
 Why: recording this so a future session does not mistake a correctly suppressed replay for a broken cron path.
 Consequence: replaying an escalation chain against a threshold of N days requires the staged escalation events to predate the staged activity mark; clear or re-date the ledger first.
+
+## D-057: Timestamp parsing accepts the PowerSync rendering, not only JavaScript ISO (2026-07-25)
+
+`packages/schema` validated every timestamp with `z.iso.datetime({ offset: true })`, which requires a `T` separator.
+PowerSync renders a Postgres `timestamptz` as `YYYY-MM-DD hh:mm:ss.sssZ`, and sometimes with a two-digit offset such as `+00`, so strict ISO validation rejects it.
+Rows the client writes itself carry `toISOString()` output and parse cleanly, which is why the existing tests passed - they only ever exercised locally written values.
+Every `escalation_events` row is written server-side by `deadman-check`, so `mapEscalationEventRows` would have thrown on all of them, and `deadman_settings`/`trusted_contacts` would have thrown once a server round-trip replaced the locally written timestamps. `ai_summaries.generated_at` from Phase 7 had the same latent defect.
+`IsoTimestamp` now lives in `packages/schema/src/timestamps.ts` and normalises the PowerSync form before validating; `deadman.ts` and `insights.ts` both use it.
+Why: the parser has to accept both formats the app actually produces, and failing closed here means a blank escalation history rather than a caught error.
+Consequence: any new schema covering a synced `timestamptz` column must import `IsoTimestamp` rather than redeclaring `z.iso.datetime`, and mapper tests should use the PowerSync shape, not a hand-written ISO string. See https://docs.powersync.com/sync/types#postgres-type-mapping.

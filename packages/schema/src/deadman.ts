@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
+import { IsoTimestamp } from './timestamps';
+
 const Uuid = z.string().uuid();
-const IsoTimestamp = z.iso.datetime({ offset: true });
 
 export const DisclosureScopeSchema = z.enum(['existence', 'summary']);
 export type DisclosureScope = z.infer<typeof DisclosureScopeSchema>;
