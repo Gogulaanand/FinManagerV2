@@ -1,4 +1,4 @@
-import { logActivity } from '@finmanager/sync';
+import { logActivityWithRetry, recordActivityIfStale } from '@finmanager/sync';
 import { PowerSyncContext } from '@powersync/react';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
+import { AppState, Platform as RNPlatform } from 'react-native';
 
 import { getConnector, getPowerSync } from '../lib/powersync';
 import { supabase } from '../lib/supabase';
@@ -62,11 +63,18 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const loggedForUser = useRef<string | null>(null);
   useEffect(() => {
     const userId = session?.user.id;
-    if (!userId || loggedForUser.current === userId) return;
-    loggedForUser.current = userId;
-    void logActivity(db, userId, 'app_open', 'ios').catch(() => {
-      // Best-effort; never surface a logging failure.
+    if (!userId) return;
+    const platform = RNPlatform.OS === 'android' ? 'android' : 'ios';
+    if (loggedForUser.current !== userId) {
+      loggedForUser.current = userId;
+      void logActivityWithRetry(db, userId, 'app_open', platform);
+    }
+    // An app that is only ever backgrounded never remounts, so each return to
+    // the foreground must record a fresh mark, not just retry a failed one.
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void recordActivityIfStale(db, userId, 'app_open', platform);
     });
+    return () => subscription.remove();
   }, [db, session]);
 
   const signInWithPassword = useCallback(async (email: string, password: string) => {

@@ -29,3 +29,5 @@ streams:
       - SELECT * FROM goals WHERE user_id = auth.user_id()
       - SELECT * FROM fire_settings WHERE user_id = auth.user_id()
       - SELECT * FROM ai_summaries WHERE user_id = auth.user_id()
+      - SELECT * FROM deadman_settings WHERE user_id = auth.user_id()
+      - SELECT * FROM escalation_events WHERE user_id = auth.user_id()

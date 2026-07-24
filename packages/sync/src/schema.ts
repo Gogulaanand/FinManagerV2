@@ -40,6 +40,7 @@ const trusted_contacts = new Table(
     notify_after_days: column.integer,
     priority: column.integer,
     is_active: column.integer,
+    disclosure_scope: column.text,
     created_at: column.text,
     updated_at: column.text,
   },
@@ -246,6 +247,28 @@ const ai_summaries = new Table(
   { indexes: { by_user: ['user_id'], by_month: ['month'] } },
 );
 
+const deadman_settings = new Table({
+  user_id: column.text,
+  is_enabled: column.integer,
+  threshold_days: column.integer,
+  disclosure_note: column.text,
+  created_at: column.text,
+  updated_at: column.text,
+});
+
+const escalation_events = new Table(
+  {
+    user_id: column.text,
+    kind: column.text,
+    status: column.text,
+    recipient: column.text,
+    detail: column.text,
+    created_at: column.text,
+    sent_at: column.text,
+  },
+  { indexes: { by_user: ['user_id'], by_created: ['created_at'] } },
+);
+
 export const AppSchema = new Schema({
   profiles,
   trusted_contacts,
@@ -261,6 +284,8 @@ export const AppSchema = new Schema({
   goals,
   fire_settings,
   ai_summaries,
+  deadman_settings,
+  escalation_events,
 });
 
 /** The row types the on-device tables produce, keyed by table name. */
@@ -277,4 +302,5 @@ export const JSON_COLUMNS: Readonly<Record<string, readonly string[]>> = {
   activity_log: ['metadata'],
   holdings: ['metadata'],
   goals: ['linked_holding_ids'],
+  escalation_events: ['detail'],
 };

@@ -368,3 +368,26 @@ Consequence: migration `20260721000002_fix_ai_usage_settlement.sql` is applied l
 The improvements pass extracted oversized setup and metadata sections into focused components. The remaining contextual holding-event and valuation forms were retained because route/detail references still use them; no unreferenced component was deleted.
 Why: deleting only files proven unused avoids breaking deep-link and detail-route flows while still reducing the largest component surfaces.
 Consequence: the audit result is recorded here, and future cleanup should re-run reference search before removing those forms.
+This supersedes the deletion assumption in D-042; D-042 remains historical context for why the global history render paths were removed, not an instruction to delete the still-referenced contextual forms.
+
+## D-054: Phase 8 cron configuration requires Vault prerequisites (2026-07-23)
+
+The Phase 8 migration reads `deadman_supabase_url` and `deadman_cron_secret` from Supabase Vault at schedule-creation time. It deliberately skips creating `deadman-daily` when either secret is absent, rather than creating a malformed job with an empty URL or header.
+Why: the migration must remain safe to apply before deployment secrets exist, while the hosted project can still create a valid schedule after Vault setup.
+Consequence: every new environment must provision both Vault secrets, verify `cron.job` contains the active `deadman-daily` schedule, and only then claim cron readiness.
+
+## D-055: Activity marks are refreshed on foreground, not only on mount (2026-07-25)
+
+`logActivity` originally ran once per user id per mounted session, guarded by a ref, and the foreground/visibility handlers only retried a previously failed write.
+A session that is never torn down - a backgrounded mobile app, a browser tab left open for days - therefore recorded exactly one `activity_log` row at sign-in and none afterwards.
+Because escalation is derived from `max(activity_log.occurred_at)`, that would have escalated all the way to trusted-contact disclosure against a user who was still opening the app daily.
+`recordActivityIfStale` now writes a fresh mark on every foreground/visibility transition when the newest local mark is older than `ACTIVITY_INTERVAL_MS` (one hour).
+Why: liveness has to be proven repeatedly, and the interval keeps ordinary tab switching from flooding the log while still bounding staleness far below the smallest useful threshold.
+Consequence: the freshness check reads local SQLite, so it works offline; a read failure deliberately falls through to writing a mark rather than suppressing one, because a missing mark is the dangerous direction.
+
+## D-056: The escalation guard is scoped to the newest activity mark (2026-07-25)
+
+`hasCurrentEvent` treats a stage as already delivered when its event was created after the newest activity mark, which makes the chain idempotent without a separate state column.
+The consequence surfaced during verification: leftover events from an earlier test run suppress a replay, because those rows are newer than any activity timestamp that is also stale enough to be due.
+Why: recording this so a future session does not mistake a correctly suppressed replay for a broken cron path.
+Consequence: replaying an escalation chain against a threshold of N days requires the staged escalation events to predate the staged activity mark; clear or re-date the ledger first.

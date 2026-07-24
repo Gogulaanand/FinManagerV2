@@ -20,7 +20,13 @@ export {
   toTaxInput,
 } from './scenarios';
 export type { Scenario, ScenarioInput } from './scenarios';
-export { logActivity } from './activity';
+export {
+  ACTIVITY_INTERVAL_MS,
+  logActivity,
+  logActivityWithRetry,
+  recordActivityIfStale,
+  retryPendingActivity,
+} from './activity';
 export type { ActivityKind, Platform } from './activity';
 export {
   FIRE_SETTINGS_QUERY,
@@ -76,3 +82,14 @@ export {
   seedDefaultCategories,
 } from './expenses';
 export { AI_SUMMARIES_QUERY, mapAiSummaryRows, saveAiSummary } from './insights';
+export {
+  DEADMAN_SETTINGS_QUERY,
+  ESCALATION_EVENTS_QUERY,
+  TRUSTED_CONTACTS_QUERY,
+  deleteTrustedContact,
+  mapDeadmanSettingsRows,
+  mapEscalationEventRows,
+  mapTrustedContactRows,
+  saveDeadmanSettings,
+  saveTrustedContact,
+} from './deadman';

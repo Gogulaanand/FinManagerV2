@@ -53,6 +53,22 @@ export {
   QuoteSchema,
   ValuationSchema,
 } from './portfolio';
+export {
+  DeadmanSettingsSchema,
+  DisclosureScopeSchema,
+  EscalationEventSchema,
+  EscalationKindSchema,
+  EscalationStatusSchema,
+  TrustedContactSchema,
+} from './deadman';
+export type {
+  DeadmanSettings,
+  DisclosureScope,
+  EscalationEvent,
+  EscalationKind,
+  EscalationStatus,
+  TrustedContact,
+} from './deadman';
 export type {
   Holding,
   HoldingEvent,

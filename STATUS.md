@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-07-21 (repo-wide improvements implemented and Supabase-verified; awaiting commit approval).
+Last updated: 2026-07-25 (Phase 8 raised as a PR; live email delivery proven, replay verification outstanding).
 
 ## Current State
 
@@ -11,12 +11,13 @@ Last updated: 2026-07-21 (repo-wide improvements implemented and Supabase-verifi
   The build passes but the app does not load yet - the three `NEXT_PUBLIC_*` env vars have not been set in Vercel (see HANDOFF.md for the exact values and setup steps).
 - Phases 0-7 are all done.
 - The repo-wide improvements plan (`phases/plans/plan-improvements.md`) is implemented in the current worktree: AI usage reservation is atomic, stream cancellation/timeouts and sync gates are in place, domain math is shared in core, and the largest setup/metadata forms have been extracted. Local package builds, tests, typechecks, linters, formatting checks, and the web production build pass. Both Supabase migrations are applied locally and remotely; local and linked pgTAP tests pass, and the concurrent reserve/release flow was verified through Supabase MCP. Owner review is pending before commit.
-  The remaining ordered backlog is Phase 8 dead-man switch, Phase 9 hardening + release, then monetization/donations.
+  Phase 8 dead-man switch implementation is raised as a PR against `main` from `phase-8-inactivity-monitor`. The migration, Edge Function (v4), Vault wiring, cron schedule, and staged remote data are deployed, the PowerSync sync rules are published, and the Resend domain `finmanager.sunfabb.com` is verified with `RESEND_FROM_EMAIL` pointed at it.
+  All four escalation stages were delivered end to end on 2026-07-24 (Resend reports `delivered`, not merely accepted) and the repeated final stage created no duplicate rows. That run predates Edge Function v4, so it has not been replayed against the deployed code. Remaining gates are the v4 replay, Auth SMTP plus a real signup email, and Chrome/native interactive verification.
 
 ## Next Up
 
 Set the three Vercel env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_POWERSYNC_URL`) and also add the Vercel production URL to Supabase Auth's allowed redirect list.
-After verification and commit approval for the improvements plan, begin Phase 8 (Inactivity Monitor / Dead-Man Switch) per `phases/plans/plan-phase8-deadman-switch.md`.
+Review the Phase 8 PR, then replay the escalation chain against Edge Function v4 per `PHASE8_EXTERNAL_VERIFICATION_RUNBOOK.md` and complete Auth SMTP plus interactive verification.
 
 Plan index: [improvements](phases/plans/plan-improvements.md) · [mobile navigation/month picker](phases/plans/plan-mobile-nav-and-month-picker.md) · [Phase 8](phases/plans/plan-phase8-deadman-switch.md) · [Phase 9](phases/plans/plan-phase9-hardening-release.md) · [monetization](phases/plans/plan-monetization.md).
 
@@ -32,7 +33,7 @@ Plan index: [improvements](phases/plans/plan-improvements.md) · [mobile navigat
 | 5     | Portfolio + Investments         | Done        | 2              | [phase-5.md](phases/briefing/phase-5.md) |
 | 6     | Goals + Retirement + FIRE       | Done        | 1              | [phase-6.md](phases/briefing/phase-6.md) |
 | 7     | AI Insights                     | Done        | 1              | [phase-7.md](phases/briefing/phase-7.md) |
-| 8     | Inactivity Monitor              | Not started | 0              | -                                        |
+| 8     | Inactivity Monitor              | In progress | 1              | [phase-8.md](phases/briefing/phase-8.md) |
 | 9     | Hardening + Release             | Not started | 0              | -                                        |
 
 Status values: Not started | In progress | Blocked | Done.

@@ -1,6 +1,6 @@
 'use client';
 
-import { logActivity } from '@finmanager/sync';
+import { logActivityWithRetry, recordActivityIfStale } from '@finmanager/sync';
 import { PowerSyncContext } from '@powersync/react';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -84,11 +84,19 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const loggedForUser = useRef<string | null>(null);
   useEffect(() => {
     const userId = session?.user.id;
-    if (!userId || loggedForUser.current === userId) return;
-    loggedForUser.current = userId;
-    void logActivity(db, userId, 'app_open', 'web').catch(() => {
-      // Best-effort: a logging failure must never surface or block the app.
-    });
+    if (!userId) return;
+    if (loggedForUser.current !== userId) {
+      loggedForUser.current = userId;
+      void logActivityWithRetry(db, userId, 'app_open', 'web');
+    }
+    // A tab left open for days never remounts, so returning to it must record a
+    // fresh mark of its own rather than only retrying a failed one.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible')
+        void recordActivityIfStale(db, userId, 'app_open', 'web');
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, [db, session]);
 
   const signInWithPassword = useCallback(async (email: string, password: string) => {

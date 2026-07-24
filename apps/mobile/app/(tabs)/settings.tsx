@@ -6,6 +6,7 @@ import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card, CardLabel, CardTitle } from '../../components/card';
+import { DeadmanSettings } from '../../components/settings/deadman-settings';
 import { useAuth } from '../../components/providers';
 
 type Choice = 'light' | 'system' | 'dark';
@@ -111,6 +112,7 @@ export default function SettingsScreen() {
             </>
           )}
         </Card>
+        <DeadmanSettings />
       </View>
     </SafeAreaView>
   );
