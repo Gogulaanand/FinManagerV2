@@ -43,7 +43,6 @@ import {
   saveCategory as repoSaveCategory,
   saveCsvMappings as repoSaveCsvMappings,
   saveTransaction as repoSaveTransaction,
-  seedDefaultCategories,
   uuidv4,
 } from '@finmanager/sync';
 import { usePowerSync, useQuery } from '@powersync/react';
@@ -176,11 +175,6 @@ export function useExpenses(): ExpensesApi {
     () => parseMappings(mappingsResult.data?.[0]?.csv_mappings),
     [mappingsResult.data],
   );
-
-  useEffect(() => {
-    if (!userId) return;
-    void seedDefaultCategories(db, userId).catch(() => undefined);
-  }, [db, userId]);
 
   useEffect(() => {
     if (!userId) return;
