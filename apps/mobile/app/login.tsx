@@ -30,16 +30,25 @@ export default function LoginScreen() {
     setError(null);
     setNotice(null);
     setBusy(true);
-    const run = mode === 'signin' ? signInWithPassword : signUpWithPassword;
-    const message = await run(email.trim(), password);
-    setBusy(false);
-    if (message) {
-      setError(message);
+    if (mode === 'signup') {
+      const { error: signUpError, needsConfirmation } = await signUpWithPassword(
+        email.trim(),
+        password,
+      );
+      setBusy(false);
+      if (signUpError) {
+        setError(signUpError);
+        return;
+      }
+      // Only promise an email when one was actually sent; otherwise the session
+      // already exists and the user is signed in.
+      if (needsConfirmation)
+        setNotice('Account created. Check your inbox to confirm your email address.');
       return;
     }
-    if (mode === 'signup') {
-      setNotice('Account created. If email confirmation is enabled, check your inbox to finish.');
-    }
+    const message = await signInWithPassword(email.trim(), password);
+    setBusy(false);
+    if (message) setError(message);
   }
 
   return (

@@ -86,6 +86,13 @@ Scope:
 - Distribution decision (plan item "app store / direct install"): EAS internal distribution - Android APK install link + TestFlight internal group for family iPhones; no public store listing at family scale.
   Revisit only if monetization Path B is ever triggered; staying off the stores also avoids store-billing obligations (see plan-monetization.md).
 - Cleanup (carried-over): delete the Phase 3 test account `gogulaanand02+webtest@gmail.com` and its synced rows, with explicit owner approval at execution time.
+- Cron observability for the inactivity monitor (added 2026-07-25 from Phase 8 findings, D-058/D-061).
+  `cron.job_run_details` cannot be used as a health signal: `net.http_post` only enqueues the request, so the job records `succeeded` no matter what the function returns. This was observed directly - the 2026-07-24 03:00 run reported `succeeded` while the function recorded a failed `reminder_1`. `net._http_response` captured a null status code and pg_net purges those rows within hours.
+  Two mechanisms are needed because they catch different failures:
+  1. Ran-but-failed: `deadman-check` writes its own outcome (`ran_at`, `enabled`, `processed`, `failed`, `detail`) to a `cron_runs` table on every invocation - it already computes these for its response. A second scheduled job checks the latest row and emails the owner via Resend when `failed > 0`. This beats inspecting `escalation_events`, because a skipped user writes no ledger row at all.
+  2. Didn't-run-at-all: an external heartbeat (healthchecks.io free tier or equivalent) pinged by the function only on a clean run, alerting when the ping does not arrive within the grace window.
+     Mechanism 2 is not optional. A system cannot detect its own absence: if the project is paused, pg_cron is disabled, the function is deleted, or Supabase has an outage, no internal checker runs either and silence is indistinguishable from health. That is the dead-man switch's own reasoning applied one level up.
+     The heartbeat call must be guarded by an env var so it no-ops when unset, and must never fail the run.
 - Release checklist: envs documented, secrets inventoried, briefing + STATUS.md close-out, `phases/briefing/phase-9.md`.
 
 Exit criteria: family members installed and using both platforms; export produces a re-importable bundle; template import rejects malformed files with row-level errors; PRODUCTION_PLAN.md Phase 9 exit criteria met.

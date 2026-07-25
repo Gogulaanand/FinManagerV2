@@ -3,6 +3,56 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
+## Latest Handoff: 2026-07-25 (Phase 8 raised as a PR)
+
+### Where we are
+
+Phase 8 is committed on `phase-8-inactivity-monitor` and raised as a PR against `main`, which the owner explicitly authorised.
+The Resend domain `finmanager.sunfabb.com` is verified, `RESEND_FROM_EMAIL` is `deadman@finmanager.sunfabb.com`, and the PowerSync sync rules carrying `deadman_settings` and `escalation_events` are deployed.
+All four escalation stages were delivered end to end on 2026-07-24 and the repeated final stage produced no duplicates, but that run predates Edge Function v4 so it has not been replayed against the deployed code.
+
+This session also fixed a real defect rather than only verifying: activity was recorded once per mounted session, so a backgrounded mobile app or a long-lived browser tab stopped proving liveness and would have escalated to trusted-contact disclosure against an active user. See D-055.
+
+### Verification state
+
+`CI=true pnpm turbo run build test lint typecheck` passes 21/21; Prettier is clean on every changed file. `packages/sync/src/activity.test.ts` covers the new freshness path with 5 tests. Resend reports all four stage emails as `delivered`, not merely accepted.
+
+### Exact next action
+
+Replay the escalation chain against v4 using `PHASE8_EXTERNAL_VERIFICATION_RUNBOOK.md`.
+The staged escalation events must be cleared or re-dated first, otherwise the replay is correctly suppressed and reports `{"events":[]}` - see D-056.
+Then configure Auth SMTP, prove one real signup email, add a trusted contact at an address distinct from the account owner's, and run the Chrome and native mobile passes.
+
+### Open items / warnings
+
+- The staged account `f2014cd9-7e2b-46aa-9555-a701c7aad0a5` is now `gogulaanand281@gmail.com`, not the `+webtest` alias several older notes still name.
+- Its single trusted contact uses that same address, so third-party disclosure is unproven.
+- During this session the staged `activity_log` was temporarily backdated to drive a replay and then restored exactly to `2026-07-23 02:27:13.778779+00` with all 90 rows intact. Any future backdating must be undone before the `deadman-daily` job runs at 03:00 UTC.
+- Verify whether v4 still writes a `cancelled` row on every cron call. Under v3 five consecutive calls each wrote one despite no app open; the v4 guard looks correct on inspection but has not been observed running.
+
+---
+
+## Previous Handoff: 2026-07-23 (Phase 8 dead-man switch)
+
+### Where we are
+
+Phase 8 local implementation is present but intentionally uncommitted pending owner approval. It adds the dead-man settings and escalation-event migration, PowerSync schema/rules, Zod contracts and repositories, Resend/`deadman-check` Edge Function scaffolding with cron/user modes, staged delivery/cancellation logic, activity-log retry on web visibility/mobile foreground, and trusted-contact/dead-man settings UI on both platforms. The 2026-07-23 audit remediation also fixed the web preview newline rendering, extracted and tested the Edge Function’s pure stage/idempotency logic, and clarified D-042/D-052 and the Vault cron prerequisite in D-054.
+
+### Verification state
+
+Schema tests (34), sync tests (41), the focused Edge Function logic tests (3), schema/sync/web/mobile typechecks, web/mobile ESLint, and the repository Prettier check pass. The authenticated web fixture is saved with the monitor enabled at a one-day threshold and one active existence-scope contact. The linked project now has the Phase 8 tables, `deadman-check` version 3 (`verify_jwt=false`), Vault-backed cron secrets, and an active `deadman-daily` job. A live cron-triggered `reminder_1` attempt reached the function and created a failed event; Resend rejected the test recipient because no verified domain exists. A subsequent fresh activity row produced a live `cancelled` event with `reason: app_open`. PowerSync rule deployment, successful Resend delivery, Auth SMTP, and the full simulation transcript remain pending.
+
+### External prerequisites / exact next action
+
+- A dedicated Resend sending-only key is configured in the linked project as `RESEND_API_KEY`; `RESEND_FROM_EMAIL` is currently the Resend staging sender `onboarding@resend.dev` because no verified domain exists. Resend currently reports no domains and no received emails. Resend's staging sender can deliver only to the Resend account owner, while the seeded Supabase test user has a different email. Verify a domain or switch to a test account matching the Resend owner before claiming delivery. Point Supabase Auth SMTP at Resend before claiming signup delivery.
+- `CRON_SECRET` is configured in the linked project. The hosted deployment stores `deadman_supabase_url` and `deadman_cron_secret` in Supabase Vault; the active `deadman-daily` job runs at `0 3 * * *` and reads both secrets at execution time.
+- Migration `supabase/migrations/20260723021348_phase8_deadman.sql` is applied remotely and `deadman-check` is deployed with its custom-auth gateway setting. The current workspace has no PowerSync deployment CLI or connector, so publish `supabase/powersync/sync-rules.yaml` from the PowerSync dashboard before running the authenticated `simulate` sequence at T, T+7, T+14, and T+21; repeat one stage for idempotency and open the app for `cancelled`. The cron cancellation behavior is already proven; the staged event ledger contains failed reminder attempts plus the cancellation event, not a successful escalation chain.
+- Complete one real signup email and record received email/event rows in `phases/briefing/phase-8.md`.
+
+Do not commit until the owner reviews this diff and approves it. Do not claim Phase 8 complete until the external exit criteria are evidenced.
+
+---
+
 ## Latest Handoff: 2026-07-21 (Repo-wide improvements)
 
 ### Where we are

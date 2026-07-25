@@ -1,8 +1,9 @@
 import { z } from 'zod';
 
+import { IsoTimestamp } from './timestamps';
+
 const Uuid = z.string().uuid();
 const MonthKey = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
-const IsoTimestamp = z.iso.datetime({ offset: true });
 const OptionalAmount = z.number().finite().nullable();
 
 export const InsightScopeSchema = z.enum([

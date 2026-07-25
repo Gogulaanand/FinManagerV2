@@ -1,4 +1,4 @@
-import { logActivity } from '@finmanager/sync';
+import { logActivityWithRetry, recordActivityIfStale } from '@finmanager/sync';
 import { PowerSyncContext } from '@powersync/react';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
+import { AppState, Platform as RNPlatform } from 'react-native';
 
 import { getConnector, getPowerSync } from '../lib/powersync';
 import { supabase } from '../lib/supabase';
@@ -20,7 +21,11 @@ export interface AuthApi {
   /** True until the initial session lookup resolves. */
   loading: boolean;
   signInWithPassword: (email: string, password: string) => Promise<string | null>;
-  signUpWithPassword: (email: string, password: string) => Promise<string | null>;
+  /** Resolves the error, plus whether a confirmation email was actually sent. */
+  signUpWithPassword: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: string | null; needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -62,11 +67,18 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const loggedForUser = useRef<string | null>(null);
   useEffect(() => {
     const userId = session?.user.id;
-    if (!userId || loggedForUser.current === userId) return;
-    loggedForUser.current = userId;
-    void logActivity(db, userId, 'app_open', 'ios').catch(() => {
-      // Best-effort; never surface a logging failure.
+    if (!userId) return;
+    const platform = RNPlatform.OS === 'android' ? 'android' : 'ios';
+    if (loggedForUser.current !== userId) {
+      loggedForUser.current = userId;
+      void logActivityWithRetry(db, userId, 'app_open', platform);
+    }
+    // An app that is only ever backgrounded never remounts, so each return to
+    // the foreground must record a fresh mark, not just retry a failed one.
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void recordActivityIfStale(db, userId, 'app_open', platform);
     });
+    return () => subscription.remove();
   }, [db, session]);
 
   const signInWithPassword = useCallback(async (email: string, password: string) => {
@@ -75,8 +87,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
   }, []);
 
   const signUpWithPassword = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    return error?.message ?? null;
+    // No session means the project requires confirmation and Supabase has sent
+    // the email; a session means it is disabled and the user is already in.
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    return { error: error?.message ?? null, needsConfirmation: !error && !data.session };
   }, []);
 
   const signOut = useCallback(async () => {

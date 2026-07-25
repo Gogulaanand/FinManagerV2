@@ -1,5 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.110.7';
 
+import { publishableKey, secretKey } from '../_shared/keys.ts';
+
 type InsightScope = 'everything' | 'expenses' | 'budget' | 'portfolio' | 'goals' | 'tax';
 type RequestMode = 'chat' | 'monthly_summary';
 
@@ -192,8 +194,8 @@ Deno.serve(async (request) => {
   if (request.method !== 'POST') return jsonError(405, 'invalid_request', 'Use POST.');
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const anonKey = publishableKey();
+  const serviceRoleKey = secretKey();
   const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
   if (!supabaseUrl || !anonKey || !serviceRoleKey || !anthropicKey) {
     return jsonError(500, 'upstream', 'AI Insights is not configured yet.');
@@ -267,6 +269,15 @@ Deno.serve(async (request) => {
   });
 
   if (!anthropicResponse.ok || !anthropicResponse.body) {
+    // The caller only ever sees a generic "temporarily unavailable", and the
+    // forwarded status is Anthropic's - a 401 here means the API key was
+    // rejected, not that the user is signed out. Without this line nothing
+    // records which, and the two are indistinguishable from the outside.
+    const detail = await anthropicResponse
+      .text()
+      .then((text) => text.slice(0, 500))
+      .catch(() => '<unreadable>');
+    console.error(`ai-insights: Anthropic returned ${anthropicResponse.status}: ${detail}`);
     await recordUsage(
       admin,
       authData.user.id,

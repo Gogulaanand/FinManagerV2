@@ -368,3 +368,95 @@ Consequence: migration `20260721000002_fix_ai_usage_settlement.sql` is applied l
 The improvements pass extracted oversized setup and metadata sections into focused components. The remaining contextual holding-event and valuation forms were retained because route/detail references still use them; no unreferenced component was deleted.
 Why: deleting only files proven unused avoids breaking deep-link and detail-route flows while still reducing the largest component surfaces.
 Consequence: the audit result is recorded here, and future cleanup should re-run reference search before removing those forms.
+This supersedes the deletion assumption in D-042; D-042 remains historical context for why the global history render paths were removed, not an instruction to delete the still-referenced contextual forms.
+
+## D-054: Phase 8 cron configuration requires Vault prerequisites (2026-07-23)
+
+The Phase 8 migration reads `deadman_supabase_url` and `deadman_cron_secret` from Supabase Vault at schedule-creation time. It deliberately skips creating `deadman-daily` when either secret is absent, rather than creating a malformed job with an empty URL or header.
+Why: the migration must remain safe to apply before deployment secrets exist, while the hosted project can still create a valid schedule after Vault setup.
+Consequence: every new environment must provision both Vault secrets, verify `cron.job` contains the active `deadman-daily` schedule, and only then claim cron readiness.
+
+## D-055: Activity marks are refreshed on foreground, not only on mount (2026-07-25)
+
+`logActivity` originally ran once per user id per mounted session, guarded by a ref, and the foreground/visibility handlers only retried a previously failed write.
+A session that is never torn down - a backgrounded mobile app, a browser tab left open for days - therefore recorded exactly one `activity_log` row at sign-in and none afterwards.
+Because escalation is derived from `max(activity_log.occurred_at)`, that would have escalated all the way to trusted-contact disclosure against a user who was still opening the app daily.
+`recordActivityIfStale` now writes a fresh mark on every foreground/visibility transition when the newest local mark is older than `ACTIVITY_INTERVAL_MS` (one hour).
+Why: liveness has to be proven repeatedly, and the interval keeps ordinary tab switching from flooding the log while still bounding staleness far below the smallest useful threshold.
+Consequence: the freshness check reads local SQLite, so it works offline; a read failure deliberately falls through to writing a mark rather than suppressing one, because a missing mark is the dangerous direction.
+
+## D-056: The escalation guard is scoped to the newest activity mark (2026-07-25)
+
+`hasCurrentEvent` treats a stage as already delivered when its event was created after the newest activity mark, which makes the chain idempotent without a separate state column.
+The consequence surfaced during verification: leftover events from an earlier test run suppress a replay, because those rows are newer than any activity timestamp that is also stale enough to be due.
+Why: recording this so a future session does not mistake a correctly suppressed replay for a broken cron path.
+Consequence: replaying an escalation chain against a threshold of N days requires the staged escalation events to predate the staged activity mark; clear or re-date the ledger first.
+
+## D-057: Timestamp parsing accepts the PowerSync rendering, not only JavaScript ISO (2026-07-25)
+
+`packages/schema` validated every timestamp with `z.iso.datetime({ offset: true })`, which requires a `T` separator.
+PowerSync renders a Postgres `timestamptz` as `YYYY-MM-DD hh:mm:ss.sssZ`, and sometimes with a two-digit offset such as `+00`, so strict ISO validation rejects it.
+Rows the client writes itself carry `toISOString()` output and parse cleanly, which is why the existing tests passed - they only ever exercised locally written values.
+Every `escalation_events` row is written server-side by `deadman-check`, so `mapEscalationEventRows` would have thrown on all of them, and `deadman_settings`/`trusted_contacts` would have thrown once a server round-trip replaced the locally written timestamps. `ai_summaries.generated_at` from Phase 7 had the same latent defect.
+`IsoTimestamp` now lives in `packages/schema/src/timestamps.ts` and normalises the PowerSync form before validating; `deadman.ts` and `insights.ts` both use it.
+Why: the parser has to accept both formats the app actually produces, and failing closed here means a blank escalation history rather than a caught error.
+Consequence: any new schema covering a synced `timestamptz` column must import `IsoTimestamp` rather than redeclaring `z.iso.datetime`, and mapper tests should use the PowerSync shape, not a hand-written ISO string. See https://docs.powersync.com/sync/types#postgres-type-mapping.
+
+## D-058: A cron run that escalates nobody must fail loudly (2026-07-25)
+
+The cron path discarded the error from `admin.auth.admin.getUserById` and skipped any user it could not load.
+During the 2026-07-25 replay a transient `bad_jwt` 403 from the Auth admin API made the function return HTTP 200 with `{"processed":0,"results":[]}` - indistinguishable from "no user has the switch enabled".
+For a dead-man switch that is the worst available failure mode: no email, no ledger row, no non-2xx for the scheduler to trip on, and the first visible symptom would be a disclosure that never arrived.
+The loop now checks the lookup error, wraps `processUser`, logs each skip, and returns HTTP 500 with a `failures` array whenever any enabled user could not be processed. The response also reports `enabled`, `processed` and `failed` counts so a clean run is distinguishable from an empty one.
+Why: silence must never be the success signal for a feature whose entire purpose is to act when the user cannot.
+Consequence: the daily job's recorded response is now meaningful; a non-2xx there means at least one user was skipped and needs investigation. This does not retry - a transient failure is surfaced rather than absorbed, and the next daily run picks the user up again.
+
+## D-059: Disclosure summaries are presented, not dumped (2026-07-25)
+
+The 2026-07-25 disclosure to a trusted contact read `- account:bank: INR 80,000` and `- stock: INR 0`.
+The first leaked `account:${type}`, an internal namespacing key used only to stop holding and account types colliding in one map, into a message sent to a third party. The second listed an asset class whose only holding had no recorded value.
+`summaryLabel` and `presentableSummary` in `logic.ts` now map each entry to a human label, drop empty classes, and order by size.
+Why: this message reaches someone else at the worst moment of the user's life, and a notice that looks broken undermines the one thing it needs to be - believed.
+Consequence: adding a holding or account type requires adding its label; an unmapped type degrades to a humanised form of the key rather than the raw key. Note that `credit_card` balances still count as positive value via the `Math.max(0, …)` clamp, which is worth revisiting before release.
+
+## D-060: Disclosure message templates live in packages/core (2026-07-25)
+
+The disclosure preview called the `deadman-check` Edge Function, which re-read `deadman_settings` from Postgres.
+It therefore showed the last value that had been both saved and uploaded by PowerSync - never the unsaved draft, and stale offline or immediately after a save. A user typing a disclosure note and pressing Preview saw the previous note.
+That is a network read of data the client already holds, which the offline-first rule in `CLAUDE.md` treats as a bug.
+The templates and summary presentation now live in `packages/core/src/deadman/messages.ts`. Web and mobile render the preview on-device from the draft plus locally synced holdings and accounts; the Edge Function imports the same module by relative path and renders the message it actually sends.
+Why: a preview that disagrees with the delivered message is worse than no preview, so both paths must share one implementation rather than one copying the other.
+Consequence: `messages.ts` must stay free of imports. The Supabase CLI bundles it through Deno by walking the relative import, and Deno cannot resolve the NodeNext `.js` specifiers the rest of `packages/core` uses - adding any import to that file will break the Edge Function deploy, not just its types. The deploy output lists `packages/core/src/deadman/messages.ts` as an uploaded asset, which is the check that this still works.
+The function's `preview` action is now unused by both clients but is retained because `test_send` shares its code path.
+
+## D-061: Edge Functions read the migrated API keys first (2026-07-25)
+
+The project is mid-migration to asymmetric JWT signing keys. Supabase imported the legacy HS256 secret into the new system and created an ES256 key, so Auth instances that had picked up the new JWKS began rejecting the legacy `service_role` token with `unrecognized JWT kid <nil> for algorithm ES256` while others still accepted it.
+The symptom was an intermittent 403 from `auth.admin.getUserById` during the 2026-07-25 replay: it failed, then succeeded two minutes later, then failed again.
+`deadman-check` now reads `SUPABASE_SECRET_KEYS` and `SUPABASE_PUBLISHABLE_KEYS` first, falling back to `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_ANON_KEY`. The new variables hold a JSON object keyed by name - the default key is `default` - not the plain string the legacy variables held.
+Why: left alone this would have taken the dead-man switch down in production, intermittently at first and then permanently once the rotation completed.
+Consequence: `ai-insights` still reads `SUPABASE_SERVICE_ROLE_KEY` directly and carries the same exposure; it should adopt the same helper. Nothing yet alerts on the cron's HTTP status, so the 500 introduced by D-058 is correct but still only visible to someone looking.
+
+## D-062: The signup notice never mentions project configuration (2026-07-25)
+
+The post-signup notice read "Account created. If email confirmation is enabled, check your inbox to finish."
+That exposes an internal project setting to the user and makes the app sound unsure of its own behaviour.
+`signUpWithPassword` already had the answer and was discarding it: `signUp` returns a session when confirmation is disabled and `null` when Supabase has sent a confirmation email. It now returns `{ error, needsConfirmation }`, and the notice appears only when an email was actually sent.
+Why: the UI should state what happened, not hedge across configurations the user cannot see.
+Consequence: enabling or disabling "Confirm email" changes the copy automatically, with no code change. Note that email confirmation was found disabled on the linked project on 2026-07-25 and re-enabled - unconfirmed signups let anyone register with an address they do not own, so this must be verified before release.
+
+## D-063: The settings form hydrates from the row id, not a loading flag (2026-07-25)
+
+`useState(settings)` captures only the first value. On the first render the PowerSync query has not resolved, so `settings` is the schema default - the form therefore showed defaults permanently, and pressing Save wrote those defaults back over the user's real configuration.
+That is data loss with a safety consequence: opening Settings and saving would have silently set `is_enabled` to false while the panel claimed the monitor was off, so a user could believe the switch was armed when it was not. Found during the 2026-07-25 interactive pass, not by any automated test.
+The first fix latched on a `loading` flag and was still wrong: the query resolves to an empty array before the row syncs down, so the latch fired against the defaults and never corrected itself. Hydration is now keyed on `settings.id`, which only exists once a real row has arrived. A user with no saved row has no id, so the form correctly keeps the defaults.
+Why: the identity of the loaded row is the only signal that distinguishes "no data yet" from "no data at all"; a boolean cannot.
+Consequence: any other form seeded from a PowerSync query has the same latent bug. `apps/mobile/components/settings/deadman-settings.tsx` carried it identically and is fixed alongside. Build and typecheck passed against the broken version, so this class of defect needs interactive verification or a test that simulates the empty-then-populated query sequence.
+
+## D-064: Edge Functions authorize in code, with verify_jwt disabled (2026-07-25)
+
+`ai-insights` returned 401 for every request. The user's access token is now `alg: ES256` with a `kid`, confirming the project has migrated to asymmetric JWT signing keys, and the platform's built-in `verify_jwt` gate only understands the legacy HS256 tokens - so it rejected callers before the function body ran.
+`ai-insights` already required a Bearer token and validated it with `auth.getUser()`, so the platform gate was redundant with a check the function performs itself. It is now deployed with `verify_jwt = false`, matching `deadman-check`.
+Verified by calling the function from the browser with the app's own session token: requests now reach the body and fail only on request-shape validation, with and without an `apikey` header.
+Why: the platform gate cannot validate the tokens this project now issues, and the function's own check is strictly stronger because it resolves the user rather than only verifying a signature.
+Consequence: `verify_jwt = false` is only safe because every code path returns 401 before doing work when the caller is unauthenticated. Any new function must authorize in code before this setting is copied. Interactive verification of the Insights UI is still outstanding - only the API-level auth path has been confirmed.

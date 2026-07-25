@@ -1,6 +1,6 @@
 'use client';
 
-import { logActivity } from '@finmanager/sync';
+import { logActivityWithRetry, recordActivityIfStale } from '@finmanager/sync';
 import { PowerSyncContext } from '@powersync/react';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -22,7 +22,11 @@ export interface AuthApi {
   /** True until the initial session lookup resolves; screens can hold UI back. */
   loading: boolean;
   signInWithPassword: (email: string, password: string) => Promise<string | null>;
-  signUpWithPassword: (email: string, password: string) => Promise<string | null>;
+  /** Resolves the error, plus whether a confirmation email was actually sent. */
+  signUpWithPassword: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: string | null; needsConfirmation: boolean }>;
   signInWithGoogle: () => Promise<string | null>;
   signOut: () => Promise<void>;
 }
@@ -84,11 +88,19 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const loggedForUser = useRef<string | null>(null);
   useEffect(() => {
     const userId = session?.user.id;
-    if (!userId || loggedForUser.current === userId) return;
-    loggedForUser.current = userId;
-    void logActivity(db, userId, 'app_open', 'web').catch(() => {
-      // Best-effort: a logging failure must never surface or block the app.
-    });
+    if (!userId) return;
+    if (loggedForUser.current !== userId) {
+      loggedForUser.current = userId;
+      void logActivityWithRetry(db, userId, 'app_open', 'web');
+    }
+    // A tab left open for days never remounts, so returning to it must record a
+    // fresh mark of its own rather than only retrying a failed one.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible')
+        void recordActivityIfStale(db, userId, 'app_open', 'web');
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, [db, session]);
 
   const signInWithPassword = useCallback(async (email: string, password: string) => {
@@ -97,8 +109,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
   }, []);
 
   const signUpWithPassword = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    return error?.message ?? null;
+    // No session means the project requires confirmation and Supabase has sent
+    // the email; a session means it is disabled and the user is already in.
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    return { error: error?.message ?? null, needsConfirmation: !error && !data.session };
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
