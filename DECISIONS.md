@@ -444,3 +444,19 @@ That exposes an internal project setting to the user and makes the app sound uns
 `signUpWithPassword` already had the answer and was discarding it: `signUp` returns a session when confirmation is disabled and `null` when Supabase has sent a confirmation email. It now returns `{ error, needsConfirmation }`, and the notice appears only when an email was actually sent.
 Why: the UI should state what happened, not hedge across configurations the user cannot see.
 Consequence: enabling or disabling "Confirm email" changes the copy automatically, with no code change. Note that email confirmation was found disabled on the linked project on 2026-07-25 and re-enabled - unconfirmed signups let anyone register with an address they do not own, so this must be verified before release.
+
+## D-063: The settings form hydrates from the row id, not a loading flag (2026-07-25)
+
+`useState(settings)` captures only the first value. On the first render the PowerSync query has not resolved, so `settings` is the schema default - the form therefore showed defaults permanently, and pressing Save wrote those defaults back over the user's real configuration.
+That is data loss with a safety consequence: opening Settings and saving would have silently set `is_enabled` to false while the panel claimed the monitor was off, so a user could believe the switch was armed when it was not. Found during the 2026-07-25 interactive pass, not by any automated test.
+The first fix latched on a `loading` flag and was still wrong: the query resolves to an empty array before the row syncs down, so the latch fired against the defaults and never corrected itself. Hydration is now keyed on `settings.id`, which only exists once a real row has arrived. A user with no saved row has no id, so the form correctly keeps the defaults.
+Why: the identity of the loaded row is the only signal that distinguishes "no data yet" from "no data at all"; a boolean cannot.
+Consequence: any other form seeded from a PowerSync query has the same latent bug. `apps/mobile/components/settings/deadman-settings.tsx` carried it identically and is fixed alongside. Build and typecheck passed against the broken version, so this class of defect needs interactive verification or a test that simulates the empty-then-populated query sequence.
+
+## D-064: Edge Functions authorize in code, with verify_jwt disabled (2026-07-25)
+
+`ai-insights` returned 401 for every request. The user's access token is now `alg: ES256` with a `kid`, confirming the project has migrated to asymmetric JWT signing keys, and the platform's built-in `verify_jwt` gate only understands the legacy HS256 tokens - so it rejected callers before the function body ran.
+`ai-insights` already required a Bearer token and validated it with `auth.getUser()`, so the platform gate was redundant with a check the function performs itself. It is now deployed with `verify_jwt = false`, matching `deadman-check`.
+Verified by calling the function from the browser with the app's own session token: requests now reach the body and fail only on request-shape validation, with and without an `apikey` header.
+Why: the platform gate cannot validate the tokens this project now issues, and the function's own check is strictly stronger because it resolves the user rather than only verifying a signature.
+Consequence: `verify_jwt = false` is only safe because every code path returns 401 before doing work when the caller is unauthenticated. Any new function must authorize in code before this setting is copied. Interactive verification of the Insights UI is still outstanding - only the API-level auth path has been confirmed.

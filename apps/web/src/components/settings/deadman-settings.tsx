@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { buildDisclosureMessage } from '@finmanager/core';
 import type { DeadmanSettings, TrustedContact } from '@finmanager/schema';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
@@ -33,6 +33,22 @@ export function DeadmanSettingsPanel() {
     invoke,
   } = useDeadman();
   const [draft, setDraft] = useState<DeadmanSettings>(settings);
+  // useState only captures the first value, and on the first render the
+  // PowerSync query has not resolved yet - so `settings` is still the schema
+  // default. Without this the form permanently shows defaults, and pressing
+  // Save writes them back over the user's real configuration, silently
+  // disarming the monitor.
+  //
+  // Keyed on the row id rather than a loading flag: the query resolves to an
+  // empty array before the row syncs down, so a one-shot "loaded" latch would
+  // fire against the defaults and never correct itself. A user with no saved
+  // row has no id, so the form correctly keeps the defaults.
+  const hydratedId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!settings.id || hydratedId.current === settings.id) return;
+    hydratedId.current = settings.id;
+    setDraft(settings);
+  }, [settings]);
   const [contact, setContact] = useState<TrustedContact>(blankContact);
   const [message, setMessage] = useState('');
   const [preview, setPreview] = useState<Array<{ recipient: string; scope: string; text: string }>>(
