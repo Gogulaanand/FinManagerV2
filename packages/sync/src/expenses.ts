@@ -13,12 +13,7 @@ import {
   type CsvMappingSet,
   type Transaction,
 } from '@finmanager/schema';
-import {
-  DEFAULT_CATEGORIES,
-  endOfMonthDate,
-  expandOccurrences,
-  type ExpandedOccurrence,
-} from '@finmanager/core';
+import { endOfMonthDate, expandOccurrences, type ExpandedOccurrence } from '@finmanager/core';
 
 import { uuidv4 } from './ids';
 
@@ -222,36 +217,6 @@ export async function saveAccount(
 
 export async function deleteAccount(db: AbstractPowerSyncDatabase, id: string): Promise<void> {
   await db.execute('DELETE FROM accounts WHERE id = ?', [id]);
-}
-
-export async function seedDefaultCategories(
-  db: AbstractPowerSyncDatabase,
-  userId: string,
-): Promise<void> {
-  for (const category of DEFAULT_CATEGORIES) {
-    const result = (await db.execute(
-      'SELECT id FROM categories WHERE user_id = ? AND name = ? AND kind = ? LIMIT 1',
-      [userId, category.name, category.kind],
-    )) as unknown as SqlResult;
-    if (rowsOf(result).length > 0) continue;
-    const now = new Date().toISOString();
-    await db.execute(
-      `INSERT INTO categories (id, user_id, name, kind, icon, color, is_system, sort_order, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        uuidv4(),
-        userId,
-        category.name,
-        category.kind,
-        category.icon,
-        category.color,
-        1,
-        category.sortOrder,
-        now,
-        now,
-      ],
-    );
-  }
 }
 
 export async function saveCategory(

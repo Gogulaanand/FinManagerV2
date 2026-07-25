@@ -460,3 +460,17 @@ Consequence: any other form seeded from a PowerSync query has the same latent bu
 Verified by calling the function from the browser with the app's own session token: requests now reach the body and fail only on request-shape validation, with and without an `apikey` header.
 Why: the platform gate cannot validate the tokens this project now issues, and the function's own check is strictly stronger because it resolves the user rather than only verifying a signature.
 Consequence: `verify_jwt = false` is only safe because every code path returns 401 before doing work when the caller is unauthenticated. Any new function must authorize in code before this setting is copied. Interactive verification of the Insights UI is still outstanding - only the API-level auth path has been confirmed.
+
+## D-065: Dashboard fixtures never represent signed-in account data (2026-07-25)
+
+The web and mobile dashboards continued importing the fixed Phase 1 sample figures after the real data layer existed. A new account therefore appeared to own invented balances, expenses, FIRE progress, and transactions even though no such rows were stored.
+The dashboards now derive their figures from the same expenses, portfolio, and goals hooks as the detail screens. The sample-data modules remain fixtures for manual design work and have no production route imports.
+Why: presentation fixtures must not be indistinguishable from a signed-in user's financial records.
+Consequence: an empty account renders zero and empty states; existing accounts render locally synced data.
+
+## D-066: Default categories are provisioned once by the auth-user trigger (2026-07-25)
+
+`useExpenses` previously ran `seedDefaultCategories` from a React effect. The repository performed a separate existence check and insert for each category, so concurrent mounts created complete duplicate sets. Later mounts also recreated defaults a user had intentionally renamed or deleted.
+The existing `on_auth_user_created` trigger now creates the profile and one private set of 21 category rows in the same server-side signup flow. Client hooks never seed categories, and categories have no permanent template key or name uniqueness constraint: after provisioning they belong entirely to the user.
+Why: account provisioning is a database lifecycle event, not a screen-mount side effect. Users must remain free to rename, delete, or create similarly named categories.
+Consequence: migration `provision_default_categories_once` consolidates exact duplicate system categories per user/name/kind, repoints transaction, budget, and parent-category references, and does not backfill missing defaults for existing users because absence may represent an intentional deletion.

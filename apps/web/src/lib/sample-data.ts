@@ -1,10 +1,14 @@
 /**
- * Sample figures for the Phase 1 shell.
+ * Fixture figures, retained for manual testing and design work.
  *
- * There is no data layer until Phase 3 (auth + offline-first sync), so the
- * shell renders fixed numbers to prove typography, alignment, and the money
- * semantics. Every consumer of this module gets deleted or rewired in Phase 3;
- * nothing here should outlive it.
+ * NOT PRODUCTION DATA. This module was the Phase 1 shell's stand-in before a
+ * data layer existed, and the Dashboard kept rendering it long after Phase 3
+ * wired everything else to real data - so every user, including brand-new
+ * accounts with nothing in them, saw the same invented net worth, spend and
+ * transactions on the first screen after sign-in (D-065).
+ *
+ * Nothing under `app/` may import this. Use it only from throwaway harnesses or
+ * design previews, and never to seed a real account.
  */
 
 export interface Transaction {
