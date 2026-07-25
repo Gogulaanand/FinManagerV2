@@ -269,6 +269,15 @@ Deno.serve(async (request) => {
   });
 
   if (!anthropicResponse.ok || !anthropicResponse.body) {
+    // The caller only ever sees a generic "temporarily unavailable", and the
+    // forwarded status is Anthropic's - a 401 here means the API key was
+    // rejected, not that the user is signed out. Without this line nothing
+    // records which, and the two are indistinguishable from the outside.
+    const detail = await anthropicResponse
+      .text()
+      .then((text) => text.slice(0, 500))
+      .catch(() => '<unreadable>');
+    console.error(`ai-insights: Anthropic returned ${anthropicResponse.status}: ${detail}`);
     await recordUsage(
       admin,
       authData.user.id,
