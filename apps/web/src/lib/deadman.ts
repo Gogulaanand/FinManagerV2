@@ -5,8 +5,11 @@ import {
   type DeadmanSettings,
   type TrustedContact,
 } from '@finmanager/schema';
+import { buildSummary } from '@finmanager/core';
 import {
   DEADMAN_SETTINGS_QUERY,
+  DEADMAN_SUMMARY_ACCOUNTS_QUERY,
+  DEADMAN_SUMMARY_HOLDINGS_QUERY,
   ESCALATION_EVENTS_QUERY,
   TRUSTED_CONTACTS_QUERY,
   deleteTrustedContact,
@@ -44,6 +47,24 @@ export function useDeadman() {
     () => mapEscalationEventRows(records(eventsResult.data)),
     [eventsResult.data],
   );
+  // Built on-device so the preview reflects the unsaved draft and still works
+  // offline; the server renders the same message from the same module.
+  const holdingsResult = useQuery<Record<string, unknown>>(DEADMAN_SUMMARY_HOLDINGS_QUERY);
+  const accountsResult = useQuery<Record<string, unknown>>(DEADMAN_SUMMARY_ACCOUNTS_QUERY);
+  const summary = useMemo(
+    () =>
+      buildSummary(
+        records(holdingsResult.data).map((row) => ({
+          type: String(row.type ?? ''),
+          value: Number(row.current_value ?? 0),
+        })),
+        records(accountsResult.data).map((row) => ({
+          type: String(row.type ?? ''),
+          value: Number(row.current_balance ?? 0),
+        })),
+      ),
+    [holdingsResult.data, accountsResult.data],
+  );
   const saveSettings = useCallback(
     async (input: DeadmanSettings) => (userId ? saveDeadmanSettings(db, userId, input) : null),
     [db, userId],
@@ -73,9 +94,11 @@ export function useDeadman() {
   }, []);
   return {
     canWrite: Boolean(userId),
+    userName: session?.user.email ?? 'your FinManager account',
     settings,
     contacts,
     events,
+    summary,
     loading: [settingsResult.data, contactsResult.data, eventsResult.data].some(
       (value) => value === undefined,
     ),

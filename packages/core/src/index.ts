@@ -161,3 +161,20 @@ export type {
   RetirementCorpusOptions,
   RetirementCorpusRow,
 } from './goals/index.js';
+
+export {
+  STAGE_OFFSETS,
+  buildDisclosureMessage,
+  buildReminderMessage,
+  buildSummary,
+  daysUntilNextStage,
+  describeDays,
+  presentableSummary,
+  summaryLabel,
+} from './deadman/messages.js';
+export type {
+  DisclosureScope,
+  EmailMessage,
+  EscalationStage,
+  SummaryEntry,
+} from './deadman/messages.js';

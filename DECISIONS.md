@@ -418,3 +418,13 @@ The first leaked `account:${type}`, an internal namespacing key used only to sto
 `summaryLabel` and `presentableSummary` in `logic.ts` now map each entry to a human label, drop empty classes, and order by size.
 Why: this message reaches someone else at the worst moment of the user's life, and a notice that looks broken undermines the one thing it needs to be - believed.
 Consequence: adding a holding or account type requires adding its label; an unmapped type degrades to a humanised form of the key rather than the raw key. Note that `credit_card` balances still count as positive value via the `Math.max(0, …)` clamp, which is worth revisiting before release.
+
+## D-060: Disclosure message templates live in packages/core (2026-07-25)
+
+The disclosure preview called the `deadman-check` Edge Function, which re-read `deadman_settings` from Postgres.
+It therefore showed the last value that had been both saved and uploaded by PowerSync - never the unsaved draft, and stale offline or immediately after a save. A user typing a disclosure note and pressing Preview saw the previous note.
+That is a network read of data the client already holds, which the offline-first rule in `CLAUDE.md` treats as a bug.
+The templates and summary presentation now live in `packages/core/src/deadman/messages.ts`. Web and mobile render the preview on-device from the draft plus locally synced holdings and accounts; the Edge Function imports the same module by relative path and renders the message it actually sends.
+Why: a preview that disagrees with the delivered message is worse than no preview, so both paths must share one implementation rather than one copying the other.
+Consequence: `messages.ts` must stay free of imports. The Supabase CLI bundles it through Deno by walking the relative import, and Deno cannot resolve the NodeNext `.js` specifiers the rest of `packages/core` uses - adding any import to that file will break the Edge Function deploy, not just its types. The deploy output lists `packages/core/src/deadman/messages.ts` as an uploaded asset, which is the check that this still works.
+The function's `preview` action is now unused by both clients but is retained because `test_send` shares its code path.

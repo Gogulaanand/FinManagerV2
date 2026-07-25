@@ -194,3 +194,8 @@ export async function deleteTrustedContact(
 ): Promise<void> {
   await db.execute('DELETE FROM trusted_contacts WHERE user_id = ? AND id = ?', [userId, id]);
 }
+
+// The disclosure preview is rendered on-device from these, so it reflects the
+// unsaved draft and keeps working offline (D-060).
+export const DEADMAN_SUMMARY_HOLDINGS_QUERY = `SELECT type, current_value FROM holdings WHERE is_active = 1`;
+export const DEADMAN_SUMMARY_ACCOUNTS_QUERY = `SELECT type, current_balance FROM accounts WHERE is_active = 1`;

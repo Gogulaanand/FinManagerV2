@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { buildDisclosureMessage } from '@finmanager/core';
 import type { DeadmanSettings, TrustedContact } from '@finmanager/schema';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,8 @@ export function DeadmanSettingsPanel() {
     events,
     loading,
     canWrite,
+    userName,
+    summary,
     saveSettings,
     saveContact,
     removeContact,
@@ -100,14 +103,23 @@ export function DeadmanSettingsPanel() {
           </Button>
           <Button
             variant="outline"
-            onClick={async () => {
-              const result = await invoke({ action: 'preview' });
+            onClick={() => {
+              // Rendered here, from the draft, so it shows what you just typed
+              // rather than what has been saved and uploaded. The Edge Function
+              // builds the delivered message from the same shared module.
               setPreview(
-                (result.previews ?? []).map(({ recipient, scope, text }) => ({
-                  recipient,
-                  scope,
-                  text,
-                })),
+                contacts
+                  .filter((item) => item.isActive && item.email)
+                  .map((item) => ({
+                    recipient: item.email as string,
+                    scope: item.disclosureScope,
+                    text: buildDisclosureMessage({
+                      userName,
+                      scope: item.disclosureScope,
+                      note: draft.disclosureNote,
+                      summary,
+                    }).text,
+                  })),
               );
             }}
           >

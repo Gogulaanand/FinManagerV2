@@ -84,6 +84,8 @@ export {
 export { AI_SUMMARIES_QUERY, mapAiSummaryRows, saveAiSummary } from './insights';
 export {
   DEADMAN_SETTINGS_QUERY,
+  DEADMAN_SUMMARY_ACCOUNTS_QUERY,
+  DEADMAN_SUMMARY_HOLDINGS_QUERY,
   ESCALATION_EVENTS_QUERY,
   TRUSTED_CONTACTS_QUERY,
   deleteTrustedContact,

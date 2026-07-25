@@ -1,6 +1,9 @@
+import { buildDisclosureMessage, buildSummary } from '@finmanager/core';
 import { DeadmanSettingsSchema, type DeadmanSettings } from '@finmanager/schema';
 import {
   DEADMAN_SETTINGS_QUERY,
+  DEADMAN_SUMMARY_ACCOUNTS_QUERY,
+  DEADMAN_SUMMARY_HOLDINGS_QUERY,
   ESCALATION_EVENTS_QUERY,
   TRUSTED_CONTACTS_QUERY,
   deleteTrustedContact,
@@ -39,6 +42,24 @@ export function DeadmanSettings() {
     [contactRows.data],
   );
   const events = useMemo(() => mapEscalationEventRows(records(eventRows.data)), [eventRows.data]);
+  // Built on-device so the preview reflects the unsaved draft and still works
+  // offline; the server renders the same message from the same module.
+  const holdingRows = useQuery<Record<string, unknown>>(DEADMAN_SUMMARY_HOLDINGS_QUERY);
+  const accountRows = useQuery<Record<string, unknown>>(DEADMAN_SUMMARY_ACCOUNTS_QUERY);
+  const summary = useMemo(
+    () =>
+      buildSummary(
+        records(holdingRows.data).map((row) => ({
+          type: String(row.type ?? ''),
+          value: Number(row.current_value ?? 0),
+        })),
+        records(accountRows.data).map((row) => ({
+          type: String(row.type ?? ''),
+          value: Number(row.current_balance ?? 0),
+        })),
+      ),
+    [holdingRows.data, accountRows.data],
+  );
   const [draft, setDraft] = useState<DeadmanSettings>(settings);
   const [notice, setNotice] = useState('');
   const [preview, setPreview] = useState('');
@@ -47,18 +68,25 @@ export function DeadmanSettings() {
     await saveDeadmanSettings(db, session.user.id, draft);
     setNotice('Settings saved.');
   }, [db, draft, session]);
+  const showPreview = useCallback(() => {
+    setPreview(
+      contacts
+        .filter((item) => item.isActive && item.email)
+        .map((item) => {
+          const message = buildDisclosureMessage({
+            userName: session?.user.email ?? 'your FinManager account',
+            scope: item.disclosureScope,
+            note: draft.disclosureNote,
+            summary,
+          });
+          return `${item.email} · ${item.disclosureScope}\n\n${message.text}`;
+        })
+        .join('\n\n---\n\n'),
+    );
+  }, [contacts, draft.disclosureNote, session, summary]);
   const callFunction = useCallback(async (action: string) => {
-    const { data, error } = await supabase.functions.invoke('deadman-check', { body: { action } });
+    const { error } = await supabase.functions.invoke('deadman-check', { body: { action } });
     if (error) Alert.alert('Could not send', error.message);
-    else if (action === 'preview')
-      setPreview(
-        (data?.previews ?? [])
-          .map(
-            (item: { recipient: string; scope: string; text: string }) =>
-              `${item.recipient} · ${item.scope}\n\n${item.text}`,
-          )
-          .join('\n\n---\n\n'),
-      );
     else setNotice('Test notice sent to your email.');
   }, []);
   if (!session) return null;
@@ -99,10 +127,7 @@ export function DeadmanSettings() {
           >
             <Text className="font-body text-body-md text-primary-foreground">Save settings</Text>
           </Pressable>
-          <Pressable
-            className="rounded-md bg-surface-muted px-4 py-3"
-            onPress={() => void callFunction('preview')}
-          >
+          <Pressable className="rounded-md bg-surface-muted px-4 py-3" onPress={showPreview}>
             <Text className="font-body text-body-md text-foreground">Preview</Text>
           </Pressable>
           <Pressable

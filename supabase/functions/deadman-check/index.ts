@@ -2,15 +2,12 @@ import { createClient, type SupabaseClient, type User } from 'npm:@supabase/supa
 
 import { sendEmail } from '../_shared/resend.ts';
 import {
-  daysSince,
-  daysUntilNextStage,
-  describeDays,
-  dueStages,
-  hasCurrentEvent,
-  presentableSummary,
-  type Stage,
+  buildDisclosureMessage,
+  buildReminderMessage,
+  buildSummary,
   type SummaryEntry,
-} from './logic.ts';
+} from '../../../packages/core/src/deadman/messages.ts';
+import { daysSince, dueStages, hasCurrentEvent, type Stage } from './logic.ts';
 
 type Scope = 'existence' | 'summary';
 type Contact = {
@@ -50,13 +47,6 @@ function json(data: unknown, status = 200): Response {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }
-function html(text: string): string {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('\n', '<br>');
-}
 function reminderContent(
   userName: string,
   kind: Stage,
@@ -64,25 +54,7 @@ function reminderContent(
   thresholdDays: number,
   contactNames: string[],
 ): { subject: string; text: string; html: string } {
-  const remaining = daysUntilNextStage({ threshold_days: thresholdDays }, kind, inactiveDays);
-  const when =
-    remaining === null || remaining === 0
-      ? 'today'
-      : remaining === 1
-        ? 'tomorrow'
-        : `in ${describeDays(remaining)}`;
-  const what =
-    kind === 'reminder_3' ? 'we will notify your trusted contacts' : 'we will remind you again';
-  const names =
-    kind === 'reminder_3'
-      ? ` The contacts who will receive that message are ${contactNames.join(', ') || 'your active trusted contacts'}.`
-      : '';
-  const text = `Hello ${userName},\n\nFinManager inactivity reminder\n\nWe have not seen you open FinManager for ${describeDays(inactiveDays)}. If you do not open the app, ${what} ${when}.${names}\n\nOpening the app cancels the escalation.`;
-  return {
-    subject: `FinManager inactivity reminder (${kind.replace('_', ' ')})`,
-    text,
-    html: html(text),
-  };
+  return buildReminderMessage({ userName, stage: kind, inactiveDays, thresholdDays, contactNames });
 }
 function disclosureContent(
   userName: string,
@@ -90,13 +62,7 @@ function disclosureContent(
   note: string | null,
   summary: readonly SummaryEntry[],
 ): { subject: string; text: string; html: string } {
-  const lines = presentableSummary(summary);
-  const body =
-    scope === 'summary'
-      ? `Coarse financial summary by asset class:\n${lines.map((item) => `- ${item.label}: INR ${item.value.toLocaleString('en-IN')}`).join('\n') || '- No summary is available.'}`
-      : 'Financial records exist in FinManager. Please contact the user or their chosen support person before taking any action.';
-  const text = `FinManager trusted-contact notice for ${userName}\n\n${body}\n\n${note ? `Message from the user:\n${note}\n\n` : ''}This message contains no transaction history. Please handle it sensitively.`;
-  return { subject: 'FinManager trusted-contact notice', text, html: html(text) };
+  return buildDisclosureMessage({ userName, scope, note, summary });
 }
 
 async function latestActivity(admin: SupabaseClient, userId: string): Promise<string | null> {
@@ -121,18 +87,13 @@ async function summaryFor(admin: SupabaseClient, userId: string): Promise<Summar
   ]);
   if (holdings.error) throw holdings.error;
   if (accounts.error) throw accounts.error;
-  // Holdings and accounts are totalled separately because their type
-  // vocabularies overlap - both have `cash` - and merging them would silently
-  // combine an unrelated holding with a bank account.
-  const totals = new Map<string, { source: 'holding' | 'account'; type: string; value: number }>();
-  const add = (source: 'holding' | 'account', type: string, amount: number) => {
-    const key = `${source}:${type}`;
-    const existing = totals.get(key);
-    totals.set(key, { source, type, value: (existing?.value ?? 0) + amount });
-  };
-  for (const row of holdings.data ?? []) add('holding', row.type, Number(row.current_value ?? 0));
-  for (const row of accounts.data ?? []) add('account', row.type, Number(row.current_balance ?? 0));
-  return [...totals.values()].map((entry) => ({ ...entry, value: Math.max(0, entry.value) }));
+  return buildSummary(
+    (holdings.data ?? []).map((row) => ({ type: row.type, value: Number(row.current_value ?? 0) })),
+    (accounts.data ?? []).map((row) => ({
+      type: row.type,
+      value: Number(row.current_balance ?? 0),
+    })),
+  );
 }
 async function settingsFor(admin: SupabaseClient, userId: string): Promise<Settings | null> {
   const { data, error } = await admin
