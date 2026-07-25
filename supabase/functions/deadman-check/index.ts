@@ -217,6 +217,32 @@ async function processUser(
   return { events: output, inactiveDays };
 }
 
+/**
+ * Reads an API key, preferring the new signing-keys format.
+ *
+ * A project that has rotated to asymmetric JWT signing keys stops accepting the
+ * legacy `service_role` token, which is signed with the retired HS256 secret -
+ * Auth rejects it with `unrecognized JWT kid <nil> for algorithm ES256`. The new
+ * variables hold a JSON object keyed by name rather than a plain string, and
+ * both forms are present during a migration, so prefer the new one and fall
+ * back to the legacy value.
+ *
+ * See https://supabase.com/docs/guides/auth/signing-keys.
+ */
+function apiKey(migratedVar: string, legacyVar: string): string | null {
+  const migrated = Deno.env.get(migratedVar);
+  if (migrated) {
+    try {
+      const keys = JSON.parse(migrated) as Record<string, string>;
+      const key = keys.default ?? Object.values(keys)[0];
+      if (typeof key === 'string' && key) return key;
+    } catch (error) {
+      console.error(`deadman-check: ${migratedVar} is not valid JSON`, error);
+    }
+  }
+  return Deno.env.get(legacyVar) ?? null;
+}
+
 async function authenticate(request: Request, url: string, anonKey: string): Promise<User | null> {
   const authorization = request.headers.get('Authorization');
   if (!authorization?.startsWith('Bearer ')) return null;
@@ -233,8 +259,8 @@ Deno.serve(async (request) => {
   if (request.method !== 'POST')
     return json({ error: 'invalid_request', message: 'Use POST.' }, 405);
   const url = Deno.env.get('SUPABASE_URL');
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const anonKey = apiKey('SUPABASE_PUBLISHABLE_KEYS', 'SUPABASE_ANON_KEY');
+  const serviceKey = apiKey('SUPABASE_SECRET_KEYS', 'SUPABASE_SERVICE_ROLE_KEY');
   if (!url || !anonKey || !serviceKey)
     return json({ error: 'upstream', message: 'Dead-man switch is not configured.' }, 500);
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } });

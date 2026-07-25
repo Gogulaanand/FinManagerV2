@@ -21,7 +21,11 @@ export interface AuthApi {
   /** True until the initial session lookup resolves. */
   loading: boolean;
   signInWithPassword: (email: string, password: string) => Promise<string | null>;
-  signUpWithPassword: (email: string, password: string) => Promise<string | null>;
+  /** Resolves the error, plus whether a confirmation email was actually sent. */
+  signUpWithPassword: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: string | null; needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -83,8 +87,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
   }, []);
 
   const signUpWithPassword = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    return error?.message ?? null;
+    // No session means the project requires confirmation and Supabase has sent
+    // the email; a session means it is disabled and the user is already in.
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    return { error: error?.message ?? null, needsConfirmation: !error && !data.session };
   }, []);
 
   const signOut = useCallback(async () => {

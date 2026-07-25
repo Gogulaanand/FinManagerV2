@@ -428,3 +428,19 @@ The templates and summary presentation now live in `packages/core/src/deadman/me
 Why: a preview that disagrees with the delivered message is worse than no preview, so both paths must share one implementation rather than one copying the other.
 Consequence: `messages.ts` must stay free of imports. The Supabase CLI bundles it through Deno by walking the relative import, and Deno cannot resolve the NodeNext `.js` specifiers the rest of `packages/core` uses - adding any import to that file will break the Edge Function deploy, not just its types. The deploy output lists `packages/core/src/deadman/messages.ts` as an uploaded asset, which is the check that this still works.
 The function's `preview` action is now unused by both clients but is retained because `test_send` shares its code path.
+
+## D-061: Edge Functions read the migrated API keys first (2026-07-25)
+
+The project is mid-migration to asymmetric JWT signing keys. Supabase imported the legacy HS256 secret into the new system and created an ES256 key, so Auth instances that had picked up the new JWKS began rejecting the legacy `service_role` token with `unrecognized JWT kid <nil> for algorithm ES256` while others still accepted it.
+The symptom was an intermittent 403 from `auth.admin.getUserById` during the 2026-07-25 replay: it failed, then succeeded two minutes later, then failed again.
+`deadman-check` now reads `SUPABASE_SECRET_KEYS` and `SUPABASE_PUBLISHABLE_KEYS` first, falling back to `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_ANON_KEY`. The new variables hold a JSON object keyed by name - the default key is `default` - not the plain string the legacy variables held.
+Why: left alone this would have taken the dead-man switch down in production, intermittently at first and then permanently once the rotation completed.
+Consequence: `ai-insights` still reads `SUPABASE_SERVICE_ROLE_KEY` directly and carries the same exposure; it should adopt the same helper. Nothing yet alerts on the cron's HTTP status, so the 500 introduced by D-058 is correct but still only visible to someone looking.
+
+## D-062: The signup notice never mentions project configuration (2026-07-25)
+
+The post-signup notice read "Account created. If email confirmation is enabled, check your inbox to finish."
+That exposes an internal project setting to the user and makes the app sound unsure of its own behaviour.
+`signUpWithPassword` already had the answer and was discarding it: `signUp` returns a session when confirmation is disabled and `null` when Supabase has sent a confirmation email. It now returns `{ error, needsConfirmation }`, and the notice appears only when an email was actually sent.
+Why: the UI should state what happened, not hedge across configurations the user cannot see.
+Consequence: enabling or disabling "Confirm email" changes the copy automatically, with no code change. Note that email confirmation was found disabled on the linked project on 2026-07-25 and re-enabled - unconfirmed signups let anyone register with an address they do not own, so this must be verified before release.

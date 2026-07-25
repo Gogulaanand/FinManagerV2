@@ -30,18 +30,25 @@ export default function LoginPage() {
     setError(null);
     setNotice(null);
     setBusy(true);
-    const submit = mode === 'signin' ? signInWithPassword : signUpWithPassword;
-    const message = await submit(email.trim(), password);
-    setBusy(false);
-    if (message) {
-      setError(message);
+    if (mode === 'signup') {
+      const { error: signUpError, needsConfirmation } = await signUpWithPassword(
+        email.trim(),
+        password,
+      );
+      setBusy(false);
+      if (signUpError) {
+        setError(signUpError);
+        return;
+      }
+      // Only promise an email when one was actually sent. Otherwise the auth
+      // listener already has a session and the effect above redirects home.
+      if (needsConfirmation)
+        setNotice('Account created. Check your inbox to confirm your email address.');
       return;
     }
-    if (mode === 'signup') {
-      // With email confirmation on there is no session yet; with it off, the auth
-      // listener already has a session and the effect above redirects home.
-      setNotice('Account created. If email confirmation is enabled, check your inbox to finish.');
-    }
+    const message = await signInWithPassword(email.trim(), password);
+    setBusy(false);
+    if (message) setError(message);
   }
 
   return (
