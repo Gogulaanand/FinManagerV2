@@ -401,3 +401,20 @@ Every `escalation_events` row is written server-side by `deadman-check`, so `map
 `IsoTimestamp` now lives in `packages/schema/src/timestamps.ts` and normalises the PowerSync form before validating; `deadman.ts` and `insights.ts` both use it.
 Why: the parser has to accept both formats the app actually produces, and failing closed here means a blank escalation history rather than a caught error.
 Consequence: any new schema covering a synced `timestamptz` column must import `IsoTimestamp` rather than redeclaring `z.iso.datetime`, and mapper tests should use the PowerSync shape, not a hand-written ISO string. See https://docs.powersync.com/sync/types#postgres-type-mapping.
+
+## D-058: A cron run that escalates nobody must fail loudly (2026-07-25)
+
+The cron path discarded the error from `admin.auth.admin.getUserById` and skipped any user it could not load.
+During the 2026-07-25 replay a transient `bad_jwt` 403 from the Auth admin API made the function return HTTP 200 with `{"processed":0,"results":[]}` - indistinguishable from "no user has the switch enabled".
+For a dead-man switch that is the worst available failure mode: no email, no ledger row, no non-2xx for the scheduler to trip on, and the first visible symptom would be a disclosure that never arrived.
+The loop now checks the lookup error, wraps `processUser`, logs each skip, and returns HTTP 500 with a `failures` array whenever any enabled user could not be processed. The response also reports `enabled`, `processed` and `failed` counts so a clean run is distinguishable from an empty one.
+Why: silence must never be the success signal for a feature whose entire purpose is to act when the user cannot.
+Consequence: the daily job's recorded response is now meaningful; a non-2xx there means at least one user was skipped and needs investigation. This does not retry - a transient failure is surfaced rather than absorbed, and the next daily run picks the user up again.
+
+## D-059: Disclosure summaries are presented, not dumped (2026-07-25)
+
+The 2026-07-25 disclosure to a trusted contact read `- account:bank: INR 80,000` and `- stock: INR 0`.
+The first leaked `account:${type}`, an internal namespacing key used only to stop holding and account types colliding in one map, into a message sent to a third party. The second listed an asset class whose only holding had no recorded value.
+`summaryLabel` and `presentableSummary` in `logic.ts` now map each entry to a human label, drop empty classes, and order by size.
+Why: this message reaches someone else at the worst moment of the user's life, and a notice that looks broken undermines the one thing it needs to be - believed.
+Consequence: adding a holding or account type requires adding its label; an unmapped type degrades to a humanised form of the key rather than the raw key. Note that `credit_card` balances still count as positive value via the `Math.max(0, …)` clamp, which is worth revisiting before release.

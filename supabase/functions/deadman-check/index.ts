@@ -1,7 +1,16 @@
 import { createClient, type SupabaseClient, type User } from 'npm:@supabase/supabase-js@2.110.7';
 
 import { sendEmail } from '../_shared/resend.ts';
-import { daysSince, dueStages, hasCurrentEvent, type Stage } from './logic.ts';
+import {
+  daysSince,
+  daysUntilNextStage,
+  describeDays,
+  dueStages,
+  hasCurrentEvent,
+  presentableSummary,
+  type Stage,
+  type SummaryEntry,
+} from './logic.ts';
 
 type Scope = 'existence' | 'summary';
 type Contact = {
@@ -55,17 +64,20 @@ function reminderContent(
   thresholdDays: number,
   contactNames: string[],
 ): { subject: string; text: string; html: string } {
-  const next =
-    kind === 'reminder_1'
-      ? `in ${thresholdDays + 7} days`
-      : kind === 'reminder_2'
-        ? `in ${thresholdDays + 14} days`
-        : 'to your trusted contacts';
+  const remaining = daysUntilNextStage({ threshold_days: thresholdDays }, kind, inactiveDays);
+  const when =
+    remaining === null || remaining === 0
+      ? 'today'
+      : remaining === 1
+        ? 'tomorrow'
+        : `in ${describeDays(remaining)}`;
+  const what =
+    kind === 'reminder_3' ? 'we will notify your trusted contacts' : 'we will remind you again';
   const names =
     kind === 'reminder_3'
-      ? ` The contacts who will receive the next message are ${contactNames.join(', ') || 'your active trusted contacts'}.`
+      ? ` The contacts who will receive that message are ${contactNames.join(', ') || 'your active trusted contacts'}.`
       : '';
-  const text = `Hello ${userName},\n\nFinManager inactivity reminder\n\nWe have not seen you open FinManager for ${inactiveDays} days. If you do not open the app, the next step is ${next}.${names}\n\nOpening the app cancels the escalation.`;
+  const text = `Hello ${userName},\n\nFinManager inactivity reminder\n\nWe have not seen you open FinManager for ${describeDays(inactiveDays)}. If you do not open the app, ${what} ${when}.${names}\n\nOpening the app cancels the escalation.`;
   return {
     subject: `FinManager inactivity reminder (${kind.replace('_', ' ')})`,
     text,
@@ -76,11 +88,12 @@ function disclosureContent(
   userName: string,
   scope: Scope,
   note: string | null,
-  summary: readonly { type: string; value: number }[],
+  summary: readonly SummaryEntry[],
 ): { subject: string; text: string; html: string } {
+  const lines = presentableSummary(summary);
   const body =
     scope === 'summary'
-      ? `Coarse financial summary by asset class:\n${summary.map((item) => `- ${item.type}: INR ${item.value.toLocaleString('en-IN')}`).join('\n') || '- No summary is available.'}`
+      ? `Coarse financial summary by asset class:\n${lines.map((item) => `- ${item.label}: INR ${item.value.toLocaleString('en-IN')}`).join('\n') || '- No summary is available.'}`
       : 'Financial records exist in FinManager. Please contact the user or their chosen support person before taking any action.';
   const text = `FinManager trusted-contact notice for ${userName}\n\n${body}\n\n${note ? `Message from the user:\n${note}\n\n` : ''}This message contains no transaction history. Please handle it sensitively.`;
   return { subject: 'FinManager trusted-contact notice', text, html: html(text) };
@@ -97,10 +110,7 @@ async function latestActivity(admin: SupabaseClient, userId: string): Promise<st
   if (error) throw error;
   return data?.occurred_at ?? null;
 }
-async function summaryFor(
-  admin: SupabaseClient,
-  userId: string,
-): Promise<{ type: string; value: number }[]> {
+async function summaryFor(admin: SupabaseClient, userId: string): Promise<SummaryEntry[]> {
   const [holdings, accounts] = await Promise.all([
     admin.from('holdings').select('type,current_value').eq('user_id', userId).eq('is_active', true),
     admin
@@ -111,15 +121,18 @@ async function summaryFor(
   ]);
   if (holdings.error) throw holdings.error;
   if (accounts.error) throw accounts.error;
-  const totals = new Map<string, number>();
-  for (const row of holdings.data ?? [])
-    totals.set(row.type, (totals.get(row.type) ?? 0) + Number(row.current_value ?? 0));
-  for (const row of accounts.data ?? [])
-    totals.set(
-      `account:${row.type}`,
-      (totals.get(`account:${row.type}`) ?? 0) + Number(row.current_balance ?? 0),
-    );
-  return [...totals].map(([type, value]) => ({ type, value: Math.max(0, value) }));
+  // Holdings and accounts are totalled separately because their type
+  // vocabularies overlap - both have `cash` - and merging them would silently
+  // combine an unrelated holding with a bank account.
+  const totals = new Map<string, { source: 'holding' | 'account'; type: string; value: number }>();
+  const add = (source: 'holding' | 'account', type: string, amount: number) => {
+    const key = `${source}:${type}`;
+    const existing = totals.get(key);
+    totals.set(key, { source, type, value: (existing?.value ?? 0) + amount });
+  };
+  for (const row of holdings.data ?? []) add('holding', row.type, Number(row.current_value ?? 0));
+  for (const row of accounts.data ?? []) add('account', row.type, Number(row.current_balance ?? 0));
+  return [...totals.values()].map((entry) => ({ ...entry, value: Math.max(0, entry.value) }));
 }
 async function settingsFor(admin: SupabaseClient, userId: string): Promise<Settings | null> {
   const { data, error } = await admin
@@ -272,12 +285,37 @@ Deno.serve(async (request) => {
       .select('user_id')
       .eq('is_enabled', true);
     if (error) return json({ error: 'database', message: error.message }, 500);
+    const enabled = settingsRows ?? [];
     const results = [];
-    for (const row of settingsRows ?? []) {
-      const { data: userData } = await admin.auth.admin.getUserById(row.user_id);
-      if (userData.user) results.push(await processUser(admin, userData.user));
+    const failures: { userId: string; message: string }[] = [];
+    for (const row of enabled) {
+      // A user we cannot process is a silent non-escalation - no email, no
+      // ledger row, nothing. That is the worst failure this feature has, so it
+      // must never be reported as a clean run: collect it and fail the request.
+      try {
+        const { data: userData, error: userError } = await admin.auth.admin.getUserById(
+          row.user_id,
+        );
+        if (userError) throw userError;
+        if (!userData.user) throw new Error('no auth user record');
+        results.push(await processUser(admin, userData.user));
+      } catch (cause) {
+        const message = cause instanceof Error ? cause.message : String(cause);
+        console.error(`deadman-check: skipped user ${row.user_id}: ${message}`);
+        failures.push({ userId: row.user_id, message });
+      }
     }
-    return json({ mode: 'cron', processed: results.length, results });
+    return json(
+      {
+        mode: 'cron',
+        enabled: enabled.length,
+        processed: results.length,
+        failed: failures.length,
+        results,
+        failures,
+      },
+      failures.length > 0 ? 500 : 200,
+    );
   }
   const user = await authenticate(request, url, anonKey);
   if (!user)
