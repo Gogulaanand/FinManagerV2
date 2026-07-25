@@ -178,3 +178,6 @@ export type {
   EscalationStage,
   SummaryEntry,
 } from './deadman/messages.js';
+
+export { selectRecentActivity, spendChangeRatio } from './dashboard/recent.js';
+export type { RecentActivityRow } from './dashboard/recent.js';
