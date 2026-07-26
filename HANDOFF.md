@@ -8,7 +8,7 @@ This file carries mid-phase state between sessions; completed phases live in pha
 ### Where we are
 
 Phase 9's tracked implementation is committed and pushed on `phase-9-hardening-release` in draft
-PR #4, based on current `origin/main` and headed by `f98223d`.
+PR #4, based on current `origin/main` and headed by `f58445d`.
 It includes the deterministic web/mobile E2E harnesses, preview-deployment workflow, versioned
 JSON/module-CSV export, strict expense template import on both clients, web/native Sentry wiring,
 EAS profiles, mobile Google OAuth, SQLCipher-backed OP-SQLite outside Expo Go, and durable
@@ -33,10 +33,11 @@ public environment variables exist across its environments.
 
 The six Supabase/E2E GitHub secrets are configured through secure pipes. The dedicated account
 `gogulaanand02+phase9e2e@gmail.com` seeds successfully and the local Chromium suite passes 7/7 in
-28.4 seconds, including the cost-free AI 400/429 paths. PR CI run `30185651622` passes both the full
-repository gate and Playwright. The latest Vercel Preview is READY, but direct access redirects to
-Vercel SSO. Preview E2E run `30185662946` fails immediately with the intentional diagnostic that a
-project Automation Bypass secret must be copied to GitHub as
+28.4 seconds, including the cost-free AI 400/429 paths. PR CI run `30186516300` passes both the full
+repository gate and Playwright 7/7 without retries after the suite was hardened for first-sync and
+category-control readiness. The latest Vercel Preview is READY, but direct access redirects to
+Vercel SSO. Preview E2E fails immediately with the intentional diagnostic that a project Automation
+Bypass secret must be copied to GitHub as
 `VERCEL_AUTOMATION_BYPASS_SECRET`. EAS still reports `Not logged in`. Sentry
 org/project/DSN/auth token are absent. There is no connected native device, so
 encrypted-at-rest inspection, offline relaunch/reconnect, Google login, Maestro, Android

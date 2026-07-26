@@ -34,8 +34,9 @@ complete; production and real-device exit criteria are not.
   Chromium suite passed 7/7 in 28.4 seconds on 2026-07-26. This proves 121-row pagination, month
   navigation, overspend, template dedup, expense CRUD, tax comparison, portfolio/goals fixtures,
   and the cost-free AI 400/429 paths.
-- Draft PR #4 is mergeable. CI run `30185651622` passes the complete repository gate and the same
-  Playwright critical paths; its Vercel Preview deployment is READY.
+- PR #4 is mergeable. CI run `30186516300` passes the complete repository gate and Playwright 7/7
+  without retries after adding explicit first-sync and category-control readiness; its Vercel
+  Preview deployment is READY.
 - Preview E2E run `30185662946` proves the remaining preview failure is explicit and external:
   Vercel Authentication protects the URL and the project has no Automation Bypass secret mirrored
   to GitHub as `VERCEL_AUTOMATION_BYPASS_SECRET`.

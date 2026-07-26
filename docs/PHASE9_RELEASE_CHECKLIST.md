@@ -9,8 +9,8 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
       `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_POWERSYNC_URL`,
       `SUPABASE_SECRET_KEY`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`.
 - [x] Local Playwright suite passes after `e2e:seed` (7/7 on 2026-07-26).
-- [x] PR CI run `30185651622` passes the repository gate and Playwright critical paths.
-- [x] Vercel Preview deployment for `f98223d` is READY.
+- [x] PR CI run `30186516300` passes the repository gate and Playwright 7/7 without retries.
+- [x] Vercel Preview deployment for `f58445d` is READY.
 - [ ] Generate a Vercel Automation Bypass secret and copy it to GitHub as
       `VERCEL_AUTOMATION_BYPASS_SECRET`; run `30185662946` proves the workflow fails fast with this
       exact missing-secret diagnostic.
