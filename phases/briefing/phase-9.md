@@ -49,8 +49,9 @@ complete; production and real-device exit criteria are not.
    secrets.
 2. Configure Sentry org/project, web/native DSNs and auth token; deploy; trigger the protected
    intentional error and confirm the event and source map in Sentry.
-3. Complete Auth SMTP and a clean deployed signup, and add `finmanager://auth/callback` to the
-   Supabase redirect allow list; verify Google sign-in on a real device.
+3. Complete Auth SMTP, enable leaked-password protection, perform a clean deployed signup, and add
+   `finmanager://auth/callback` to the Supabase redirect allow list; verify Google sign-in on a real
+   device.
 4. Explicitly approve retaining `verify_jwt=false` for `deadman-check` and `deadman-monitor`, whose
    code authenticates requests itself; deploy both. Configure `DEADMAN_MONITOR_EMAIL` and
    `DEADMAN_HEARTBEAT_URL`, set the `deadman_monitor_enabled=true` Vault flag, schedule the monitor,

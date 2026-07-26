@@ -16,6 +16,7 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
       exact missing-secret diagnostic.
 - [ ] Vercel Preview deployment triggers `Preview E2E` and passes.
 - [ ] Production deployment is READY and sign-in/data sync work.
+- [ ] Supabase Auth leaked-password protection is enabled.
 - [ ] Clean-browser signup email is received and confirmation completes without SQL.
 
 ## Sentry
@@ -31,6 +32,8 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 ## Supabase dead-man observability
 
 - [x] `cron_runs` table exists remotely.
+- [x] `cron_runs` intentionally has RLS with no client policy; only the service role can access
+      operational health rows.
 - [x] Remote audit confirms the current `deadman-check` v10 predates Phase 9,
       `deadman-monitor` is absent, only `deadman-daily` is scheduled, and `cron_runs` is empty.
 - [ ] Deploy `deadman-check` and `deadman-monitor` with their in-code authentication and

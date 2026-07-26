@@ -64,6 +64,9 @@ committed and pushed in draft PR #4.
 - A lost SecureStore database key requires clearing app data/reinstalling and re-syncing.
 - Do not enable platform JWT verification on custom-auth cron functions without also changing the
   scheduled request authentication; doing so would make every cron invocation fail at the gateway.
+- The Supabase security advisor reports leaked-password protection disabled; enable it as part of
+  Auth SMTP/signup release verification. Its `cron_runs` RLS-without-policy notice is intentional:
+  operational health rows are service-role only.
 
 ---
 
