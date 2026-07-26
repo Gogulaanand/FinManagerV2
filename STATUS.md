@@ -12,22 +12,25 @@ Last updated: 2026-07-26 (Phase 9 implemented locally; external release gates bl
   org/project/DSN/auth token are not configured, so release creation, source-map upload, and the
   intentional-event check remain blocked.
 - Phases 0-8 are done.
-- Phase 9 is implemented locally on `phase-9-hardening-release`: deterministic Playwright/Maestro
+- Phase 9 is implemented on draft PR #4 from `phase-9-hardening-release`: deterministic Playwright/Maestro
   harnesses, strict expense-template import, versioned export on web/mobile, Sentry wiring,
   EAS profiles, Google OAuth flow, encrypted OP-SQLite native adapter, and cron observability.
   The full monorepo automated gate, web production build, and iOS/Android Expo exports pass.
-  Its dedicated fixture and local Playwright suite pass 7/7, and the required GitHub secrets are
-  configured. It remains Blocked on Expo/Sentry account setup, production function deployment
-  approval, and real-device/family installation evidence.
+  Its dedicated fixture and local and GitHub CI Playwright suites pass 7/7; the Vercel Preview
+  deployment is READY. Preview E2E is blocked by Vercel Authentication until an Automation Bypass
+  secret is generated and copied to GitHub as `VERCEL_AUTOMATION_BYPASS_SECRET`. Phase 9 remains
+  Blocked on that secret, Expo/Sentry account setup, production function deployment approval, and
+  real-device/family installation evidence.
 - The repo-wide improvements plan (`phases/plans/plan-improvements.md`) is implemented in the current worktree: AI usage reservation is atomic, stream cancellation/timeouts and sync gates are in place, domain math is shared in core, and the largest setup/metadata forms have been extracted. Local package builds, tests, typechecks, linters, formatting checks, and the web production build pass. Both Supabase migrations are applied locally and remotely; local and linked pgTAP tests pass, and the concurrent reserve/release flow was verified through Supabase MCP. Owner review is pending before commit.
   Phase 8 dead-man switch implementation is raised as a PR against `main` from `phase-8-inactivity-monitor`. The migration, Edge Function (v4), Vault wiring, cron schedule, and staged remote data are deployed, the PowerSync sync rules are published, and the Resend domain `finmanager.sunfabb.com` is verified with `RESEND_FROM_EMAIL` pointed at it.
   All four escalation stages were delivered end to end on 2026-07-24 (Resend reports `delivered`, not merely accepted) and the repeated final stage created no duplicate rows. That run predates Edge Function v4, so it has not been replayed against the deployed code. Remaining gates are the v4 replay, Auth SMTP plus a real signup email, and Chrome/native interactive verification.
 
 ## Next Up
 
-Resolve the account/device gates listed in `phases/briefing/phase-9.md`, then run Playwright,
-deploy and verify Sentry/cron functions, create EAS builds, and complete the two-platform family
-install/offline-relaunch checklist. Do not mark Phase 9 Done before those results exist.
+Resolve the account/device gates listed in `phases/briefing/phase-9.md`, beginning with the Vercel
+Automation Bypass secret for Preview E2E. Then deploy and verify Sentry/cron functions, create EAS
+builds, and complete the two-platform family install/offline-relaunch checklist. Do not mark Phase
+9 Done before those results exist.
 
 Plan index: [improvements](phases/plans/plan-improvements.md) · [mobile navigation/month picker](phases/plans/plan-mobile-nav-and-month-picker.md) · [Phase 8](phases/plans/plan-phase8-deadman-switch.md) · [Phase 9](phases/plans/plan-phase9-hardening-release.md) · [monetization](phases/plans/plan-monetization.md).
 

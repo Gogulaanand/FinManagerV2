@@ -9,6 +9,10 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
       `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_POWERSYNC_URL`,
       `SUPABASE_SECRET_KEY`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`.
 - [x] Local Playwright suite passes after `e2e:seed` (7/7 on 2026-07-26).
+- [x] PR CI run `30185240533` passes the repository gate and Playwright critical paths.
+- [x] Vercel Preview deployment for `08f5c87` is READY.
+- [ ] Generate a Vercel Automation Bypass secret and copy it to GitHub as
+      `VERCEL_AUTOMATION_BYPASS_SECRET`.
 - [ ] Vercel Preview deployment triggers `Preview E2E` and passes.
 - [ ] Production deployment is READY and sign-in/data sync work.
 - [ ] Clean-browser signup email is received and confirmation completes without SQL.
