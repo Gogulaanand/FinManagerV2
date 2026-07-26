@@ -46,6 +46,7 @@ test('month navigation and seeded overspend remain visible at scale', async ({ p
 
 test('strict expense template deduplicates the second import', async ({ page }) => {
   await page.goto('/expenses');
+  await expect(page.getByRole('option', { name: 'Food', exact: true })).toHaveCount(1);
   const uniqueAmount = `${Date.now() % 100000}.37`;
   const template = {
     name: 'phase9-template.csv',
