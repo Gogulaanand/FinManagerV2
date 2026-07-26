@@ -29,10 +29,16 @@ complete; production and real-device exit criteria are not.
 - `expo config --type public` validates. iOS and Android Metro/Hermes exports pass.
 - Vercel production is READY; public Supabase and PowerSync variables exist in Development,
   Preview, and Production; no recent production runtime-error cluster was found.
+- The six GitHub E2E secrets are configured without storing credentials in the checkout. The
+  dedicated account `gogulaanand02+phase9e2e@gmail.com` was seeded successfully and the local
+  Chromium suite passed 7/7 in 28.4 seconds on 2026-07-26. This proves 121-row pagination, month
+  navigation, overspend, template dedup, expense CRUD, tax comparison, portfolio/goals fixtures,
+  and the cost-free AI 400/429 paths.
 
 ## Required release evidence
 
-1. Add GitHub E2E secrets and run the seed plus Playwright locally and on a Vercel Preview.
+1. Push the phase branch and prove the GitHub/Vercel Preview Playwright jobs with the configured
+   secrets.
 2. Configure Sentry org/project, web/native DSNs and auth token; deploy; trigger the protected
    intentional error and confirm the event and source map in Sentry.
 3. Complete Auth SMTP and a clean deployed signup, and add `finmanager://auth/callback` to the

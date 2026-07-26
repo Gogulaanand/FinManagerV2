@@ -16,7 +16,8 @@ Last updated: 2026-07-26 (Phase 9 implemented locally; external release gates bl
   harnesses, strict expense-template import, versioned export on web/mobile, Sentry wiring,
   EAS profiles, Google OAuth flow, encrypted OP-SQLite native adapter, and cron observability.
   The full monorepo automated gate, web production build, and iOS/Android Expo exports pass.
-  It remains Blocked on E2E secrets, Expo/Sentry account setup, production function deployment
+  Its dedicated fixture and local Playwright suite pass 7/7, and the required GitHub secrets are
+  configured. It remains Blocked on Expo/Sentry account setup, production function deployment
   approval, and real-device/family installation evidence.
 - The repo-wide improvements plan (`phases/plans/plan-improvements.md`) is implemented in the current worktree: AI usage reservation is atomic, stream cancellation/timeouts and sync gates are in place, domain math is shared in core, and the largest setup/metadata forms have been extracted. Local package builds, tests, typechecks, linters, formatting checks, and the web production build pass. Both Supabase migrations are applied locally and remotely; local and linked pgTAP tests pass, and the concurrent reserve/release flow was verified through Supabase MCP. Owner review is pending before commit.
   Phase 8 dead-man switch implementation is raised as a PR against `main` from `phase-8-inactivity-monitor`. The migration, Edge Function (v4), Vault wiring, cron schedule, and staged remote data are deployed, the PowerSync sync rules are published, and the Resend domain `finmanager.sunfabb.com` is verified with `RESEND_FROM_EMAIL` pointed at it.

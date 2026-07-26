@@ -27,17 +27,19 @@ and ESLint pass, formatting is clean, the Next.js production build passes, and E
 iOS and Android. Expo public config validates. The linked Vercel deployment is READY and all three
 public environment variables exist across its environments.
 
-Live Playwright did not run: GitHub has no Phase 9 secrets, and the local shell lacks the server key
-and E2E credentials. EAS reports `Not logged in`. Sentry org/project/DSN/auth token are absent.
-There is no connected native device, so encrypted-at-rest inspection, offline relaunch/reconnect,
-Google login, Maestro, Android performance numbers, and family installs are not claimed.
+The six GitHub Phase 9 secrets are configured through secure pipes. The dedicated account
+`gogulaanand02+phase9e2e@gmail.com` seeds successfully and the local Chromium suite passes 7/7 in
+28.4 seconds, including the cost-free AI 400/429 paths. EAS still reports `Not logged in`.
+Sentry org/project/DSN/auth token are absent. There is no connected native device, so
+encrypted-at-rest inspection, offline relaunch/reconnect, Google login, Maestro, Android
+performance numbers, and family installs are not claimed.
 
 ### Exact next action
 
-Provide or configure the missing E2E, Expo, and Sentry account access. Explicitly approve retaining
-custom-auth `verify_jwt=false` when deploying `deadman-check` and `deadman-monitor`. Then execute
-the ordered checklist in `phases/briefing/phase-9.md`. The Phase 3 test-account deletion still
-requires the plan's separate explicit owner approval.
+Push the branch and verify its CI/Preview deployment. Then provide Expo and Sentry account access
+and explicitly approve retaining custom-auth `verify_jwt=false` when deploying `deadman-check` and
+`deadman-monitor`. Follow the ordered checklist in `phases/briefing/phase-9.md`. The Phase 3
+test-account deletion still requires the plan's separate explicit owner approval.
 
 ### Files in flight
 
