@@ -10,7 +10,7 @@ type Mode = 'signin' | 'signup';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { session, signInWithPassword, signUpWithPassword } = useAuth();
+  const { session, signInWithPassword, signInWithGoogle, signUpWithPassword } = useAuth();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,6 +47,15 @@ export default function LoginScreen() {
       return;
     }
     const message = await signInWithPassword(email.trim(), password);
+    setBusy(false);
+    if (message) setError(message);
+  }
+
+  async function submitGoogle() {
+    setError(null);
+    setNotice(null);
+    setBusy(true);
+    const message = await signInWithGoogle();
     setBusy(false);
     if (message) setError(message);
   }
@@ -109,6 +118,19 @@ export default function LoginScreen() {
               {busy ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'}
             </Text>
           </Pressable>
+
+          {mode === 'signin' ? (
+            <Pressable
+              onPress={() => void submitGoogle()}
+              disabled={busy}
+              accessibilityRole="button"
+              className="h-11 justify-center rounded-md border border-border px-4"
+            >
+              <Text className="text-center font-body text-body-md text-foreground">
+                Continue with Google
+              </Text>
+            </Pressable>
+          ) : null}
         </Card>
 
         <Pressable

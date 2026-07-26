@@ -1,6 +1,7 @@
 # Plan: Phase 9 - Hardening + Release
 
-Status: planned, not started.
+Status: blocked (tracked implementation complete; account, production, and device release gates
+pending; see `phases/briefing/phase-9.md`).
 Priority: after Phase 8 (see plan-phase8-deadman-switch.md).
 Four sub-phases, each sized to one agent session: 9a E2E harnesses, 9b web deploy + observability, 9c mobile native track, 9d export/import + release.
 Implements the PRODUCTION_PLAN.md Phase 9 spec and resolves its carried-over items.

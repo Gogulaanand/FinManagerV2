@@ -229,6 +229,38 @@ async function authenticate(request: Request, url: string, anonKey: string): Pro
   return data.user ?? null;
 }
 
+async function recordCronRun(
+  admin: SupabaseClient,
+  outcome: {
+    enabled: number;
+    processed: number;
+    failed: number;
+    results: unknown[];
+    failures: unknown[];
+  },
+): Promise<void> {
+  const { error } = await admin.from('cron_runs').insert({
+    job_name: 'deadman-daily',
+    enabled: outcome.enabled,
+    processed: outcome.processed,
+    failed: outcome.failed,
+    detail: { results: outcome.results, failures: outcome.failures },
+  });
+  if (error) throw error;
+}
+
+async function pingHeartbeat(): Promise<void> {
+  const heartbeatUrl = Deno.env.get('DEADMAN_HEARTBEAT_URL');
+  if (!heartbeatUrl) return;
+  try {
+    await fetch(heartbeatUrl, { signal: AbortSignal.timeout(5_000) });
+  } catch (error) {
+    // A heartbeat provider outage must not turn a clean escalation run into a
+    // failure. The missed ping will still be visible to that provider.
+    console.error(`deadman-check: heartbeat failed: ${String(error)}`);
+  }
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST')
@@ -246,7 +278,21 @@ Deno.serve(async (request) => {
       .from('deadman_settings')
       .select('user_id')
       .eq('is_enabled', true);
-    if (error) return json({ error: 'database', message: error.message }, 500);
+    if (error) {
+      const outcome = {
+        enabled: 0,
+        processed: 0,
+        failed: 1,
+        results: [],
+        failures: [{ stage: 'load_settings', message: error.message }],
+      };
+      try {
+        await recordCronRun(admin, outcome);
+      } catch (recordError) {
+        console.error(`deadman-check: could not record failed run: ${String(recordError)}`);
+      }
+      return json({ mode: 'cron', ...outcome }, 500);
+    }
     const enabled = settingsRows ?? [];
     const results = [];
     const failures: { userId: string; message: string }[] = [];
@@ -267,17 +313,29 @@ Deno.serve(async (request) => {
         failures.push({ userId: row.user_id, message });
       }
     }
-    return json(
-      {
-        mode: 'cron',
-        enabled: enabled.length,
-        processed: results.length,
-        failed: failures.length,
-        results,
-        failures,
-      },
-      failures.length > 0 ? 500 : 200,
-    );
+    const outcome = {
+      enabled: enabled.length,
+      processed: results.length,
+      failed: failures.length,
+      results,
+      failures,
+    };
+    try {
+      await recordCronRun(admin, outcome);
+    } catch (recordError) {
+      console.error(`deadman-check: could not record run: ${String(recordError)}`);
+      return json(
+        {
+          mode: 'cron',
+          ...outcome,
+          error: 'cron_run_not_recorded',
+          message: String(recordError),
+        },
+        500,
+      );
+    }
+    if (failures.length === 0) await pingHeartbeat();
+    return json({ mode: 'cron', ...outcome }, failures.length > 0 ? 500 : 200);
   }
   const user = await authenticate(request, url, anonKey);
   if (!user)

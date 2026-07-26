@@ -3,57 +3,55 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
-## Latest Handoff: 2026-07-29 (Phase 8.5 design alignment)
+## Latest Handoff: 2026-07-26 (Phase 9 implementation complete; release gates blocked)
 
 ### Where we are
 
-Phase 8.5 is isolated on `phase-8.5-design-alignment`, created from refreshed `origin/main`. The
-paused Phase 9 checkout, its commits, and its three uncommitted documentation edits remain
-untouched. Stitch project `15700405983783543744` and Calm Teal system
-`10681403320511857968` were used to generate and select mobile/desktop concepts for dashboard,
-expense analytics, Insights, and dead-man safety; selected IDs are in
-`phases/briefing/phase-8.5.md`.
+Phase 9's tracked implementation is complete on `phase-9-hardening-release`, based on `a958c6d`.
+It includes the deterministic web/mobile E2E harnesses, preview-deployment workflow, versioned
+JSON/module-CSV export, strict expense template import on both clients, web/native Sentry wiring,
+EAS profiles, mobile Google OAuth, SQLCipher-backed OP-SQLite outside Expo Go, and durable
+dead-man cron outcomes plus an independent monitor and optional external heartbeat.
 
-Implementation now includes shared category fallback/persistence, Lucide/Ionicons mappings,
-dashboard allocation, web/mobile chart inspection parity, category badges, redesigned Insights and
-dead-man workspaces, and a purposeful icon pass through the remaining financial modules. Existing
-API, PowerSync, Anthropic SSE, local-preview, and delivery behavior is preserved.
+Migration `phase9_cron_observability` is applied to Supabase `vkivzhbckfsjtvzatuiz`; the production
+Edge Function updates are not deployed because they require retaining `verify_jwt=false` for the
+functions' custom `x-cron-secret`/in-body auth, and the deployment guard requires explicit approval.
+The new `deadman-monitor-daily` schedule was removed after that deployment was blocked, so it cannot
+call a missing function. Recreate it only after deployment by setting the explicit
+`deadman_monitor_enabled=true` Vault flag and applying/scheduling the documented job.
 
 ### Verification state
 
-The exact `CI=true pnpm turbo run build test lint typecheck` gate passes 21/21 with 317 unit tests.
-Formatting, `git diff --check`, the five-test Playwright collection, and Expo iOS export pass.
-Signed-out Chrome checks cover light/dark desktop plus 390px Dashboard, Insights, and Expenses with
-no console errors, overlay, or horizontal overflow. The pass caught and fixed the all-zero trend
-chart's misleading ₹0–₹4 axis.
+The repository package tests pass (schema 42, core 198, sync 46, tokens 27), app/package typechecks
+and ESLint pass, formatting is clean, the Next.js production build passes, and Expo bundles both
+iOS and Android. Expo public config validates. The linked Vercel deployment is READY and all three
+public environment variables exist across its environments.
 
-The dedicated account was seeded through the server-only fixture script, and
-`CI=true pnpm --filter @finmanager/web e2e` passes all five Chromium scenarios in 18.8 seconds.
-The admin key and generated password were subprocess-only; no credential was persisted or printed.
-AI/provider and dead-man delivery calls were intercepted, so no Anthropic request or email was sent.
-An authenticated iPhone 17 Pro Expo Go pass verified real-data Dashboard allocation, expense charts
-and legends, Insights keyboard avoidance, and hydrated dead-man settings/trusted contacts. It caught
-and fixed analytics being buried after the transaction list and a chart content-width error that
-clipped the final month. The local safety controls were inspected without using Test-send.
-Simulator mouse input did not activate Victory's press state, and Expo Go is not custom-build or
-physical-device proof. An iPad Pro 13-inch Expo Go pass also verified Dashboard, Expenses, Insights,
-and signed-out Settings at a large viewport in light/dark modes with no clipping or horizontal
-overflow.
+Live Playwright did not run: GitHub has no Phase 9 secrets, and the local shell lacks the server key
+and E2E credentials. EAS reports `Not logged in`. Sentry org/project/DSN/auth token are absent.
+There is no connected native device, so encrypted-at-rest inspection, offline relaunch/reconnect,
+Google login, Maestro, Android performance numbers, and family installs are not claimed.
 
 ### Exact next action
 
-Finish the real-touch chart-tap/gesture check on a device or retain it explicitly as pending
-device-only evidence, as allowed by the phase plan. Then review and land this branch before rebasing
-Phase 9.
+Provide or configure the missing E2E, Expo, and Sentry account access. Explicitly approve retaining
+custom-auth `verify_jwt=false` when deploying `deadman-check` and `deadman-monitor`. Then execute
+the ordered checklist in `phases/briefing/phase-9.md`. The Phase 3 test-account deletion still
+requires the plan's separate explicit owner approval.
+
+### Files in flight
+
+All Phase 9 source, workflow, migration, function, manifest/lockfile, and closeout-doc changes.
+No commit has been made.
 
 ### Open items / warnings
 
-- Phase 9 owns template-import UI in its paused branch. Phase 8.5 deliberately does not copy that
-  later feature backward; its shared `saveCategory` guard ensures both import clients inherit
-  `tag`/brand-teal defaults after the rebase.
-- No schema, migration, Edge Function, sync rule, Anthropic, or email delivery change belongs to
-  this phase.
-- Do not claim Expo export as real-device or gesture proof.
+- Do not put the Supabase secret key or E2E password in tracked files. The fixture accepts the new
+  `SUPABASE_SECRET_KEY` first and the legacy service-role variable only as a migration fallback.
+- Do not use Expo Go to claim persistence or SQLCipher; it intentionally stays on SQL.js.
+- A lost SecureStore database key requires clearing app data/reinstalling and re-syncing.
+- Do not enable platform JWT verification on custom-auth cron functions without also changing the
+  scheduled request authentication; doing so would make every cron invocation fail at the gateway.
 
 ---
 

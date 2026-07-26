@@ -6,6 +6,9 @@
   "engines": {
     "node": ">=22.0.0"
   },
+  "op-sqlite": {
+    "sqlcipher": true
+  },
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",

@@ -2,14 +2,14 @@
 // changes in packages/* trigger reloads, and must resolve modules from both the
 // app's and the root's node_modules (deps are hoisted via nodeLinker in
 // pnpm-workspace.yaml, see D-010).
-const { getDefaultConfig } = require('expo/metro-config');
+const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 const { withNativeWind } = require('nativewind/metro');
 const path = require('node:path');
 
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, '../..');
 
-const config = getDefaultConfig(projectRoot);
+const config = getSentryExpoConfig(projectRoot);
 
 config.watchFolders = [workspaceRoot];
 config.resolver.nodeModulesPaths = [

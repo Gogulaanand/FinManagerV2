@@ -1,0 +1,4 @@
+appId: ${APP_ID}
+flows:
+  - 'critical-*.yaml'
+testOutputDir: .maestro/artifacts

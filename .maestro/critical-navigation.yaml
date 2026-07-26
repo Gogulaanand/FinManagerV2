@@ -1,0 +1,18 @@
+appId: ${APP_ID}
+name: Critical signed-in navigation
+tags:
+  - smoke
+---
+- launchApp:
+    clearState: true
+- runFlow: login.yaml
+- tapOn: 'Expenses'
+- assertVisible: 'E2E Grocery 120'
+- tapOn: 'Portfolio'
+- assertVisible: 'E2E Index Fund'
+- tapOn: 'More'
+- tapOn: 'Goals'
+- assertVisible: 'E2E Education Goal'
+- tapOn: 'More'
+- tapOn: 'Tax'
+- assertVisible: 'Old vs new regime'

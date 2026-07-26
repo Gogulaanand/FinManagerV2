@@ -1,4 +1,12 @@
-import type { CsvField, CsvImportRow, CsvMapping, Direction } from '@finmanager/schema';
+import {
+  ExpenseTemplateRowSchema,
+  type Category,
+  type CsvField,
+  type CsvImportRow,
+  type CsvMapping,
+  type Direction,
+  type ExpenseTemplateType,
+} from '@finmanager/schema';
 
 import { roundToPaise } from '../money.js';
 
@@ -15,6 +23,26 @@ export interface CsvPreviewError {
 export interface CsvImportPreview {
   readonly rows: readonly CsvImportRow[];
   readonly errors: readonly CsvPreviewError[];
+}
+
+export const EXPENSE_TEMPLATE_HEADERS = ['date', 'category', 'amount', 'type'] as const;
+export const EXPENSE_TEMPLATE_SAMPLE = `date,category,amount,type
+2026-01-15,Food,850,expense
+2026-01-31,Salary,150000,income
+`;
+
+export interface ExpenseTemplatePreviewRow extends CsvImportRow {
+  readonly categoryName: string;
+  readonly categoryType: ExpenseTemplateType;
+}
+
+export interface ExpenseTemplatePreview {
+  readonly rows: readonly ExpenseTemplatePreviewRow[];
+  readonly errors: readonly CsvPreviewError[];
+  readonly missingCategories: readonly {
+    readonly name: string;
+    readonly kind: ExpenseTemplateType;
+  }[];
 }
 
 function pushCell(cells: string[], value: string): void {
@@ -80,6 +108,16 @@ function parseAmount(value: string): number | null {
   if (!normalized) return null;
   const amount = Number.parseFloat(normalized);
   return Number.isFinite(amount) && amount > 0 ? roundToPaise(Math.abs(amount)) : null;
+}
+
+function sanitizeTemplateText(value: string): string {
+  return Array.from(value, (character) => {
+    const code = character.codePointAt(0) ?? 0;
+    return code < 32 || code === 127 ? ' ' : character;
+  })
+    .join('')
+    .trim()
+    .slice(0, 80);
 }
 
 function parseDate(value: string): string | null {
@@ -165,4 +203,78 @@ export function previewCsv(
     rows.push({ ...row, importHash: canonicalImportHash(accountId, row) });
   }
   return { rows, errors };
+}
+
+export function previewExpenseTemplate(
+  text: string,
+  categories: readonly Category[],
+  accountId: string,
+): ExpenseTemplatePreview {
+  const document = parseCsv(text.replace(/^\uFEFF/, ''));
+  const headers = document.headers.map((header) => header.trim());
+  if (
+    headers.length !== EXPENSE_TEMPLATE_HEADERS.length ||
+    headers.some((header, index) => header !== EXPENSE_TEMPLATE_HEADERS[index])
+  ) {
+    return {
+      rows: [],
+      errors: [
+        {
+          sourceRow: 1,
+          message: `Header must be exactly ${EXPENSE_TEMPLATE_HEADERS.join(',')}`,
+        },
+      ],
+      missingCategories: [],
+    };
+  }
+
+  const rows: ExpenseTemplatePreviewRow[] = [];
+  const errors: CsvPreviewError[] = [];
+  const missing = new Map<string, { name: string; kind: ExpenseTemplateType }>();
+  for (const [index, source] of document.rows.entries()) {
+    const sourceRow = index + 2;
+    if (source.length !== EXPENSE_TEMPLATE_HEADERS.length) {
+      errors.push({ sourceRow, message: 'Expected exactly 4 columns' });
+      continue;
+    }
+    const categoryName = sanitizeTemplateText(source[1] ?? '');
+    const amount = parseAmount(source[2] ?? '');
+    const candidate = ExpenseTemplateRowSchema.safeParse({
+      date: (source[0] ?? '').trim(),
+      category: categoryName,
+      amount,
+      type: (source[3] ?? '').trim().toLowerCase(),
+    });
+    if (!candidate.success) {
+      errors.push({
+        sourceRow,
+        message: candidate.error.issues[0]?.message ?? 'Invalid template row',
+      });
+      continue;
+    }
+    const kind = candidate.data.type;
+    const category = categories.find(
+      (item) => item.kind === kind && item.name.trim().toLowerCase() === categoryName.toLowerCase(),
+    );
+    if (!category?.id) {
+      missing.set(`${kind}\u001f${categoryName.toLowerCase()}`, { name: categoryName, kind });
+    }
+    const row: ExpenseTemplatePreviewRow = {
+      sourceRow,
+      error: null,
+      accountId,
+      categoryId: category?.id ?? null,
+      categoryName,
+      categoryType: kind,
+      amount: candidate.data.amount,
+      direction: kind === 'expense' ? 'debit' : 'credit',
+      currency: 'INR',
+      occurredOn: candidate.data.date,
+      note: null,
+      merchant: null,
+      importHash: null,
+    };
+    rows.push({ ...row, importHash: canonicalImportHash(accountId, row) });
+  }
+  return { rows, errors, missingCategories: [...missing.values()] };
 }

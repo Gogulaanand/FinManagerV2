@@ -1,0 +1,49 @@
+name: Preview E2E
+
+on:
+  deployment_status:
+
+concurrency:
+  group: preview-e2e-${{ github.event.deployment.id }}
+  cancel-in-progress: true
+
+jobs:
+  playwright:
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Preview'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      deployments: read
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ github.event.deployment_status.target_url }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      NEXT_PUBLIC_POWERSYNC_URL: ${{ secrets.NEXT_PUBLIC_POWERSYNC_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+      E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @finmanager/web exec playwright install --with-deps chromium
+      - name: Seed dedicated account
+        run: pnpm --filter @finmanager/web e2e:seed
+      - name: Verify preview
+        run: pnpm --filter @finmanager/web e2e
+      - uses: actions/upload-artifact@v5
+        if: ${{ !cancelled() }}
+        with:
+          name: preview-playwright-report-${{ github.event.deployment.id }}
+          path: apps/web/playwright-report/
+          retention-days: 14

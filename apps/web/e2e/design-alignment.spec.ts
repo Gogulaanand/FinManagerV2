@@ -35,7 +35,7 @@ test('expense charts expose formatted legends and keyboard-readable summaries', 
   const trend = page.getByRole('figure', { name: 'Monthly income and spending trend' });
   await trend.focus();
   await expect(trend).toBeFocused();
-  await expect(page.getByText(/income ₹\s?1,50,000.*spent ₹\s?8,100/i)).toBeVisible();
+  await expect(page.getByText(/income ₹\s?1,50,000.*spent ₹\s?27,054/i)).toBeVisible();
 
   const budgetSummary = page.getByRole('list', { name: 'Budget status summary' });
   await expect(budgetSummary).toContainText('Food & Dining');

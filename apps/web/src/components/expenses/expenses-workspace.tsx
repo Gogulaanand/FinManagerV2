@@ -228,7 +228,9 @@ function ExpensesWorkspaceContent() {
       <ExpenseSetup api={api} />
       <CsvImport
         accounts={api.accounts}
+        categories={api.categories}
         mappings={api.mappings}
+        onCreateCategory={api.saveCategory}
         onSaveMappings={api.saveMappings}
         onImport={importRows}
       />

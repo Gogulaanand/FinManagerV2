@@ -1,8 +1,16 @@
 'use client';
 
-import { parseCsv, previewCsv, type CsvImportPreview } from '@finmanager/core';
+import {
+  EXPENSE_TEMPLATE_SAMPLE,
+  parseCsv,
+  previewCsv,
+  previewExpenseTemplate,
+  type CsvImportPreview,
+  type ExpenseTemplatePreview,
+} from '@finmanager/core';
 import type {
   Account,
+  Category,
   CsvField,
   CsvImportRow,
   CsvMapping,
@@ -27,11 +35,20 @@ const fieldOptions: readonly { value: CsvField | ''; label: string }[] = [
 export interface CsvImportProps {
   readonly accounts: readonly Account[];
   readonly mappings: CsvMappingSet;
+  readonly categories: readonly Category[];
+  readonly onCreateCategory: (category: Category) => Promise<void>;
   readonly onSaveMappings: (mappings: CsvMappingSet) => Promise<void>;
   readonly onImport: (rows: readonly CsvImportRow[]) => Promise<void>;
 }
 
-export function CsvImport({ accounts, mappings, onSaveMappings, onImport }: CsvImportProps) {
+export function CsvImport({
+  accounts,
+  categories,
+  mappings,
+  onCreateCategory,
+  onSaveMappings,
+  onImport,
+}: CsvImportProps) {
   const [bankKey, setBankKey] = useState('');
   const [csvText, setCsvText] = useState('');
   const [filename, setFilename] = useState<string | undefined>();
@@ -40,6 +57,9 @@ export function CsvImport({ accounts, mappings, onSaveMappings, onImport }: CsvI
   const [preview, setPreview] = useState<CsvImportPreview | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [accountId, setAccountId] = useState('');
+  const [templateFilename, setTemplateFilename] = useState<string | undefined>();
+  const [templatePreview, setTemplatePreview] = useState<ExpenseTemplatePreview | null>(null);
+  const [templateMessage, setTemplateMessage] = useState<string | null>(null);
   const hasSeparateAmounts = useMemo(
     () => Object.values(columns).some((field) => field === 'debit' || field === 'credit'),
     [columns],
@@ -93,6 +113,59 @@ export function CsvImport({ accounts, mappings, onSaveMappings, onImport }: CsvI
     const withoutCurrent = mappings.mappings.filter((item) => item.bankKey !== next.bankKey);
     await onSaveMappings({ mappings: [...withoutCurrent, next] });
     setMessage(`Saved the ${next.bankKey} mapping across devices.`);
+  }
+
+  function downloadTemplate() {
+    const url = URL.createObjectURL(new Blob([EXPENSE_TEMPLATE_SAMPLE], { type: 'text/csv' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'finmanager-expense-template.csv';
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function readTemplate(file: File | undefined) {
+    if (!file) return;
+    setTemplateFilename(file.name);
+    const selectedAccountId = accountId || accounts[0]?.id || '';
+    if (!selectedAccountId) {
+      setTemplateMessage('Add an account before importing the expense template.');
+      return;
+    }
+    const next = previewExpenseTemplate(await file.text(), categories, selectedAccountId);
+    setTemplatePreview(next);
+    setTemplateMessage(
+      `${next.rows.length} valid rows, ${next.errors.length} errors, ${next.missingCategories.length} categories to create.`,
+    );
+  }
+
+  async function importTemplate() {
+    if (!templatePreview) return;
+    const ids = new Map<string, string>();
+    for (const missing of templatePreview.missingCategories) {
+      const id = crypto.randomUUID();
+      ids.set(`${missing.kind}\u001f${missing.name.toLowerCase()}`, id);
+      await onCreateCategory({
+        id,
+        name: missing.name,
+        kind: missing.kind,
+        icon: null,
+        color: null,
+        parentId: null,
+        isSystem: false,
+        sortOrder: categories.length + ids.size,
+      });
+    }
+    await onImport(
+      templatePreview.rows.map(({ categoryName, categoryType, ...row }) => ({
+        ...row,
+        categoryId:
+          row.categoryId ?? ids.get(`${categoryType}\u001f${categoryName.toLowerCase()}`) ?? null,
+      })),
+    );
+    setTemplateMessage(
+      `${templatePreview.rows.length} template rows submitted; ${ids.size} missing categories created.`,
+    );
   }
 
   return (
@@ -188,6 +261,41 @@ export function CsvImport({ accounts, mappings, onSaveMappings, onImport }: CsvI
         </div>
       ) : null}
       {message ? <p className="font-body text-caption text-foreground-muted">{message}</p> : null}
+
+      <div className="border-t border-border pt-4">
+        <CardTitle>Import the FinManager expense template</CardTitle>
+        <CardLabel>
+          Only date,category,amount,type is accepted. Invalid rows are rejected with line numbers;
+          missing categories are created after review.
+        </CardLabel>
+      </div>
+      <div className="flex flex-wrap items-end gap-3">
+        <Button type="button" variant="outline" onClick={downloadTemplate}>
+          Download sample CSV
+        </Button>
+        <div className="min-w-64 flex-1">
+          <UploadButton
+            accept=".csv,text/csv"
+            filename={templateFilename}
+            onFile={(file) => void readTemplate(file)}
+          />
+        </div>
+        <Button
+          type="button"
+          disabled={!templatePreview || templatePreview.rows.length === 0}
+          onClick={() => void importTemplate()}
+        >
+          Import template rows
+        </Button>
+      </div>
+      {templatePreview?.errors.map((error) => (
+        <p key={`${error.sourceRow}-${error.message}`} className="font-body text-caption text-loss">
+          Row {error.sourceRow}: {error.message}
+        </p>
+      ))}
+      {templateMessage ? (
+        <p className="font-body text-caption text-foreground-muted">{templateMessage}</p>
+      ) : null}
     </Card>
   );
 }

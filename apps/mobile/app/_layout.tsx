@@ -1,6 +1,7 @@
 // Polyfills first: crypto.getRandomValues backs the UUID generator used for
 // synced row ids, and must be installed before any crypto call.
 import 'react-native-get-random-values';
+import 'react-native-url-polyfill/auto';
 
 import { Inter_400Regular, Inter_500Medium, useFonts as useInter } from '@expo-google-fonts/inter';
 import {
@@ -9,6 +10,7 @@ import {
   Manrope_800ExtraBold,
   useFonts as useManrope,
 } from '@expo-google-fonts/manrope';
+import * as Sentry from '@sentry/react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
@@ -19,7 +21,13 @@ import { AppProviders } from '../components/providers';
 
 import '../global.css';
 
-export default function RootLayout() {
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: Boolean(process.env.EXPO_PUBLIC_SENTRY_DSN),
+  sendDefaultPii: false,
+});
+
+function RootLayout() {
   const { colorScheme } = useColorScheme();
 
   // Each weight is a separate face: React Native will not synthesise a bold
@@ -47,3 +55,5 @@ export default function RootLayout() {
     </AppProviders>
   );
 }
+
+export default Sentry.wrap(RootLayout);
