@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const externalBaseUrl = process.env.PLAYWRIGHT_BASE_URL;
-const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim();
 const localPort = process.env.PLAYWRIGHT_PORT ?? '3100';
 const baseURL = externalBaseUrl ?? `http://localhost:${localPort}`;
 
