@@ -1,7 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const externalBaseUrl = process.env.PLAYWRIGHT_BASE_URL;
-const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim();
 const localPort = process.env.PLAYWRIGHT_PORT ?? '3100';
 const baseURL = externalBaseUrl ?? `http://localhost:${localPort}`;
 
@@ -18,14 +17,6 @@ export default defineConfig({
     : [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL,
-    ...(externalBaseUrl && vercelBypassSecret
-      ? {
-          extraHTTPHeaders: {
-            'x-vercel-protection-bypass': vercelBypassSecret,
-            'x-vercel-set-bypass-cookie': 'true',
-          },
-        }
-      : {}),
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
