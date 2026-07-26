@@ -8,7 +8,7 @@ This file carries mid-phase state between sessions; completed phases live in pha
 ### Where we are
 
 Phase 9's tracked implementation is committed and pushed on `phase-9-hardening-release` in draft
-PR #4, based on current `origin/main` and headed by `08f5c87`.
+PR #4, based on current `origin/main` and headed by `f98223d`.
 It includes the deterministic web/mobile E2E harnesses, preview-deployment workflow, versioned
 JSON/module-CSV export, strict expense template import on both clients, web/native Sentry wiring,
 EAS profiles, mobile Google OAuth, SQLCipher-backed OP-SQLite outside Expo Go, and durable
@@ -20,6 +20,9 @@ functions' custom `x-cron-secret`/in-body auth, and the deployment guard require
 The new `deadman-monitor-daily` schedule was removed after that deployment was blocked, so it cannot
 call a missing function. Recreate it only after deployment by setting the explicit
 `deadman_monitor_enabled=true` Vault flag and applying/scheduling the documented job.
+The 2026-07-26 remote audit confirms `deadman-check` v10 is still the pre-Phase-9 implementation,
+`deadman-monitor` is absent, only `deadman-daily` is active, `deadman_monitor_enabled` is absent
+from Vault, and `cron_runs` contains no evidence rows.
 
 ### Verification state
 
@@ -30,11 +33,12 @@ public environment variables exist across its environments.
 
 The six Supabase/E2E GitHub secrets are configured through secure pipes. The dedicated account
 `gogulaanand02+phase9e2e@gmail.com` seeds successfully and the local Chromium suite passes 7/7 in
-28.4 seconds, including the cost-free AI 400/429 paths. PR CI run `30185240533` passes both the full
+28.4 seconds, including the cost-free AI 400/429 paths. PR CI run `30185651622` passes both the full
 repository gate and Playwright. The latest Vercel Preview is READY, but direct access redirects to
-Vercel SSO; Preview E2E therefore requires a project Automation Bypass secret copied to GitHub as
-`VERCEL_AUTOMATION_BYPASS_SECRET`. EAS still reports `Not logged in`. Sentry org/project/DSN/auth
-token are absent. There is no connected native device, so
+Vercel SSO. Preview E2E run `30185662946` fails immediately with the intentional diagnostic that a
+project Automation Bypass secret must be copied to GitHub as
+`VERCEL_AUTOMATION_BYPASS_SECRET`. EAS still reports `Not logged in`. Sentry
+org/project/DSN/auth token are absent. There is no connected native device, so
 encrypted-at-rest inspection, offline relaunch/reconnect, Google login, Maestro, Android
 performance numbers, and family installs are not claimed.
 

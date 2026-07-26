@@ -9,10 +9,11 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
       `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_POWERSYNC_URL`,
       `SUPABASE_SECRET_KEY`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`.
 - [x] Local Playwright suite passes after `e2e:seed` (7/7 on 2026-07-26).
-- [x] PR CI run `30185240533` passes the repository gate and Playwright critical paths.
-- [x] Vercel Preview deployment for `08f5c87` is READY.
+- [x] PR CI run `30185651622` passes the repository gate and Playwright critical paths.
+- [x] Vercel Preview deployment for `f98223d` is READY.
 - [ ] Generate a Vercel Automation Bypass secret and copy it to GitHub as
-      `VERCEL_AUTOMATION_BYPASS_SECRET`.
+      `VERCEL_AUTOMATION_BYPASS_SECRET`; run `30185662946` proves the workflow fails fast with this
+      exact missing-secret diagnostic.
 - [ ] Vercel Preview deployment triggers `Preview E2E` and passes.
 - [ ] Production deployment is READY and sign-in/data sync work.
 - [ ] Clean-browser signup email is received and confirmation completes without SQL.
@@ -30,6 +31,8 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 ## Supabase dead-man observability
 
 - [x] `cron_runs` table exists remotely.
+- [x] Remote audit confirms the current `deadman-check` v10 predates Phase 9,
+      `deadman-monitor` is absent, only `deadman-daily` is scheduled, and `cron_runs` is empty.
 - [ ] Deploy `deadman-check` and `deadman-monitor` with their in-code authentication and
       platform `verify_jwt=false` explicitly approved.
 - [ ] Edge Function secrets contain `CRON_SECRET`, `RESEND_API_KEY`,
