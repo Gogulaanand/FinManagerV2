@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "powersync-web copy-assets -o public",
     "build": "next build",
     "e2e": "playwright test",
     "e2e:seed": "node e2e/seed.mjs",
