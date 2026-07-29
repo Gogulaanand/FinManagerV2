@@ -43,7 +43,7 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --fetch-timeout=300000 --fetch-retries=5
       - run: pnpm --filter @finmanager/web exec playwright install --with-deps chromium
       - name: Seed dedicated account
         run: pnpm --filter @finmanager/web e2e:seed

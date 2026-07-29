@@ -24,7 +24,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --fetch-timeout=300000 --fetch-retries=5
 
       - name: Build
         run: pnpm turbo run build
@@ -63,7 +63,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --fetch-timeout=300000 --fetch-retries=5
 
       - name: Build web workspace dependencies
         run: pnpm turbo run build --filter=@finmanager/web^...

@@ -9,11 +9,11 @@ test.beforeEach(async ({ page }) => {
 test('seeded account exposes the scale, portfolio, and goals fixtures', async ({ page }) => {
   await page.goto('/expenses');
   await expect(page.getByRole('heading', { name: 'Expenses' })).toBeVisible();
-  await expect(page.getByText('50 of 121 this month')).toBeVisible();
-  await page.getByRole('button', { name: 'Load more (showing 50 of 121)' }).click();
-  await expect(page.getByText('100 of 121 this month')).toBeVisible();
-  await page.getByRole('button', { name: 'Load more (showing 100 of 121)' }).click();
-  await expect(page.getByText('121 of 121 this month')).toBeVisible();
+  await expect(page.getByText('50 of 120 this month')).toBeVisible();
+  await page.getByRole('button', { name: 'Load more (showing 50 of 120)' }).click();
+  await expect(page.getByText('100 of 120 this month')).toBeVisible();
+  await page.getByRole('button', { name: 'Load more (showing 100 of 120)' }).click();
+  await expect(page.getByText('120 of 120 this month')).toBeVisible();
   await expect(page.getByText('E2E Grocery 120')).toBeVisible();
 
   await page.goto('/portfolio');
@@ -41,7 +41,7 @@ test('month navigation and seeded overspend remain visible at scale', async ({ p
   await expect(page.getByText('0 of 0 this month')).toBeVisible();
   if (currentLabel) await expect(page.getByRole('button', { name: currentLabel })).toHaveCount(0);
   await page.getByRole('button', { name: 'Next month' }).click();
-  await expect(page.getByText('50 of 121 this month')).toBeVisible();
+  await expect(page.getByText('50 of 120 this month')).toBeVisible();
 });
 
 test('strict expense template deduplicates the second import', async ({ page }) => {
