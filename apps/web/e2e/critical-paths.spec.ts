@@ -31,11 +31,11 @@ test('month navigation and seeded overspend remain visible at scale', async ({ p
   await page.goto('/expenses');
   const currentMonth = page.getByRole('button', { expanded: false }).filter({ hasText: /20\d{2}/ });
   const currentLabel = await currentMonth.textContent();
-  await expect(page.getByText('Overspent', { exact: true })).toBeVisible();
-  await expect(page.getByRole('progressbar', { name: 'Food budget progress' })).toHaveAttribute(
-    'aria-valuenow',
-    '100',
-  );
+  const budgetSummary = page.getByRole('list', { name: 'Budget status summary' });
+  await expect(budgetSummary.getByText('Overspent', { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('progressbar', { name: 'Food & Dining budget progress' }),
+  ).toHaveAttribute('aria-valuenow', '100');
 
   await page.getByRole('button', { name: 'Previous month' }).click();
   await expect(page.getByText('0 of 0 this month')).toBeVisible();

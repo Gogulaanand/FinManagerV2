@@ -45,6 +45,9 @@ jobs:
     name: Playwright critical paths
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    concurrency:
+      group: phase9-e2e-dedicated-account
+      cancel-in-progress: false
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
