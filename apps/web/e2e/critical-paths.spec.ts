@@ -51,7 +51,7 @@ test('strict expense template deduplicates the second import', async ({ page }) 
   const template = {
     name: 'phase9-template.csv',
     mimeType: 'text/csv',
-    buffer: Buffer.from(`date,category,amount,type\n2026-07-01,Food,${uniqueAmount},expense\n`),
+    buffer: Buffer.from(`date,category,amount,type\n2020-01-01,Food,${uniqueAmount},expense\n`),
   };
   await page.locator('input[type="file"]').nth(1).setInputFiles(template);
   await expect(page.getByText('1 valid rows, 0 errors, 0 categories to create.')).toBeVisible();
