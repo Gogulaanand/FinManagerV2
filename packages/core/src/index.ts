@@ -52,6 +52,8 @@ export {
   calculateCategoryBreakdown,
   calculateMonthlySummary,
   endOfMonthDate,
+  EXPENSE_TEMPLATE_HEADERS,
+  EXPENSE_TEMPLATE_SAMPLE,
   monthRange,
   clampMonth,
   monthLabel,
@@ -60,6 +62,7 @@ export {
   expandOccurrences,
   parseCsv,
   previewCsv,
+  previewExpenseTemplate,
   reduceKeypad,
   isCategoryIconKey,
   resolveCategoryPresentation,
@@ -76,6 +79,8 @@ export type {
   CsvImportPreview,
   CsvPreviewError,
   DefaultCategory,
+  ExpenseTemplatePreview,
+  ExpenseTemplatePreviewRow,
   ExpandedOccurrence,
   MonthlySummary,
   MonthlyTrendPoint,
@@ -189,3 +194,18 @@ export type {
 
 export { selectRecentActivity, spendChangeRatio } from './dashboard/recent.js';
 export type { RecentActivityRow } from './dashboard/recent.js';
+
+export {
+  DATA_EXPORT_COLLECTIONS,
+  DATA_EXPORT_SCHEMA_VERSION,
+  createDataExportBundle,
+  createModuleCsvExports,
+  parseDataExportBundle,
+  serializeDataExportBundle,
+} from './export/index.js';
+export type {
+  DataExportBundle,
+  DataExportCollection,
+  DataExportCollections,
+  JsonRecord,
+} from './export/index.js';

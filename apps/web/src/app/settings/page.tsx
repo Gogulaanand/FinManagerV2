@@ -5,6 +5,7 @@ import { DeadmanSettingsPanel } from '@/components/settings/deadman-settings';
 import { Card, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/providers';
 import { Button } from '@/components/ui/button';
+import { DataExportPanel } from '@/components/settings/data-export';
 
 export default function SettingsPage() {
   const { session, signOut } = useAuth();
@@ -34,6 +35,7 @@ export default function SettingsPage() {
           </p>
         )}
       </Card>
+      <DataExportPanel />
       <DeadmanSettingsPanel />
     </div>
   );

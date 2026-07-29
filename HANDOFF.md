@@ -3,57 +3,69 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
-## Latest Handoff: 2026-07-29 (Phase 8.5 design alignment)
+## Latest Handoff: 2026-07-29 (Phase 9 integrated with merged Phase 8.5)
 
 ### Where we are
 
-Phase 8.5 is isolated on `phase-8.5-design-alignment`, created from refreshed `origin/main`. The
-paused Phase 9 checkout, its commits, and its three uncommitted documentation edits remain
-untouched. Stitch project `15700405983783543744` and Calm Teal system
-`10681403320511857968` were used to generate and select mobile/desktop concepts for dashboard,
-expense analytics, Insights, and dead-man safety; selected IDs are in
-`phases/briefing/phase-8.5.md`.
+Phase 8.5 PR #5 is verified merged as `93c255b`. The paused Phase 9 branch was rebased onto that
+commit after stashing only `HANDOFF.md`, `docs/PHASE9_RELEASE_CHECKLIST.md`, and
+`phases/briefing/phase-9.md`; `.codegraph/` remained untracked and untouched. The two dashboard and
+default-category commits already represented by PR #3 were skipped, and the true Phase 9 commits
+were reconciled with the Phase 8.5 UI, data, and test contracts.
 
-Implementation now includes shared category fallback/persistence, Lucide/Ionicons mappings,
-dashboard allocation, web/mobile chart inspection parity, category badges, redesigned Insights and
-dead-man workspaces, and a purposeful icon pass through the remaining financial modules. Existing
-API, PowerSync, Anthropic SSE, local-preview, and delivery behavior is preserved.
+The integrated seed retains exactly 120 current-month transactions: 117 scale rows, the Phase 8.5
+Food & Dining and legacy-category rows, and salary. It also retains allocation, goals/FIRE, saved
+Insights, exhausted allowance, and dead-man fixtures. The combined Playwright collection has 12
+tests across design alignment, critical paths, and cost-free AI validation.
 
 ### Verification state
 
-The exact `CI=true pnpm turbo run build test lint typecheck` gate passes 21/21 with 317 unit tests.
-Formatting, `git diff --check`, the five-test Playwright collection, and Expo iOS export pass.
-Signed-out Chrome checks cover light/dark desktop plus 390px Dashboard, Insights, and Expenses with
-no console errors, overlay, or horizontal overflow. The pass caught and fixed the all-zero trend
-chart's misleading ₹0–₹4 axis.
+At `2026-07-29T17:59:44Z`, `CI=true pnpm turbo run build test lint typecheck` passes 21/21 outside
+the restricted process sandbox. Unit totals are tokens 27, schema 42, core 205, and sync 49 (323
+total). The web build copies both PowerSync workers before Next.js, then compiles all routes.
+`CI=true pnpm format:check` and `git diff --check` pass. iOS export bundles 3,112 modules into a
+15 MB Hermes bundle; Android bundles 3,193 modules into 16 MB. Expo/Sentry warn only that the Sentry
+org/project are absent.
 
-The dedicated account was seeded through the server-only fixture script, and
-`CI=true pnpm --filter @finmanager/web e2e` passes all five Chromium scenarios in 18.8 seconds.
-The admin key and generated password were subprocess-only; no credential was persisted or printed.
-AI/provider and dead-man delivery calls were intercepted, so no Anthropic request or email was sent.
-An authenticated iPhone 17 Pro Expo Go pass verified real-data Dashboard allocation, expense charts
-and legends, Insights keyboard avoidance, and hydrated dead-man settings/trusted contacts. It caught
-and fixed analytics being buried after the transaction list and a chart content-width error that
-clipped the final month. The local safety controls were inspected without using Test-send.
-Simulator mouse input did not activate Victory's press state, and Expo Go is not custom-build or
-physical-device proof. An iPad Pro 13-inch Expo Go pass also verified Dashboard, Expenses, Insights,
-and signed-out Settings at a large viewport in light/dark modes with no clipping or horizontal
-overflow.
+GitHub has all seven required repository secrets, including
+`VERCEL_AUTOMATION_BYPASS_SECRET` (updated `2026-07-26T04:02:33Z`). Historical pre-rebase Preview
+E2E run `30188066854` passed on `b020d01`; matching CI run `30188040958` had a failed critical-path
+job, so neither proves the integrated 12-test tree. Vercel production deployment
+`dpl_9vkdpiaMxLPBx3QoYRG4MuxbNVP3` for `93c255b` is READY, and all three public variables exist in
+Development, Preview, and Production. No Sentry variables exist.
+
+Supabase remote state is ahead of the old handoff: migration `20260726015958` is applied,
+`deadman-check` v11 and `deadman-monitor` v1 are ACTIVE with `verify_jwt=false`, and `cron_runs`
+contains three rows. The latest `deadman-daily` run at `2026-07-29T03:00:04.225557Z` records
+`failed=0`. Only `deadman-daily` is scheduled; Vault contains `deadman_supabase_url` and
+`deadman_cron_secret`, but not the monitor enable flag. This observed deployment is not recorded
+owner approval for retaining `verify_jwt=false`, and no heartbeat or monitor-alert evidence exists.
+EAS reports `Not logged in`.
 
 ### Exact next action
 
-Finish the real-touch chart-tap/gesture check on a device or retain it explicitly as pending
-device-only evidence, as allowed by the phase plan. Then review and land this branch before rebasing
-Phase 9.
+Commit the lockfile/document reconciliation, update the existing branch with
+`git push --force-with-lease`, and require both fresh PR #4 workflows plus the new Vercel Preview to
+pass. Then configure Sentry, authenticate/link EAS, record explicit owner approval for the already
+deployed custom-auth functions, and finish the monitor/heartbeat and physical-device gates. The
+Phase 3 test-account deletion and any paid Anthropic call remain approval-gated.
+
+### Files in flight
+
+The rebased source commits are local. The reconciled `pnpm-lock.yaml` and five release/status
+documents are in flight. `.codegraph/` is local-only and must not be staged.
 
 ### Open items / warnings
 
-- Phase 9 owns template-import UI in its paused branch. Phase 8.5 deliberately does not copy that
-  later feature backward; its shared `saveCategory` guard ensures both import clients inherit
-  `tag`/brand-teal defaults after the rebase.
-- No schema, migration, Edge Function, sync rule, Anthropic, or email delivery change belongs to
-  this phase.
-- Do not claim Expo export as real-device or gesture proof.
+- Do not put the Supabase secret key or E2E password in tracked files. The fixture accepts the new
+  `SUPABASE_SECRET_KEY` first and the legacy service-role variable only as a migration fallback.
+- Do not use Expo Go to claim persistence or SQLCipher; it intentionally stays on SQL.js.
+- A lost SecureStore database key requires clearing app data/reinstalling and re-syncing.
+- Do not enable platform JWT verification on custom-auth cron functions without also changing the
+  scheduled request authentication; doing so would make every cron invocation fail at the gateway.
+- Supabase leaked-password protection was explicitly waived on 2026-07-26 because it requires a
+  paid plan; it is not a Phase 9 release gate. The `cron_runs` RLS-without-policy notice is
+  intentional: operational health rows are service-role only.
 
 ---
 

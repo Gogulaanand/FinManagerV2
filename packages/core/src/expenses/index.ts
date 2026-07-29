@@ -22,8 +22,21 @@ export type {
   MonthlySummary,
   MonthlyTrendPoint,
 } from './analytics.js';
-export { canonicalImportHash, parseCsv, previewCsv } from './csv.js';
-export type { CsvDocument, CsvImportPreview, CsvPreviewError } from './csv.js';
+export {
+  EXPENSE_TEMPLATE_HEADERS,
+  EXPENSE_TEMPLATE_SAMPLE,
+  canonicalImportHash,
+  parseCsv,
+  previewCsv,
+  previewExpenseTemplate,
+} from './csv.js';
+export type {
+  CsvDocument,
+  CsvImportPreview,
+  CsvPreviewError,
+  ExpenseTemplatePreview,
+  ExpenseTemplatePreviewRow,
+} from './csv.js';
 export { endOfMonthDate, expandOccurrences, monthRange, trendWindowStart } from './recurrence.js';
 export type { ExpandedOccurrence, RecurrenceExpansionInput } from './recurrence.js';
 export { reduceKeypad } from './keypad.js';

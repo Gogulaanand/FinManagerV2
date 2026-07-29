@@ -1,0 +1,15 @@
+appId: ${APP_ID}
+---
+- openLink: finmanager://login
+- assertVisible: 'Welcome back'
+- tapOn: 'you@example.com'
+- inputText: ${E2E_USER_EMAIL}
+- tapOn: 'At least 6 characters'
+- inputText: ${E2E_USER_PASSWORD}
+- hideKeyboard
+- tapOn:
+    text: 'Sign in'
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible: 'Dashboard'
+    timeout: 30000

@@ -10,6 +10,7 @@ export { AppSchema, JSON_COLUMNS } from './schema';
 export type { Database } from './schema';
 export { SupabaseConnector } from './connector';
 export { uuidv4 } from './ids';
+export { readDataExportCollections } from './export';
 export {
   DEFAULT_SCENARIO_INPUT,
   SCENARIOS_QUERY,

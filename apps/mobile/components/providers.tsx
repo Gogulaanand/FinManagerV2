@@ -12,6 +12,8 @@ import {
 } from 'react';
 import type { ReactNode } from 'react';
 import { AppState, Platform as RNPlatform } from 'react-native';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 
 import { getConnector, getPowerSync } from '../lib/powersync';
 import { supabase } from '../lib/supabase';
@@ -21,6 +23,7 @@ export interface AuthApi {
   /** True until the initial session lookup resolves. */
   loading: boolean;
   signInWithPassword: (email: string, password: string) => Promise<string | null>;
+  signInWithGoogle: () => Promise<string | null>;
   /** Resolves the error, plus whether a confirmation email was actually sent. */
   signUpWithPassword: (
     email: string,
@@ -30,6 +33,7 @@ export interface AuthApi {
 }
 
 const AuthContext = createContext<AuthApi | null>(null);
+WebBrowser.maybeCompleteAuthSession();
 
 export function useAuth(): AuthApi {
   const ctx = useContext(AuthContext);
@@ -86,6 +90,31 @@ export function AppProviders({ children }: { children: ReactNode }) {
     return error?.message ?? null;
   }, []);
 
+  const signInWithGoogle = useCallback(async () => {
+    const redirectTo = Linking.createURL('auth/callback');
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo, skipBrowserRedirect: true },
+    });
+    if (error) return error.message;
+    if (!data.url) return 'Google sign-in did not return an authorization URL.';
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    if (result.type !== 'success')
+      return result.type === 'cancel' ? null : 'Google sign-in failed.';
+
+    const parameters = new URL(result.url.replace('#', '?')).searchParams;
+    const authError = parameters.get('error_description') ?? parameters.get('error');
+    if (authError) return authError;
+    const accessToken = parameters.get('access_token');
+    const refreshToken = parameters.get('refresh_token');
+    if (!accessToken || !refreshToken) return 'Google sign-in returned an incomplete session.';
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    return sessionError?.message ?? null;
+  }, []);
+
   const signUpWithPassword = useCallback(async (email: string, password: string) => {
     // No session means the project requires confirmation and Supabase has sent
     // the email; a session means it is disabled and the user is already in.
@@ -98,8 +127,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthApi>(
-    () => ({ session, loading, signInWithPassword, signUpWithPassword, signOut }),
-    [session, loading, signInWithPassword, signUpWithPassword, signOut],
+    () => ({
+      session,
+      loading,
+      signInWithPassword,
+      signInWithGoogle,
+      signUpWithPassword,
+      signOut,
+    }),
+    [session, loading, signInWithPassword, signInWithGoogle, signUpWithPassword, signOut],
   );
 
   return (

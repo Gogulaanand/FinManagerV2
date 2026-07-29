@@ -1,0 +1,85 @@
+# Phase 9 Release Checklist
+
+This is an evidence checklist, not a declaration that release is complete. Record links, build IDs,
+device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
+
+## Web and CI
+
+- [x] GitHub secrets exist: `NEXT_PUBLIC_SUPABASE_URL`,
+      `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_POWERSYNC_URL`,
+      `SUPABASE_SECRET_KEY`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`, and
+      `VERCEL_AUTOMATION_BYPASS_SECRET`.
+- [x] Local Playwright suite passes after `e2e:seed` (7/7 on 2026-07-26).
+- [x] The integrated post-rebase suite collects 12 tests across three files.
+- [ ] Run the integrated 12-test suite against its seeded deployment; the local shell intentionally
+      has no E2E credentials.
+- [x] PR CI run `30186516300` passes the repository gate and Playwright 7/7 without retries.
+- [x] Vercel Preview deployment for `f58445d` is READY.
+- [x] Historical Preview E2E run `30188066854` passes with the Automation Bypass secret on
+      pre-rebase commit `b020d01`.
+- [ ] Fresh post-rebase GitHub CI and Vercel Preview E2E pass on the current PR head.
+- [x] Production deployment `dpl_9vkdpiaMxLPBx3QoYRG4MuxbNVP3` is READY at merged Phase 8.5 commit
+      `93c255b`.
+- [ ] Production deployment is READY and sign-in/data sync work.
+- [x] Supabase Auth leaked-password protection was reviewed and explicitly waived on 2026-07-26
+      because it requires a paid Supabase plan; it is not a Phase 9 release gate.
+- [ ] Clean-browser signup email is received and confirmation completes without SQL.
+
+## Sentry
+
+- [x] Live Vercel environment audit confirms the audited project currently has no Sentry variables.
+- [ ] Web environments contain `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`,
+      `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`, and
+      `SENTRY_TEST_TOKEN`.
+- [ ] EAS environments contain `EXPO_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`,
+      `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN`.
+- [ ] Protected web monitoring route produces one symbolicated client/server event.
+- [ ] Native development build produces one symbolicated event.
+
+## Supabase dead-man observability
+
+- [x] `cron_runs` table exists remotely.
+- [x] `cron_runs` intentionally has RLS with no client policy; only the service role can access
+      operational health rows.
+- [x] Remote audit confirms `deadman-check` v11 and `deadman-monitor` v1 are ACTIVE with
+      `verify_jwt=false`; only `deadman-daily` is scheduled.
+- [ ] Explicitly approve retaining the deployed functions' in-code authentication with platform
+      `verify_jwt=false`.
+- [ ] Edge Function secrets contain `CRON_SECRET`, `RESEND_API_KEY`,
+      `RESEND_FROM_EMAIL`, `DEADMAN_MONITOR_EMAIL`, and `DEADMAN_HEARTBEAT_URL`.
+- [x] Vault contains `deadman_supabase_url` and `deadman_cron_secret`.
+- [ ] Vault contains the explicit `deadman_monitor_enabled=true` flag before scheduling the
+      monitor.
+- [x] The latest daily invocation at `2026-07-29T03:00:04.225557+00:00` wrote `failed=0`.
+- [ ] A clean daily invocation reaches the external heartbeat.
+- [ ] A controlled failed invocation causes the independent owner alert.
+- [ ] A missed heartbeat test alerts after the configured grace period.
+
+## Native build and distribution
+
+- [x] Local iOS and Android Metro/Hermes exports pass (3,112/15 MB and 3,193/16 MB respectively);
+      these are not native builds.
+- [ ] EAS account is authenticated and `extra.eas.projectId` comes from the linked project.
+      Current CLI evidence: `Not logged in`.
+- [ ] Development build installed on an Android test device.
+- [ ] `native-offline-relaunch.yaml` passes and its expense later appears on web.
+- [ ] SQLCipher confirmed by inspecting the database header/file while the app is stopped.
+- [ ] Google OAuth returns through `finmanager://auth/callback`; password fallback still works.
+- [ ] Mid-range Android cold-start, 120-row scroll, and chart-render measurements recorded.
+- [ ] Preview Android APK installed by intended family users.
+- [ ] Production iOS build installed through a TestFlight internal group.
+
+## Data portability and cleanup
+
+- [x] JSON export parses through `parseDataExportBundle` in the round-trip test.
+- [ ] Web downloads and native share sheets manually opened on target devices.
+- [x] Strict template rejects malformed rows in core tests and the live Playwright second import
+      created zero rows.
+- [ ] Phase 3 test account deletion has separate explicit owner approval before execution.
+
+## Cost-gated AI verification
+
+- [x] Invalid AI scope returns 400 before a provider request.
+- [x] Exhausted allowance returns 429 before a provider request.
+- [ ] With owner approval for one paid call, ask a grounded question for each scope, stop one stream,
+      confirm token settlement in `ai_usage`, and confirm the saved monthly summary syncs offline.

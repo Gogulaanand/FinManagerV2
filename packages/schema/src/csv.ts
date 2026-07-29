@@ -42,5 +42,16 @@ export const CsvImportRowSchema = TransactionSchema.pick({
 });
 export type CsvImportRow = z.infer<typeof CsvImportRowSchema>;
 
+export const ExpenseTemplateTypeSchema = z.enum(['income', 'expense']);
+export type ExpenseTemplateType = z.infer<typeof ExpenseTemplateTypeSchema>;
+
+export const ExpenseTemplateRowSchema = z.object({
+  date: z.iso.date(),
+  category: z.string().trim().min(1).max(80),
+  amount: z.number().finite().positive(),
+  type: ExpenseTemplateTypeSchema,
+});
+export type ExpenseTemplateRow = z.infer<typeof ExpenseTemplateRowSchema>;
+
 export { DirectionSchema };
 export type { Direction };

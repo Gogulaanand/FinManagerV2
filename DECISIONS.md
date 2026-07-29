@@ -520,3 +520,59 @@ Why: this phase exists to improve comprehension before release hardening, not to
 backend or delivery behavior.
 Consequence: there is no Phase 8.5 schema, Supabase, PowerSync, route, AI API, or dead-man API
 migration.
+
+## D-071: Phase 9 E2E data is a dedicated, idempotent account fixture (2026-07-25)
+
+The Phase 9 harness provisions one environment-named Supabase user through the server-only Auth
+Admin API, resets only that user's fixture tables, and inserts a deterministic current-month
+dataset including 120 transactions. Credentials and the Supabase secret key are environment
+variables; none is stored in Playwright, Maestro, CI YAML, or tracked documentation.
+Why: critical flows need stable scale and financial data in both web and mobile without borrowing a
+real user's account or making tests order-dependent. Reusing one account also exercises the same
+PowerSync path as production.
+Consequence: the fixture must remain idempotent and user-scoped. Any new destructive reset table
+must be reviewed for ownership and foreign-key order. CI must seed before Playwright, and concurrent
+runs against the same account are intentionally serialized.
+
+## D-072: Expo Go detection uses `expoGoConfig`, not `executionEnvironment` (2026-07-26)
+
+Expo's `StoreClient` execution environment can represent both Expo Go and a development client in
+current SDKs, so it cannot safely choose the database adapter. `Constants.expoGoConfig` is present
+only inside Expo Go. Mobile therefore keeps SQL.js when that value exists and runtime-loads
+OP-SQLite everywhere else.
+Why: evaluating the native OP-SQLite module at import time crashes Expo Go, while classifying a
+development client as Expo Go would silently retain the in-memory database.
+Consequence: the native import must stay behind the runtime branch. Expo Go cannot be used as
+evidence for persistence or SQLCipher.
+
+## D-073: Native database keys are random, device-only, and recoverable by re-sync (2026-07-26)
+
+Custom mobile builds generate a 256-bit-equivalent random hex database key, store it with
+SecureStore's device-only after-first-unlock accessibility, and pass it to OP-SQLite's SQLCipher
+option. The key is never derived from a password or synchronized.
+Why: a synchronized or user-derived key broadens exposure and creates password-rotation coupling.
+Consequence: SecureStore loss makes the local database unreadable. The recovery path is to clear app
+data or reinstall, create a new key/database, and let PowerSync re-sync server data.
+
+## D-074: Dead-man cron health requires both durable outcomes and an external heartbeat (2026-07-26)
+
+`deadman-check` records enabled/processed/failed counts and detail in `cron_runs` after every
+authenticated cron invocation. A separately scheduled `deadman-monitor` alerts the owner for a
+failed or stale latest row, while a clean run optionally pings an external heartbeat.
+Why: the internal monitor catches ran-but-failed outcomes, but no component inside the same
+Supabase project can detect that the project, scheduler, or function did not run at all.
+Consequence: the heartbeat URL is optional in code but mandatory for release. Heartbeat failures
+are logged without converting a clean escalation run into a failure; the provider detects the
+missed ping independently.
+
+## D-075: Phase 9 rebase uses one combined 120-row fixture (2026-07-29)
+
+After Phase 8.5 merged, Phase 9 was rebased onto `93c255b`. The integrated E2E seed uses 117 scale
+transactions, two Phase 8.5 design rows, and one salary row so the current-month count remains
+exactly 120 while both design and release assertions run against one user. The scale rows use their
+own semantic custom category so Food & Dining remains independently verifiable.
+Why: keeping separate or additive fixtures would either lose Phase 8.5 coverage or silently expand
+the Phase 9 pagination contract beyond 120 rows.
+Consequence: CI collects 12 Chromium tests across the three suites. Future seed changes must keep
+the count, design categories, allocation, saved Insights, dead-man preview, and cost-free AI states
+coherent.

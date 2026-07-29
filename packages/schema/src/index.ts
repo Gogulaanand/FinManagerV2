@@ -22,8 +22,22 @@ export type {
   RecurrenceRule,
   Transaction,
 } from './expenses';
-export { CsvFieldSchema, CsvImportRowSchema, CsvMappingSchema, CsvMappingSetSchema } from './csv';
-export type { CsvField, CsvImportRow, CsvMapping, CsvMappingSet } from './csv';
+export {
+  CsvFieldSchema,
+  CsvImportRowSchema,
+  CsvMappingSchema,
+  CsvMappingSetSchema,
+  ExpenseTemplateRowSchema,
+  ExpenseTemplateTypeSchema,
+} from './csv';
+export type {
+  CsvField,
+  CsvImportRow,
+  CsvMapping,
+  CsvMappingSet,
+  ExpenseTemplateRow,
+  ExpenseTemplateType,
+} from './csv';
 export { FireSettingsSchema, GoalKindSchema, GoalSchema } from './goals';
 export type { FireSettings, Goal, GoalKind } from './goals';
 export {

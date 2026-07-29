@@ -16,12 +16,6 @@ const admin = createClient(url, secret, {
   auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
 });
 
-async function checked(label, promise) {
-  const { data, error } = await promise;
-  if (error) throw new Error(`${label}: ${error.message}`);
-  return data;
-}
-
 async function findUser() {
   for (let page = 1; ; page += 1) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
@@ -32,6 +26,12 @@ async function findUser() {
   }
 }
 
+async function checked(label, promise) {
+  const { data, error } = await promise;
+  if (error) throw new Error(`${label}: ${error.message}`);
+  return data;
+}
+
 let user = await findUser();
 if (!user) {
   const data = await checked(
@@ -40,7 +40,7 @@ if (!user) {
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: 'FinManager Phase 8.5 E2E' },
+      user_metadata: { full_name: 'FinManager E2E' },
     }),
   );
   user = data.user;
@@ -91,14 +91,7 @@ async function category(name, kind, icon, color, isSystem = true) {
     `create ${name} category`,
     admin
       .from('categories')
-      .insert({
-        user_id: userId,
-        name,
-        kind,
-        icon,
-        color,
-        is_system: isSystem,
-      })
+      .insert({ user_id: userId, name, kind, icon, color, is_system: isSystem })
       .select('id'),
   );
   return rows[0].id;
@@ -106,10 +99,12 @@ async function category(name, kind, icon, color, isSystem = true) {
 
 const foodId = await category('Food & Dining', 'expense', 'utensils', '#f97316');
 const salaryId = await category('Salary', 'income', 'banknote', '#047857');
+const scaleId = await category('E2E Scale', 'expense', 'tag', '#0F766E', false);
 const legacyId = await category('E2E Legacy custom', 'expense', 'unknown-legacy', null, false);
 await category('E2E Imported category', 'expense', 'tag', '#0F766E', false);
-
 const accountId = crypto.randomUUID();
+const holdingId = crypto.randomUUID();
+const goldHoldingId = crypto.randomUUID();
 await checked(
   'seed account',
   admin.from('accounts').insert({
@@ -127,41 +122,58 @@ const year = now.getUTCFullYear();
 const month = now.getUTCMonth();
 const dateFor = (day) =>
   new Date(Date.UTC(year, month, Math.min(day, 28))).toISOString().slice(0, 10);
-await checked(
-  'seed transactions',
-  admin.from('transactions').insert([
-    {
-      user_id: userId,
-      account_id: accountId,
-      category_id: foodId,
-      amount: 7200,
-      direction: 'debit',
-      occurred_on: dateFor(4),
-      merchant: 'E2E Groceries',
-      import_hash: 'phase85-food',
-    },
-    {
-      user_id: userId,
-      account_id: accountId,
-      category_id: legacyId,
-      amount: 900,
-      direction: 'debit',
-      occurred_on: dateFor(8),
-      merchant: 'E2E Pet care',
-      import_hash: 'phase85-legacy',
-    },
-    {
-      user_id: userId,
-      account_id: accountId,
-      category_id: salaryId,
-      amount: 150000,
-      direction: 'credit',
-      occurred_on: dateFor(1),
-      merchant: 'E2E Salary',
-      import_hash: 'phase85-salary',
-    },
-  ]),
-);
+const transactions = Array.from({ length: 117 }, (_, index) => {
+  const fixtureNumber = index + 4;
+  return {
+    id: crypto.randomUUID(),
+    user_id: userId,
+    account_id: accountId,
+    category_id: scaleId,
+    amount: 100 + fixtureNumber,
+    direction: 'debit',
+    occurred_on: dateFor((fixtureNumber % 26) + 1),
+    merchant: `E2E Grocery ${fixtureNumber}`,
+    note: 'Phase 9 deterministic scale fixture',
+    import_hash: `phase9-scale-${fixtureNumber}`,
+  };
+});
+transactions.push({
+  id: crypto.randomUUID(),
+  user_id: userId,
+  account_id: accountId,
+  category_id: foodId,
+  amount: 7200,
+  direction: 'debit',
+  occurred_on: dateFor(28),
+  merchant: 'E2E Groceries',
+  note: 'Phase 8.5 design fixture',
+  import_hash: 'phase85-food',
+});
+transactions.push({
+  id: crypto.randomUUID(),
+  user_id: userId,
+  account_id: accountId,
+  category_id: legacyId,
+  amount: 900,
+  direction: 'debit',
+  occurred_on: dateFor(27),
+  merchant: 'E2E Pet care',
+  note: 'Phase 8.5 legacy-category fixture',
+  import_hash: 'phase85-legacy',
+});
+transactions.push({
+  id: crypto.randomUUID(),
+  user_id: userId,
+  account_id: accountId,
+  category_id: salaryId,
+  amount: 150000,
+  direction: 'credit',
+  occurred_on: dateFor(1),
+  merchant: 'E2E Salary',
+  note: 'Phase 9 deterministic fixture',
+  import_hash: 'phase9-salary',
+});
+await checked('seed transactions', admin.from('transactions').insert(transactions));
 await checked(
   'seed budget',
   admin.from('budgets').insert({
@@ -172,31 +184,85 @@ await checked(
     amount: 6000,
   }),
 );
-
-const holdings = [
-  {
-    id: crypto.randomUUID(),
+await checked(
+  'seed holdings',
+  admin.from('holdings').insert([
+    {
+      id: holdingId,
+      user_id: userId,
+      name: 'E2E Index Fund',
+      type: 'mutual_fund',
+      identifier: 'E2E-FUND',
+      currency: 'INR',
+      quantity: 100,
+      avg_cost: 1000,
+      current_value: 110000,
+    },
+    {
+      id: goldHoldingId,
+      user_id: userId,
+      name: 'E2E Gold',
+      type: 'gold',
+      currency: 'INR',
+      quantity: 1,
+      avg_cost: 40000,
+      current_value: 50000,
+    },
+  ]),
+);
+await checked(
+  'seed holding events',
+  admin.from('holding_events').insert([
+    {
+      user_id: userId,
+      holding_id: holdingId,
+      kind: 'buy',
+      occurred_on: `${year - 1}-01-01`,
+      quantity: 100,
+      price: 1000,
+      amount: -100000,
+    },
+    {
+      user_id: userId,
+      holding_id: holdingId,
+      kind: 'sell',
+      occurred_on: `${year}-01-01`,
+      quantity: null,
+      price: null,
+      amount: 110000,
+      note: 'Terminal value fixture for XIRR',
+    },
+  ]),
+);
+await checked(
+  'seed goal',
+  admin.from('goals').insert({
     user_id: userId,
-    name: 'E2E Index Fund',
-    type: 'mutual_fund',
-    currency: 'INR',
-    quantity: 100,
-    avg_cost: 1000,
-    current_value: 110000,
-  },
-  {
-    id: crypto.randomUUID(),
+    name: 'E2E Education Goal',
+    kind: 'education',
+    target_amount: 2500000,
+    target_date: `${year + 10}-06-01`,
+    current_amount: 300000,
+    expected_return: 0.1,
+    inflation: 0.06,
+    linked_holding_ids: [holdingId],
+  }),
+);
+await checked(
+  'seed FIRE settings',
+  admin.from('fire_settings').insert({
     user_id: userId,
-    name: 'E2E Gold',
-    type: 'gold',
-    currency: 'INR',
-    quantity: 1,
-    avg_cost: 40000,
-    current_value: 50000,
-  },
-];
-await checked('seed holdings', admin.from('holdings').insert(holdings));
-
+    annual_expenses: 600000,
+    withdrawal_rate: 0.04,
+    expected_return: 0.1,
+    inflation: 0.06,
+    current_age: 35,
+    retirement_age: 50,
+    lean_multiplier: 0.75,
+    fat_multiplier: 1.5,
+    monthly_investment: 50000,
+  }),
+);
 await checked(
   'seed saved monthly summary',
   admin.from('ai_summaries').insert({
@@ -238,4 +304,4 @@ await checked(
   }),
 );
 
-console.log(`Seeded deterministic Phase 8.5 fixture for ${email} (${userId}).`);
+console.log(`Seeded deterministic Phase 8.5 + Phase 9 fixture for ${email} (${userId}).`);

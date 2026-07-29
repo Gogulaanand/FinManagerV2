@@ -2,24 +2,44 @@
   "expo": {
     "name": "FinManager",
     "slug": "finmanager",
-    "version": "0.0.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "finmanager",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.finmanager.app"
+      "bundleIdentifier": "com.finmanager.app",
+      "buildNumber": "1"
     },
     "android": {
       "package": "com.finmanager.app",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
       "output": "static"
     },
-    "plugins": ["expo-router", "expo-font", "expo-secure-store"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-web-browser",
+        {
+          "experimentalLauncherActivity": false
+        }
+      ],
+      [
+        "expo-file-system",
+        {
+          "supportsOpeningDocumentsInPlace": true,
+          "enableFileSharing": true
+        }
+      ],
+      "@sentry/react-native/expo"
+    ],
     "experiments": {
       "typedRoutes": true
     }

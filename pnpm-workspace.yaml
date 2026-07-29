@@ -12,6 +12,7 @@ nodeLinker: hoisted
 # Both are first-party build deps of tooling we already trust.
 allowBuilds:
   '@journeyapps/wa-sqlite': true
+  '@sentry/cli': true
   sharp: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
