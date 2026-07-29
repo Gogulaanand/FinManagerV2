@@ -42,6 +42,8 @@ export type {
 } from './tax/salary.js';
 
 export {
+  CUSTOM_CATEGORY_COLOR,
+  CUSTOM_CATEGORY_ICON,
   DEFAULT_CATEGORIES,
   canonicalImportHash,
   buildBudgetVsActual,
@@ -59,13 +61,17 @@ export {
   parseCsv,
   previewCsv,
   reduceKeypad,
+  isCategoryIconKey,
+  resolveCategoryPresentation,
   trendWindowStart,
+  withCustomCategoryPresentation,
 } from './expenses/index.js';
 export type {
   BudgetChartPoint,
   BudgetProgress,
   BudgetStatus,
   CategoryBreakdown,
+  CategoryPresentation,
   CsvDocument,
   CsvImportPreview,
   CsvPreviewError,
@@ -85,6 +91,7 @@ export {
 export type { HoldingTimelineEntry } from './portfolio-ux.js';
 export {
   assetClassForType,
+  assetClassPresentation,
   buildHoldingCashFlows,
   calculatePortfolioSummary,
   calculateXirr,
@@ -100,6 +107,7 @@ export {
 export type {
   AllocationRow,
   AssetClass,
+  AssetClassPresentation,
   EffectiveValue,
   HoldingCashFlow,
   HoldingXirr,

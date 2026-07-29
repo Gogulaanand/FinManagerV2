@@ -8,6 +8,7 @@ import {
   type FireProjection,
 } from '@finmanager/core';
 import { useStatus } from '@powersync/react';
+import { Compass, Flag, PiggyBank, Route, Sailboat, Target } from 'lucide-react';
 import { useState } from 'react';
 
 import { Amount } from '@/components/amount';
@@ -108,12 +109,17 @@ function GoalsWorkspaceContent() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="font-display text-headline-lg text-foreground">Goals &amp; FIRE</h1>
-        <p className="font-body text-body-md text-foreground-muted">
-          Inflation-adjusted targets, the SIP to close each gap, and your path to financial
-          independence.
-        </p>
+      <div className="flex items-start gap-3">
+        <span className="mt-1 inline-flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Target aria-hidden="true" size={21} />
+        </span>
+        <div>
+          <h1 className="font-display text-headline-lg text-foreground">Goals &amp; FIRE</h1>
+          <p className="font-body text-body-md text-foreground-muted">
+            Inflation-adjusted targets, the SIP to close each gap, and your path to financial
+            independence.
+          </p>
+        </div>
       </div>
 
       {!api.canWrite ? (
@@ -128,7 +134,10 @@ function GoalsWorkspaceContent() {
       {/* FIRE summary */}
       <div className="grid gap-3 md:grid-cols-4">
         <Card>
-          <CardLabel>FIRE number</CardLabel>
+          <CardLabel className="flex items-center gap-2">
+            <Flag aria-hidden="true" size={15} />
+            FIRE number
+          </CardLabel>
           <Amount value={fire.fireNumber} size="section" />
           <p className="mt-1 font-body text-caption text-foreground-muted">
             {fire.fireNumber > 0
@@ -137,7 +146,10 @@ function GoalsWorkspaceContent() {
           </p>
         </Card>
         <Card>
-          <CardLabel>Current corpus</CardLabel>
+          <CardLabel className="flex items-center gap-2">
+            <PiggyBank aria-hidden="true" size={15} />
+            Current corpus
+          </CardLabel>
           <Amount value={fire.currentCorpus} size="section" />
           <p className="mt-1 font-body text-caption text-foreground-muted">
             {fire.fireNumber > 0 ? `${formatPercent(fire.progress, 0)} of FIRE` : 'Net worth today'}
@@ -145,7 +157,10 @@ function GoalsWorkspaceContent() {
           <ProgressBar ratio={fire.progress} />
         </Card>
         <Card>
-          <CardLabel>Monthly savings</CardLabel>
+          <CardLabel className="flex items-center gap-2">
+            <Compass aria-hidden="true" size={15} />
+            Monthly savings
+          </CardLabel>
           <Amount value={api.monthlyContribution} size="section" />
           <p className="mt-1 font-body text-caption text-foreground-muted">
             {api.fireSettings.monthlyInvestment !== null
@@ -156,7 +171,10 @@ function GoalsWorkspaceContent() {
           </p>
         </Card>
         <Card>
-          <CardLabel>Coast FIRE</CardLabel>
+          <CardLabel className="flex items-center gap-2">
+            <Sailboat aria-hidden="true" size={15} />
+            Coast FIRE
+          </CardLabel>
           <Amount value={fire.coastNumber} size="section" />
           <p className="mt-1 font-body text-caption text-foreground-muted">
             {fire.coastAchieved ? 'Reached: growth alone can coast' : 'Corpus needed to coast'}
@@ -165,7 +183,10 @@ function GoalsWorkspaceContent() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Path to FIRE</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Route aria-hidden="true" size={18} className="text-primary" />
+            Path to FIRE
+          </CardTitle>
           <StatusPillFire projection={fire} />
         </CardHeader>
         <p className="font-body text-body-md text-foreground">{fireStatusLabel(fire)}</p>

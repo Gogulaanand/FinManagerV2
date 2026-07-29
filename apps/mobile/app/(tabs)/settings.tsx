@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { color } from '@finmanager/tokens';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card, CardLabel, CardTitle } from '../../components/card';
@@ -37,11 +37,17 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <View className="gap-4 p-4">
-        <Text className="font-display text-headline-lg text-foreground">Settings</Text>
+      <ScrollView contentContainerClassName="gap-4 p-4 pb-12">
+        <View className="flex-row items-center gap-3">
+          <View className="size-10 items-center justify-center rounded-full bg-primary/10">
+            <Ionicons name="settings" size={21} color={scheme.primary} />
+          </View>
+          <Text className="font-display text-headline-lg text-foreground">Settings</Text>
+        </View>
 
         <Card>
-          <View className="mb-3">
+          <View className="mb-3 flex-row items-center gap-2">
+            <Ionicons name="color-palette" size={18} color={scheme.primary} />
             <CardTitle>Appearance</CardTitle>
           </View>
 
@@ -82,7 +88,10 @@ export default function SettingsScreen() {
         </Card>
 
         <Card className="gap-3">
-          <CardTitle>Account</CardTitle>
+          <View className="flex-row items-center gap-2">
+            <Ionicons name="person-circle" size={19} color={scheme.primary} />
+            <CardTitle>Account</CardTitle>
+          </View>
           {session ? (
             <>
               <Text className="font-body text-body-md text-foreground" numberOfLines={1}>
@@ -113,7 +122,7 @@ export default function SettingsScreen() {
           )}
         </Card>
         <DeadmanSettings />
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

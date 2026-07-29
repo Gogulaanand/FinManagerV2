@@ -6,6 +6,7 @@
  */
 import type { Category, Transaction } from '@finmanager/schema';
 
+import { resolveCategoryPresentation } from '../expenses/categories.js';
 import { shiftMonth } from '../expenses/month.js';
 
 export interface RecentActivityRow {
@@ -13,6 +14,8 @@ export interface RecentActivityRow {
   /** Merchant when recorded, otherwise the note, otherwise a neutral fallback. */
   readonly label: string;
   readonly categoryLabel: string;
+  readonly categoryIcon: string;
+  readonly categoryColor: string;
   readonly occurredOn: string;
   /** Rupees, signed for display: negative is money out. */
   readonly amount: number;
@@ -33,19 +36,25 @@ export function selectRecentActivity(
   limit = 5,
 ): RecentActivityRow[] {
   if (limit <= 0) return [];
-  const labelById = new Map(categories.map((category) => [category.id, category.name]));
+  const categoryById = new Map(categories.map((category) => [category.id, category]));
   return [...transactions]
     .sort((a, b) => b.occurredOn.localeCompare(a.occurredOn))
     .slice(0, limit)
-    .map((transaction, index) => ({
-      id: transaction.id ?? `recent-${index}`,
-      label: transaction.merchant?.trim() || transaction.note?.trim() || 'Transaction',
-      categoryLabel:
-        (transaction.categoryId ? labelById.get(transaction.categoryId) : undefined) ??
-        UNCATEGORISED,
-      occurredOn: transaction.occurredOn,
-      amount: transaction.direction === 'debit' ? -transaction.amount : transaction.amount,
-    }));
+    .map((transaction, index) => {
+      const category = transaction.categoryId
+        ? categoryById.get(transaction.categoryId)
+        : undefined;
+      const presentation = resolveCategoryPresentation(category);
+      return {
+        id: transaction.id ?? `recent-${index}`,
+        label: transaction.merchant?.trim() || transaction.note?.trim() || 'Transaction',
+        categoryLabel: category?.name ?? UNCATEGORISED,
+        categoryIcon: presentation.icon,
+        categoryColor: presentation.color,
+        occurredOn: transaction.occurredOn,
+        amount: transaction.direction === 'debit' ? -transaction.amount : transaction.amount,
+      };
+    });
 }
 
 /**

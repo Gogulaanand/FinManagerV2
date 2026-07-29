@@ -1,6 +1,7 @@
 'use client';
 
 import { computeTax, formatInr, rulesFor } from '@finmanager/core';
+import { BadgeIndianRupee, BookmarkPlus, Calculator, Trash2, Upload } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { RegimeCard } from '@/components/tax/regime-card';
@@ -68,11 +69,16 @@ export function TaxCalculator() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-display-md text-foreground">Tax</h1>
-          <p className="font-body text-body-md text-foreground-muted">
-            Old vs new regime for a salaried individual. Everything is computed on your device.
-          </p>
+        <div className="flex items-start gap-3">
+          <span className="mt-1 inline-flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Calculator aria-hidden="true" size={21} />
+          </span>
+          <div>
+            <h1 className="font-display text-display-md text-foreground">Tax</h1>
+            <p className="font-body text-body-md text-foreground-muted">
+              Old vs new regime for a salaried individual. Everything is computed on your device.
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-1 rounded-lg bg-surface-muted p-1">
           <ModeTab
@@ -99,10 +105,17 @@ export function TaxCalculator() {
 
         <div className="flex flex-col gap-4">
           <Card className="bg-primary/5 ring-1 ring-primary/20">
-            <p className="font-body text-body-md text-foreground">
-              <span className="font-medium">{better}</span> leaves you better off by{' '}
-              <span className="font-medium">{formatInr(result.savings)}</span> a year
-              {result.savings === 0 && ' - the two regimes are identical here'}.
+            <p className="flex items-start gap-2 font-body text-body-md text-foreground">
+              <BadgeIndianRupee
+                aria-hidden="true"
+                size={19}
+                className="mt-0.5 shrink-0 text-primary"
+              />
+              <span>
+                <span className="font-medium">{better}</span> leaves you better off by{' '}
+                <span className="font-medium">{formatInr(result.savings)}</span> a year
+                {result.savings === 0 && ' - the two regimes are identical here'}.
+              </span>
             </p>
             <p className="mt-1 font-body text-caption text-foreground-muted">
               FY {result.fy} rules under the {result.statute}.
@@ -143,6 +156,7 @@ export function TaxCalculator() {
                 }}
               />
               <Button onClick={addScenario} disabled={!name.trim() || !canSave}>
+                <BookmarkPlus aria-hidden="true" size={16} />
                 Save
               </Button>
             </div>
@@ -186,6 +200,7 @@ export function TaxCalculator() {
                                 setInput(s.input);
                               }}
                             >
+                              <Upload aria-hidden="true" size={15} />
                               Load
                             </Button>
                             <Button
@@ -195,6 +210,7 @@ export function TaxCalculator() {
                                 void deleteScenario(s.id);
                               }}
                             >
+                              <Trash2 aria-hidden="true" size={15} />
                               Delete
                             </Button>
                           </td>

@@ -1,10 +1,12 @@
 'use client';
 
 import { type Transaction } from '@finmanager/schema';
+import { resolveCategoryPresentation } from '@finmanager/core';
 import { useState } from 'react';
 import { useStatus } from '@powersync/react';
 
 import { Amount } from '@/components/amount';
+import { CategoryIcon } from '@/components/category-icon';
 import { useInitialSkeleton, WorkspaceSkeleton } from '@/components/motion/skeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
@@ -115,6 +117,11 @@ function ExpensesWorkspaceContent() {
           <p className="font-body text-caption text-foreground-muted">Income minus spending</p>
         </Card>
       </div>
+      <ExpenseCharts
+        monthlyTrend={api.monthlyTrend}
+        categoryBreakdown={api.categoryBreakdown}
+        budgetChart={api.budgetChart}
+      />
       {showTransactionForm ? (
         <TransactionForm
           key={editing?.id ?? 'new'}
@@ -152,13 +159,19 @@ function ExpensesWorkspaceContent() {
                   key={transaction.id}
                   className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate font-body text-body-md text-foreground">
-                      {transaction.merchant || transaction.note || 'Transaction'}
-                    </p>
-                    <p className="font-body text-caption text-foreground-muted">
-                      {category?.name ?? 'Uncategorised'} · {transaction.occurredOn}
-                    </p>
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <CategoryIcon
+                      {...resolveCategoryPresentation(category)}
+                      label={`${category?.name ?? 'Uncategorised'} category`}
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate font-body text-body-md text-foreground">
+                        {transaction.merchant || transaction.note || 'Transaction'}
+                      </p>
+                      <p className="font-body text-caption text-foreground-muted">
+                        {category?.name ?? 'Uncategorised'} · {transaction.occurredOn}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Amount value={displayAmount(transaction)} signed />
@@ -211,11 +224,6 @@ function ExpensesWorkspaceContent() {
         progress={api.budgetProgress}
         onSave={api.saveBudget}
         onDelete={api.deleteBudget}
-      />
-      <ExpenseCharts
-        monthlyTrend={api.monthlyTrend}
-        categoryBreakdown={api.categoryBreakdown}
-        budgetChart={api.budgetChart}
       />
       <ExpenseSetup api={api} />
       <CsvImport

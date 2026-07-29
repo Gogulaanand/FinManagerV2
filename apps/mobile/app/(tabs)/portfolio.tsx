@@ -1,11 +1,21 @@
-import { effectiveHoldingValue, formatPercent, latestValuation } from '@finmanager/core';
+import {
+  assetClassForType,
+  assetClassPresentation,
+  effectiveHoldingValue,
+  formatPercent,
+  latestValuation,
+} from '@finmanager/core';
+import { color } from '@finmanager/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import { useStatus } from '@powersync/react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Amount } from '../../components/amount';
 import { Card, CardLabel, CardTitle } from '../../components/card';
+import { CategoryIcon } from '../../components/category-icon';
 import { Fab } from '../../components/fab';
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
 import { MobilePortfolioImport } from '../../components/portfolio/portfolio-import';
@@ -33,6 +43,8 @@ export default function PortfolioScreen() {
 }
 
 function PortfolioScreenContent() {
+  const { colorScheme } = useColorScheme();
+  const scheme = color[colorScheme === 'dark' ? 'dark' : 'light'];
   const api = usePortfolio();
   const initialSkeleton = useInitialSkeleton();
   const notice = useNotice();
@@ -46,12 +58,17 @@ function PortfolioScreenContent() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView contentContainerClassName="gap-4 p-4 pb-28">
-        <View className="flex-row items-end justify-between gap-3">
-          <View className="flex-1">
-            <Text className="font-display text-headline-lg text-foreground">Portfolio</Text>
-            <Text className="font-body text-body-md text-foreground-muted">
-              Value and return across every asset.
-            </Text>
+        <View className="flex-row items-center justify-between gap-3">
+          <View className="flex-1 flex-row items-start gap-3">
+            <View className="mt-1 size-10 items-center justify-center rounded-full bg-primary/10">
+              <Ionicons name="wallet" size={21} color={scheme.primary} />
+            </View>
+            <View className="flex-1">
+              <Text className="font-display text-headline-lg text-foreground">Portfolio</Text>
+              <Text className="font-body text-body-md text-foreground-muted">
+                Value and return across every asset.
+              </Text>
+            </View>
           </View>
           <Pressable
             accessibilityRole="button"
@@ -59,7 +76,10 @@ function PortfolioScreenContent() {
             onPress={() => void refresh()}
             className="rounded-md bg-surface-muted px-3 py-2 disabled:opacity-50"
           >
-            <Text className="text-foreground">Refresh</Text>
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="refresh" size={16} color={scheme.foreground} />
+              <Text className="text-foreground">Refresh</Text>
+            </View>
           </Pressable>
         </View>
         {!api.canWrite ? (
@@ -118,6 +138,10 @@ function PortfolioScreenContent() {
                   onPress={() => router.push(`/holding/${holding.id}` as Href)}
                   className="flex-row items-center gap-2 border-b border-border/60 pb-3"
                 >
+                  <CategoryIcon
+                    {...assetClassPresentation(assetClassForType(holding.type))}
+                    label={`${assetClassForType(holding.type).replace('_', ' ')} holding`}
+                  />
                   <View className="min-w-0 flex-1">
                     <Text numberOfLines={1} className="text-body-md text-foreground">
                       {holding.name}
@@ -140,13 +164,32 @@ function PortfolioScreenContent() {
         </Card>
         <Card>
           <CardTitle>Allocation</CardTitle>
-          <View className="mt-3 gap-2">
+          <View className="mt-3 gap-3">
             {api.summary.allocation.map((item) => (
-              <View key={item.assetClass} className="flex-row justify-between">
-                <Text className="text-foreground">{item.assetClass.replace('_', ' ')}</Text>
-                <Text className="text-foreground-muted">
-                  {formatPercent(item.percentage / 100, 1)}
-                </Text>
+              <View key={item.assetClass} className="flex-row items-center gap-3">
+                <CategoryIcon
+                  {...assetClassPresentation(item.assetClass)}
+                  label={assetClassPresentation(item.assetClass).label}
+                />
+                <View className="flex-1">
+                  <View className="flex-row justify-between">
+                    <Text className="text-foreground">
+                      {assetClassPresentation(item.assetClass).label}
+                    </Text>
+                    <Text className="text-foreground-muted">
+                      {formatPercent(item.percentage / 100, 1)}
+                    </Text>
+                  </View>
+                  <View className="mt-1 h-2 rounded-full bg-surface-muted">
+                    <View
+                      className="h-2 rounded-full"
+                      style={{
+                        width: `${Math.min(100, item.percentage)}%`,
+                        backgroundColor: assetClassPresentation(item.assetClass).color,
+                      }}
+                    />
+                  </View>
+                </View>
               </View>
             ))}
           </View>

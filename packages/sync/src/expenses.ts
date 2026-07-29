@@ -13,7 +13,12 @@ import {
   type CsvMappingSet,
   type Transaction,
 } from '@finmanager/schema';
-import { endOfMonthDate, expandOccurrences, type ExpandedOccurrence } from '@finmanager/core';
+import {
+  endOfMonthDate,
+  expandOccurrences,
+  withCustomCategoryPresentation,
+  type ExpandedOccurrence,
+} from '@finmanager/core';
 
 import { uuidv4 } from './ids';
 
@@ -224,23 +229,30 @@ export async function saveCategory(
   userId: string,
   category: Category,
 ): Promise<void> {
-  const isNew = !category.id;
   const id = idFor(category.id);
   const now = new Date().toISOString();
-  if (isNew) {
+  let exists = false;
+  if (category.id) {
+    const check = (await db.execute('SELECT id FROM categories WHERE id = ? LIMIT 1', [
+      category.id,
+    ])) as unknown as SqlResult;
+    exists = rowsOf(check).length > 0;
+  }
+  if (!exists) {
+    const savedCategory = withCustomCategoryPresentation(category);
     await db.execute(
       `INSERT INTO categories (id, user_id, name, kind, icon, color, parent_id, is_system, sort_order, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         userId,
-        category.name,
-        category.kind,
-        category.icon,
-        category.color,
-        category.parentId,
-        category.isSystem ? 1 : 0,
-        category.sortOrder,
+        savedCategory.name,
+        savedCategory.kind,
+        savedCategory.icon,
+        savedCategory.color,
+        savedCategory.parentId,
+        savedCategory.isSystem ? 1 : 0,
+        savedCategory.sortOrder,
         now,
         now,
       ],

@@ -1,6 +1,7 @@
 import type { Budget, Category, Transaction } from '@finmanager/schema';
 
 import { roundToPaise } from '../money.js';
+import { resolveCategoryPresentation } from './categories.js';
 
 export interface MonthlySummary {
   readonly debit: number;
@@ -12,6 +13,7 @@ export interface MonthlySummary {
 export interface CategoryBreakdown {
   readonly categoryId: string | null;
   readonly label: string;
+  readonly icon: string;
   readonly color: string;
   readonly amount: number;
   readonly percentage: number;
@@ -23,6 +25,7 @@ export interface BudgetProgress {
   readonly budgetId: string | null;
   readonly categoryId: string | null;
   readonly label: string;
+  readonly icon: string;
   readonly color: string;
   readonly budget: number;
   readonly actual: number;
@@ -42,6 +45,9 @@ export interface MonthlyTrendPoint {
 export interface BudgetChartPoint {
   readonly categoryId: string | null;
   readonly label: string;
+  readonly icon: string;
+  readonly color: string;
+  readonly status: BudgetStatus;
   readonly budget: number;
   readonly actual: number;
   readonly range: number;
@@ -107,11 +113,12 @@ export function calculateCategoryBreakdown(
   return [...amounts.entries()]
     .map(([categoryId, values]) => {
       const category = categoryId ? byId.get(categoryId) : undefined;
+      const presentation = resolveCategoryPresentation(category);
       const amount = sum(values);
       return {
         categoryId,
         label: category?.name ?? 'Uncategorised',
-        color: category?.color ?? '#64748b',
+        ...presentation,
         amount,
         percentage: total === 0 ? 0 : roundToPaise((amount / total) * 100),
       };
@@ -130,6 +137,7 @@ export function calculateBudgetProgress(
     .filter((budget) => budget.period === 'monthly' && monthOf(budget.periodStart) === month)
     .map((budget) => {
       const category = budget.categoryId ? byId.get(budget.categoryId) : undefined;
+      const presentation = resolveCategoryPresentation(category);
       const actual = sum(
         transactions
           .filter(
@@ -146,7 +154,7 @@ export function calculateBudgetProgress(
         budgetId: budget.id ?? null,
         categoryId: budget.categoryId,
         label: category?.name ?? 'Uncategorised',
-        color: category?.color ?? '#64748b',
+        ...presentation,
         budget: roundToPaise(budget.amount),
         actual,
         remaining: roundToPaise(budget.amount - actual),
@@ -175,6 +183,9 @@ export function buildBudgetVsActual(progress: readonly BudgetProgress[]): Budget
   return progress.map((item) => ({
     categoryId: item.categoryId,
     label: item.label,
+    icon: item.icon,
+    color: item.color,
+    status: item.status,
     budget: item.budget,
     actual: item.actual,
     range: Math.max(item.budget, item.actual),

@@ -1,5 +1,12 @@
-export { DEFAULT_CATEGORIES } from './categories.js';
-export type { DefaultCategory } from './categories.js';
+export {
+  CUSTOM_CATEGORY_COLOR,
+  CUSTOM_CATEGORY_ICON,
+  DEFAULT_CATEGORIES,
+  isCategoryIconKey,
+  resolveCategoryPresentation,
+  withCustomCategoryPresentation,
+} from './categories.js';
+export type { CategoryPresentation, DefaultCategory } from './categories.js';
 export {
   buildBudgetVsActual,
   buildMonthlyTrend,

@@ -202,6 +202,21 @@ Estimated effort: 1 session.
 
 Exit criteria: simulate inactivity in staging (shortened thresholds) and watch the full escalation chain fire correctly; briefing written.
 
+### Phase 8.5: Design Alignment
+
+Estimated effort: 1 focused session before Phase 9 resumes.
+
+- Use the existing Stitch project and Calm Teal design system to align dashboard/allocation,
+  expense analytics, AI Insights, and dead-man safety on mobile and desktop.
+- Keep shared app tokens and real offline-first data authoritative; add category/asset icons,
+  allocation, accessible chart inspection, saved/offline Insights states, and comprehensible
+  dead-man status without backend or delivery changes.
+- Add focused unit and cost-free Playwright coverage, compare light/dark implementations with the
+  selected concepts, and record device-only checks honestly.
+
+Exit criteria: full automated gate is green, selected Stitch screen IDs and implementation notes
+are recorded in `phases/briefing/phase-8.5.md`, and remaining real-device-only checks are explicit.
+
 ### Phase 9: Hardening + Release
 
 Estimated effort: 1-2 sessions.
@@ -229,7 +244,7 @@ Exit criteria: family members installed and using it; CI + deploys automated; th
 ### Re-prioritization (2026-07-19)
 
 After Phase 7, the owner re-ordered the remaining work; detailed plans live in `phases/plans/`.
-Order: correctness sweep (plan-improvements.md I1), then the two promoted UX items (plan-mobile-nav-and-month-picker.md: mobile add/edit modal routes, expenses month/year navigation), then Phase 8 (plan-phase8-deadman-switch.md), then Phase 9 (plan-phase9-hardening-release.md), then donations per plan-monetization.md.
+Order: correctness sweep (plan-improvements.md I1), then the two promoted UX items (plan-mobile-nav-and-month-picker.md: mobile add/edit modal routes, expenses month/year navigation), then Phase 8 (plan-phase8-deadman-switch.md), Phase 8.5 design alignment, Phase 9 (plan-phase9-hardening-release.md), then donations per plan-monetization.md.
 The Phase 8/9 sections above remain the scope of record; the plan docs refine them into session-sized sub-phases and carry the design decisions.
 
 Total: roughly 14-18 focused sessions.
