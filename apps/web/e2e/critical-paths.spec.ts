@@ -69,10 +69,16 @@ test('strict expense template deduplicates the second import', async ({ page }) 
 test('expense can be added, edited, and deleted through the offline-first UI', async ({ page }) => {
   const merchant = `E2E CRUD ${Date.now()}`;
   const updatedMerchant = `${merchant} updated`;
+  const transactionDate = new Date();
+  transactionDate.setUTCDate(1);
+  transactionDate.setUTCMonth(transactionDate.getUTCMonth() - 1);
+  const occurredOn = transactionDate.toISOString().slice(0, 10);
 
   await page.goto('/expenses');
+  await page.getByRole('button', { name: 'Previous month' }).click();
   await page.getByRole('button', { name: 'Add transaction' }).click();
   await page.getByLabel('Amount').fill('275');
+  await page.getByLabel('Date').fill(occurredOn);
   await page.getByLabel('Merchant').fill(merchant);
   await page.getByRole('button', { name: 'Save transaction' }).click();
   await expect(page.getByText(merchant)).toBeVisible();

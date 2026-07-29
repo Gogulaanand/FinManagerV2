@@ -48,10 +48,11 @@ test('custom and imported categories use the semantic fallback badge', async ({ 
   await page.getByLabel('Category name').fill(categoryName);
   await page.getByRole('button', { name: 'Add category' }).click();
 
-  await expect(page.getByLabel(`${categoryName} category`)).toBeVisible();
-  await expect(page.getByLabel('E2E Imported category category')).toBeVisible();
+  const categoriesSection = page.getByRole('heading', { name: 'Categories' }).locator('..');
+  await expect(categoriesSection.getByLabel(`${categoryName} category`)).toBeVisible();
+  await expect(categoriesSection.getByLabel('E2E Imported category category')).toBeVisible();
 
-  const customRow = page.getByLabel(`${categoryName} category`).locator('..');
+  const customRow = categoriesSection.getByLabel(`${categoryName} category`).locator('..');
   page.once('dialog', (dialog) => dialog.accept());
   await customRow.getByRole('button', { name: 'Delete' }).click();
   await expect(page.getByText(categoryName, { exact: true })).toHaveCount(0);
