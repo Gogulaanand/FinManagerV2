@@ -1,12 +1,15 @@
 # Phase 9 Briefing: Hardening + Release
 
-Status: Blocked as of 2026-07-26. Tracked implementation and local automated verification are
-complete; production and real-device exit criteria are not.
+Status: Blocked as of 2026-07-29. Phase 9 is rebased onto merged Phase 8.5 (`93c255b`), and the
+integrated implementation and local automated verification are complete. Fresh post-rebase
+GitHub/Vercel evidence, production integrations, and real-device exit criteria are not.
 
 ## Implemented
 
 - Deterministic, user-scoped Supabase seed; Playwright critical paths; local and preview CI
   workflows; Maestro navigation/expense flows.
+- The integrated seed preserves Phase 8.5 dashboard/design fixtures while keeping exactly 120
+  current-month transactions: 117 scale rows plus the design, legacy-category, and salary rows.
 - Versioned JSON backup covering all synced collections, module CSV exports, spreadsheet-formula
   neutralization, parsers, and round-trip tests. Web downloads and native share sheet are wired.
 - Strict `date,category,amount,type` expense template with Zod validation, row-numbered errors,
@@ -17,46 +20,47 @@ complete; production and real-device exit criteria are not.
 - Expo Go SQL.js fallback plus OP-SQLite/SQLCipher for custom builds, with a device-only random key
   in SecureStore. Mobile Google OAuth uses the Supabase redirect flow and keeps password fallback.
 - `cron_runs` durable outcome migration, independent `deadman-monitor`, and optional clean-run
-  external heartbeat. The table migration is applied remotely; the monitor schedule is intentionally
-  absent until its function and explicit Vault enable flag exist.
+  external heartbeat. The table migration and both functions are deployed remotely; the monitor
+  schedule is intentionally absent until explicit owner approval and its Vault enable flag exist.
 
 ## Automated evidence
 
-- Schema: 42 tests; core: 198; sync: 46; tokens: 27.
-- Full package/app builds, tests, ESLint, TypeScript, and repository formatting pass.
+- Schema: 42 tests; core: 205; sync: 49; tokens: 27 (323 total).
+- `CI=true pnpm turbo run build test lint typecheck` passes all 21 tasks after the rebase.
+  Repository formatting and `git diff --check` pass.
 - Next.js production build passes. Sentry correctly reports that release/source-map upload is
   skipped without its auth token.
-- `expo config --type public` validates. iOS and Android Metro/Hermes exports pass.
-- Vercel production is READY; public Supabase and PowerSync variables exist in Development,
-  Preview, and Production; no recent production runtime-error cluster was found.
-- The six GitHub E2E secrets are configured without storing credentials in the checkout. The
-  dedicated account `gogulaanand02+phase9e2e@gmail.com` was seeded successfully and the local
-  Chromium suite passed 7/7 in 28.4 seconds on 2026-07-26. This proves 121-row pagination, month
-  navigation, overspend, template dedup, expense CRUD, tax comparison, portfolio/goals fixtures,
-  and the cost-free AI 400/429 paths.
-- PR #4 is mergeable. CI run `30186516300` passes the complete repository gate and Playwright 7/7
-  without retries after adding explicit first-sync and category-control readiness; its Vercel
-  Preview deployment is READY.
-- Preview E2E run `30185662946` proves the remaining preview failure is explicit and external:
-  Vercel Authentication protects the URL and the project has no Automation Bypass secret mirrored
-  to GitHub as `VERCEL_AUTOMATION_BYPASS_SECRET`.
-- A read-only Supabase audit confirms `deadman-check` v10 is still the pre-Phase-9 implementation,
-  `deadman-monitor` is absent, only `deadman-daily` is scheduled, the monitor enable flag is absent
-  from Vault, and `cron_runs` has no rows.
+- iOS Metro/Hermes export passes with 3,112 modules and a 15 MB bundle. Android passes with 3,193
+  modules and a 16 MB bundle. These are JavaScript exports, not native builds.
+- Playwright collects 12 integrated tests across three files. The local shell intentionally has no
+  E2E credentials, so the deployed suite must run in GitHub after the rebased branch is pushed.
+- Seven GitHub E2E secrets are configured, including `VERCEL_AUTOMATION_BYPASS_SECRET` (last updated
+  2026-07-26), without storing their values in the checkout. Historical Preview E2E run
+  `30188066854` passed on pre-rebase commit `b020d01`; fresh integrated proof is still required.
+- Vercel production deployment `dpl_9vkdpiaMxLPBx3QoYRG4MuxbNVP3` is READY at commit `93c255b`.
+  Public Supabase and PowerSync variables exist in Development, Preview, and Production. No Sentry
+  variables are configured in the audited Vercel project.
+- Supabase migration `20260726015958` is applied. `ai-insights` v8, `deadman-check` v11, and
+  `deadman-monitor` v1 are ACTIVE with `verify_jwt=false`; this observed state is not a substitute
+  for the required owner approval. Only `deadman-daily` is scheduled. Its latest run at
+  `2026-07-29T03:00:04.225557+00:00` wrote `failed=0`, but no external heartbeat or monitor schedule
+  is configured.
+- EAS CLI reports `Not logged in`; no EAS build or real-device evidence exists.
 
 ## Required release evidence
 
-1. Push the phase branch and prove the GitHub/Vercel Preview Playwright jobs with the configured
-   secrets.
+1. Push the rebased phase branch and prove fresh GitHub CI and Vercel Preview jobs with all 12
+   Playwright tests.
 2. Configure Sentry org/project, web/native DSNs and auth token; deploy; trigger the protected
    intentional error and confirm the event and source map in Sentry.
-3. Complete Auth SMTP, enable leaked-password protection, perform a clean deployed signup, and add
-   `finmanager://auth/callback` to the Supabase redirect allow list; verify Google sign-in on a real
-   device.
-4. Explicitly approve retaining `verify_jwt=false` for `deadman-check` and `deadman-monitor`, whose
-   code authenticates requests itself; deploy both. Configure `DEADMAN_MONITOR_EMAIL` and
-   `DEADMAN_HEARTBEAT_URL`, set the `deadman_monitor_enabled=true` Vault flag, schedule the monitor,
-   invoke a clean cron run, and prove both `cron_runs` and the heartbeat.
+3. Complete Auth SMTP, perform a clean deployed signup, and add `finmanager://auth/callback` to the
+   Supabase redirect allow list; verify Google sign-in on a real device. Leaked-password protection
+   was explicitly waived on 2026-07-26 because it requires a paid Supabase plan.
+4. Explicitly approve retaining the already-deployed `verify_jwt=false` configuration for
+   `deadman-check` and `deadman-monitor`, whose code authenticates requests itself. Configure
+   `DEADMAN_MONITOR_EMAIL` and `DEADMAN_HEARTBEAT_URL`, set the
+   `deadman_monitor_enabled=true` Vault flag, schedule the monitor, and prove both a clean
+   `cron_runs` record and the external heartbeat.
 5. Log in to EAS, create/link the Expo project (do not invent a project ID), then build development,
    internal Android APK, and production iOS/TestFlight artifacts.
 6. On a real device: prove OP-SQLite persistence across relaunch, inspect SQLCipher encryption,
@@ -66,4 +70,5 @@ complete; production and real-device exit criteria are not.
    test account only after separate explicit owner approval.
 
 Phase 9 must remain Blocked until these external results exist. A successful JS export is not a
-native build, and implemented observability code is not a deployed heartbeat.
+native build, a clean cron row is not an external heartbeat, and deployed functions do not imply
+approval of their authentication posture.

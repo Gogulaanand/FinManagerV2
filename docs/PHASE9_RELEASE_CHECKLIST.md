@@ -7,20 +7,27 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 
 - [x] GitHub secrets exist: `NEXT_PUBLIC_SUPABASE_URL`,
       `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_POWERSYNC_URL`,
-      `SUPABASE_SECRET_KEY`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`.
+      `SUPABASE_SECRET_KEY`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`, and
+      `VERCEL_AUTOMATION_BYPASS_SECRET`.
 - [x] Local Playwright suite passes after `e2e:seed` (7/7 on 2026-07-26).
+- [x] The integrated post-rebase suite collects 12 tests across three files.
+- [ ] Run the integrated 12-test suite against its seeded deployment; the local shell intentionally
+      has no E2E credentials.
 - [x] PR CI run `30186516300` passes the repository gate and Playwright 7/7 without retries.
 - [x] Vercel Preview deployment for `f58445d` is READY.
-- [ ] Generate a Vercel Automation Bypass secret and copy it to GitHub as
-      `VERCEL_AUTOMATION_BYPASS_SECRET`; run `30185662946` proves the workflow fails fast with this
-      exact missing-secret diagnostic.
-- [ ] Vercel Preview deployment triggers `Preview E2E` and passes.
+- [x] Historical Preview E2E run `30188066854` passes with the Automation Bypass secret on
+      pre-rebase commit `b020d01`.
+- [ ] Fresh post-rebase GitHub CI and Vercel Preview E2E pass on the current PR head.
+- [x] Production deployment `dpl_9vkdpiaMxLPBx3QoYRG4MuxbNVP3` is READY at merged Phase 8.5 commit
+      `93c255b`.
 - [ ] Production deployment is READY and sign-in/data sync work.
-- [ ] Supabase Auth leaked-password protection is enabled.
+- [x] Supabase Auth leaked-password protection was reviewed and explicitly waived on 2026-07-26
+      because it requires a paid Supabase plan; it is not a Phase 9 release gate.
 - [ ] Clean-browser signup email is received and confirmation completes without SQL.
 
 ## Sentry
 
+- [x] Live Vercel environment audit confirms the audited project currently has no Sentry variables.
 - [ ] Web environments contain `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`,
       `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`, and
       `SENTRY_TEST_TOKEN`.
@@ -34,21 +41,26 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 - [x] `cron_runs` table exists remotely.
 - [x] `cron_runs` intentionally has RLS with no client policy; only the service role can access
       operational health rows.
-- [x] Remote audit confirms the current `deadman-check` v10 predates Phase 9,
-      `deadman-monitor` is absent, only `deadman-daily` is scheduled, and `cron_runs` is empty.
-- [ ] Deploy `deadman-check` and `deadman-monitor` with their in-code authentication and
-      platform `verify_jwt=false` explicitly approved.
+- [x] Remote audit confirms `deadman-check` v11 and `deadman-monitor` v1 are ACTIVE with
+      `verify_jwt=false`; only `deadman-daily` is scheduled.
+- [ ] Explicitly approve retaining the deployed functions' in-code authentication with platform
+      `verify_jwt=false`.
 - [ ] Edge Function secrets contain `CRON_SECRET`, `RESEND_API_KEY`,
       `RESEND_FROM_EMAIL`, `DEADMAN_MONITOR_EMAIL`, and `DEADMAN_HEARTBEAT_URL`.
-- [ ] Vault contains `deadman_supabase_url`, `deadman_cron_secret`, and the explicit
-      `deadman_monitor_enabled=true` flag before scheduling the monitor.
-- [ ] A clean daily invocation writes `failed=0` and reaches the external heartbeat.
+- [x] Vault contains `deadman_supabase_url` and `deadman_cron_secret`.
+- [ ] Vault contains the explicit `deadman_monitor_enabled=true` flag before scheduling the
+      monitor.
+- [x] The latest daily invocation at `2026-07-29T03:00:04.225557+00:00` wrote `failed=0`.
+- [ ] A clean daily invocation reaches the external heartbeat.
 - [ ] A controlled failed invocation causes the independent owner alert.
 - [ ] A missed heartbeat test alerts after the configured grace period.
 
 ## Native build and distribution
 
+- [x] Local iOS and Android Metro/Hermes exports pass (3,112/15 MB and 3,193/16 MB respectively);
+      these are not native builds.
 - [ ] EAS account is authenticated and `extra.eas.projectId` comes from the linked project.
+      Current CLI evidence: `Not logged in`.
 - [ ] Development build installed on an Android test device.
 - [ ] `native-offline-relaunch.yaml` passes and its expense later appears on web.
 - [ ] SQLCipher confirmed by inspecting the database header/file while the app is stopped.

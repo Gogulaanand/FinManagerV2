@@ -564,3 +564,15 @@ Supabase project can detect that the project, scheduler, or function did not run
 Consequence: the heartbeat URL is optional in code but mandatory for release. Heartbeat failures
 are logged without converting a clean escalation run into a failure; the provider detects the
 missed ping independently.
+
+## D-075: Phase 9 rebase uses one combined 120-row fixture (2026-07-29)
+
+After Phase 8.5 merged, Phase 9 was rebased onto `93c255b`. The integrated E2E seed uses 117 scale
+transactions, two Phase 8.5 design rows, and one salary row so the current-month count remains
+exactly 120 while both design and release assertions run against one user. The scale rows use their
+own semantic custom category so Food & Dining remains independently verifiable.
+Why: keeping separate or additive fixtures would either lose Phase 8.5 coverage or silently expand
+the Phase 9 pagination contract beyond 120 rows.
+Consequence: CI collects 12 Chromium tests across the three suites. Future seed changes must keep
+the count, design categories, allocation, saved Insights, dead-man preview, and cost-free AI states
+coherent.

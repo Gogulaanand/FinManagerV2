@@ -3,59 +3,57 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
-## Latest Handoff: 2026-07-26 (Phase 9 implementation complete; release gates blocked)
+## Latest Handoff: 2026-07-29 (Phase 9 integrated with merged Phase 8.5)
 
 ### Where we are
 
-Phase 9's tracked implementation is committed and pushed on `phase-9-hardening-release` in draft
-PR #4, based on current `origin/main` and headed by `f58445d`.
-It includes the deterministic web/mobile E2E harnesses, preview-deployment workflow, versioned
-JSON/module-CSV export, strict expense template import on both clients, web/native Sentry wiring,
-EAS profiles, mobile Google OAuth, SQLCipher-backed OP-SQLite outside Expo Go, and durable
-dead-man cron outcomes plus an independent monitor and optional external heartbeat.
+Phase 8.5 PR #5 is verified merged as `93c255b`. The paused Phase 9 branch was rebased onto that
+commit after stashing only `HANDOFF.md`, `docs/PHASE9_RELEASE_CHECKLIST.md`, and
+`phases/briefing/phase-9.md`; `.codegraph/` remained untracked and untouched. The two dashboard and
+default-category commits already represented by PR #3 were skipped, and the true Phase 9 commits
+were reconciled with the Phase 8.5 UI, data, and test contracts.
 
-Migration `phase9_cron_observability` is applied to Supabase `vkivzhbckfsjtvzatuiz`; the production
-Edge Function updates are not deployed because they require retaining `verify_jwt=false` for the
-functions' custom `x-cron-secret`/in-body auth, and the deployment guard requires explicit approval.
-The new `deadman-monitor-daily` schedule was removed after that deployment was blocked, so it cannot
-call a missing function. Recreate it only after deployment by setting the explicit
-`deadman_monitor_enabled=true` Vault flag and applying/scheduling the documented job.
-The 2026-07-26 remote audit confirms `deadman-check` v10 is still the pre-Phase-9 implementation,
-`deadman-monitor` is absent, only `deadman-daily` is active, `deadman_monitor_enabled` is absent
-from Vault, and `cron_runs` contains no evidence rows.
+The integrated seed retains exactly 120 current-month transactions: 117 scale rows, the Phase 8.5
+Food & Dining and legacy-category rows, and salary. It also retains allocation, goals/FIRE, saved
+Insights, exhausted allowance, and dead-man fixtures. The combined Playwright collection has 12
+tests across design alignment, critical paths, and cost-free AI validation.
 
 ### Verification state
 
-The repository package tests pass (schema 42, core 198, sync 46, tokens 27), app/package typechecks
-and ESLint pass, formatting is clean, the Next.js production build passes, and Expo bundles both
-iOS and Android. Expo public config validates. The linked Vercel deployment is READY and all three
-public environment variables exist across its environments.
+At `2026-07-29T17:59:44Z`, `CI=true pnpm turbo run build test lint typecheck` passes 21/21 outside
+the restricted process sandbox. Unit totals are tokens 27, schema 42, core 205, and sync 49 (323
+total). The web build copies both PowerSync workers before Next.js, then compiles all routes.
+`CI=true pnpm format:check` and `git diff --check` pass. iOS export bundles 3,112 modules into a
+15 MB Hermes bundle; Android bundles 3,193 modules into 16 MB. Expo/Sentry warn only that the Sentry
+org/project are absent.
 
-The six Supabase/E2E GitHub secrets are configured through secure pipes. The dedicated account
-`gogulaanand02+phase9e2e@gmail.com` seeds successfully and the local Chromium suite passes 7/7 in
-28.4 seconds, including the cost-free AI 400/429 paths. PR CI run `30186516300` passes both the full
-repository gate and Playwright 7/7 without retries after the suite was hardened for first-sync and
-category-control readiness. The latest Vercel Preview is READY, but direct access redirects to
-Vercel SSO. Preview E2E fails immediately with the intentional diagnostic that a project Automation
-Bypass secret must be copied to GitHub as
-`VERCEL_AUTOMATION_BYPASS_SECRET`. EAS still reports `Not logged in`. Sentry
-org/project/DSN/auth token are absent. There is no connected native device, so
-encrypted-at-rest inspection, offline relaunch/reconnect, Google login, Maestro, Android
-performance numbers, and family installs are not claimed.
+GitHub has all seven required repository secrets, including
+`VERCEL_AUTOMATION_BYPASS_SECRET` (updated `2026-07-26T04:02:33Z`). Historical pre-rebase Preview
+E2E run `30188066854` passed on `b020d01`; matching CI run `30188040958` had a failed critical-path
+job, so neither proves the integrated 12-test tree. Vercel production deployment
+`dpl_9vkdpiaMxLPBx3QoYRG4MuxbNVP3` for `93c255b` is READY, and all three public variables exist in
+Development, Preview, and Production. No Sentry variables exist.
+
+Supabase remote state is ahead of the old handoff: migration `20260726015958` is applied,
+`deadman-check` v11 and `deadman-monitor` v1 are ACTIVE with `verify_jwt=false`, and `cron_runs`
+contains three rows. The latest `deadman-daily` run at `2026-07-29T03:00:04.225557Z` records
+`failed=0`. Only `deadman-daily` is scheduled; Vault contains `deadman_supabase_url` and
+`deadman_cron_secret`, but not the monitor enable flag. This observed deployment is not recorded
+owner approval for retaining `verify_jwt=false`, and no heartbeat or monitor-alert evidence exists.
+EAS reports `Not logged in`.
 
 ### Exact next action
 
-Generate a Vercel Automation Bypass secret for `fin-manager-web` and copy it to the repository
-secret `VERCEL_AUTOMATION_BYPASS_SECRET`, then rerun Preview E2E. Next provide Expo and Sentry
-account access and explicitly approve retaining custom-auth `verify_jwt=false` when deploying
-`deadman-check` and `deadman-monitor`. Follow the ordered checklist in
-`phases/briefing/phase-9.md`. The Phase 3 test-account deletion still requires the plan's separate
-explicit owner approval.
+Commit the lockfile/document reconciliation, update the existing branch with
+`git push --force-with-lease`, and require both fresh PR #4 workflows plus the new Vercel Preview to
+pass. Then configure Sentry, authenticate/link EAS, record explicit owner approval for the already
+deployed custom-auth functions, and finish the monitor/heartbeat and physical-device gates. The
+Phase 3 test-account deletion and any paid Anthropic call remain approval-gated.
 
 ### Files in flight
 
-All Phase 9 source, workflow, migration, function, manifest/lockfile, and closeout-doc changes are
-committed and pushed in draft PR #4.
+The rebased source commits are local. The reconciled `pnpm-lock.yaml` and five release/status
+documents are in flight. `.codegraph/` is local-only and must not be staged.
 
 ### Open items / warnings
 
@@ -65,9 +63,9 @@ committed and pushed in draft PR #4.
 - A lost SecureStore database key requires clearing app data/reinstalling and re-syncing.
 - Do not enable platform JWT verification on custom-auth cron functions without also changing the
   scheduled request authentication; doing so would make every cron invocation fail at the gateway.
-- The Supabase security advisor reports leaked-password protection disabled; enable it as part of
-  Auth SMTP/signup release verification. Its `cron_runs` RLS-without-policy notice is intentional:
-  operational health rows are service-role only.
+- Supabase leaked-password protection was explicitly waived on 2026-07-26 because it requires a
+  paid plan; it is not a Phase 9 release gate. The `cron_runs` RLS-without-policy notice is
+  intentional: operational health rows are service-role only.
 
 ---
 
