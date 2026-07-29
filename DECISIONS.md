@@ -474,3 +474,49 @@ Consequence: an empty account renders zero and empty states; existing accounts r
 The existing `on_auth_user_created` trigger now creates the profile and one private set of 21 category rows in the same server-side signup flow. Client hooks never seed categories, and categories have no permanent template key or name uniqueness constraint: after provisioning they belong entirely to the user.
 Why: account provisioning is a database lifecycle event, not a screen-mount side effect. Users must remain free to rename, delete, or create similarly named categories.
 Consequence: migration `provision_default_categories_once` consolidates exact duplicate system categories per user/name/kind, repoints transaction, budget, and parent-category references, and does not backfill missing defaults for existing users because absence may represent an intentional deletion.
+
+## D-067: Calm Teal application tokens override generated design literals (2026-07-29)
+
+Phase 8.5 uses Stitch for layout and hierarchy exploration, not as a second design-token source.
+Manrope remains the display/amount face, Inter remains body text, cards retain the existing 12px
+rhythm, semantic light/dark colors stay authoritative, and positive values retain accessible
+`#047857`.
+Why: generated concepts are useful for composition, but copying literal values would fork the
+system and regress existing accessibility decisions.
+Consequence: selected Stitch screen IDs and intentional implementation differences are recorded in
+`phases/briefing/phase-8.5.md`; no bespoke brand logo or parallel token layer is introduced.
+
+## D-068: Category presentation fallback is semantic and non-migrating (2026-07-29)
+
+New custom categories persist icon `tag` and brand teal `#0F766E`. Existing rows with null or
+unknown icon/color values render through the same fallback in shared core; they are not remotely
+backfilled. The repository applies the fixed pair only on insert, so editing a legacy row does not
+silently rewrite stored presentation.
+Why: category identity is financial data, while a missing badge is a presentation concern. A
+database backfill would create unnecessary remote writes and could overwrite user-owned legacy
+choices.
+Consequence: web and mobile use platform-native icon components over the same persisted keys, and
+future Phase 9 import paths inherit the insert default through `saveCategory`.
+
+## D-069: Dashboard allocation and charts remain honest, inspectable projections (2026-07-29)
+
+Both dashboard adapters expose `portfolio.summary.allocation`; they never synthesize holdings or
+sample figures. Asset-class presentation is deterministic in shared core. Chart meaning is
+available through formatted axes, text legends and summaries, status words, and platform-native
+inspection: hover/focus tooltips on web and Victory press state plus visible selection text on
+mobile.
+Why: financial graphics that rely only on color or fabricated demonstration data are inaccessible
+and potentially misleading.
+Consequence: an account without valued holdings receives an explicit empty state, and Expo export
+alone cannot close the native tap/gesture verification gate.
+
+## D-070: Phase 8.5 changes safety and AI comprehension, not their contracts (2026-07-29)
+
+AI Insights retains authenticated Anthropic SSE, ephemeral chat, persisted monthly summaries,
+scope filtering, cancellation, and allowance enforcement. Dead-man settings retain PowerSync
+hydration, local unsaved-draft preview, Edge Function actions, disclosure semantics, activity
+cancellation, and the threshold +0/+7/+14/+21 escalation logic.
+Why: this phase exists to improve comprehension before release hardening, not to reopen deployed
+backend or delivery behavior.
+Consequence: there is no Phase 8.5 schema, Supabase, PowerSync, route, AI API, or dead-man API
+migration.

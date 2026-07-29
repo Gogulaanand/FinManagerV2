@@ -1,5 +1,5 @@
 import { AccountSchema, CategorySchema, type Account, type Transaction } from '@finmanager/schema';
-import { budgetRatio } from '@finmanager/core';
+import { CUSTOM_CATEGORY_COLOR, CUSTOM_CATEGORY_ICON, budgetRatio } from '@finmanager/core';
 import { useStatus } from '@powersync/react';
 import { router, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Amount } from '../../components/amount';
 import { Card, CardLabel, CardTitle } from '../../components/card';
+import { CategoryIcon } from '../../components/category-icon';
 import { MobileExpenseCharts } from '../../components/expenses/expense-charts';
 import { TransactionRow } from '../../components/expenses/transaction-row';
 import { MonthPickerSheet } from '../../components/expenses/month-picker-sheet';
@@ -66,7 +67,12 @@ function ExpensesScreenContent() {
     setAccountBalance('');
   }
   async function saveCategory() {
-    const parsed = CategorySchema.safeParse({ name: categoryName, kind: categoryKind });
+    const parsed = CategorySchema.safeParse({
+      name: categoryName,
+      kind: categoryKind,
+      icon: CUSTOM_CATEGORY_ICON,
+      color: CUSTOM_CATEGORY_COLOR,
+    });
     if (!parsed.success) return;
     await api.saveCategory(parsed.data);
     setCategoryName('');
@@ -126,6 +132,11 @@ function ExpensesScreenContent() {
           <Amount value={api.summary.net} size="tile" signed />
         </Card>
       </View>
+      <MobileExpenseCharts
+        monthlyTrend={api.monthlyTrend}
+        categoryBreakdown={api.categoryBreakdown}
+        budgetChart={api.budgetChart}
+      />
       <View className="flex-row items-center justify-between rounded-t-lg bg-surface px-4 pt-4">
         <CardTitle>Transactions</CardTitle>
         <Text className="font-body text-caption text-foreground-muted">
@@ -160,8 +171,22 @@ function ExpensesScreenContent() {
                 key={`${item.categoryId ?? 'uncategorised'}-${item.budgetId ?? item.label}`}
                 className="gap-1"
               >
-                <View className="flex-row justify-between">
-                  <Text className="text-foreground">{item.label}</Text>
+                <View className="flex-row items-center gap-3">
+                  <CategoryIcon
+                    icon={item.icon}
+                    color={item.color}
+                    label={`${item.label} category`}
+                  />
+                  <View className="min-w-0 flex-1">
+                    <Text className="text-foreground">{item.label}</Text>
+                    <Text className="text-caption text-foreground-muted">
+                      {item.status === 'overspent'
+                        ? 'Overspent'
+                        : item.status === 'nearLimit'
+                          ? 'Near limit'
+                          : 'On track'}
+                    </Text>
+                  </View>
                   <Text
                     className={item.status === 'overspent' ? 'text-loss' : 'text-foreground-muted'}
                   >
@@ -212,11 +237,6 @@ function ExpensesScreenContent() {
         setCategoryKind={(value) => setCategoryKind(value as 'expense' | 'income')}
         saveAccount={saveAccount}
         saveCategory={saveCategory}
-      />
-      <MobileExpenseCharts
-        monthlyTrend={api.monthlyTrend}
-        categoryBreakdown={api.categoryBreakdown}
-        budgetChart={api.budgetChart}
       />
     </View>
   );

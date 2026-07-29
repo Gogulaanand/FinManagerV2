@@ -3,6 +3,60 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
+## Latest Handoff: 2026-07-29 (Phase 8.5 design alignment)
+
+### Where we are
+
+Phase 8.5 is isolated on `phase-8.5-design-alignment`, created from refreshed `origin/main`. The
+paused Phase 9 checkout, its commits, and its three uncommitted documentation edits remain
+untouched. Stitch project `15700405983783543744` and Calm Teal system
+`10681403320511857968` were used to generate and select mobile/desktop concepts for dashboard,
+expense analytics, Insights, and dead-man safety; selected IDs are in
+`phases/briefing/phase-8.5.md`.
+
+Implementation now includes shared category fallback/persistence, Lucide/Ionicons mappings,
+dashboard allocation, web/mobile chart inspection parity, category badges, redesigned Insights and
+dead-man workspaces, and a purposeful icon pass through the remaining financial modules. Existing
+API, PowerSync, Anthropic SSE, local-preview, and delivery behavior is preserved.
+
+### Verification state
+
+The exact `CI=true pnpm turbo run build test lint typecheck` gate passes 21/21 with 317 unit tests.
+Formatting, `git diff --check`, the five-test Playwright collection, and Expo iOS export pass.
+Signed-out Chrome checks cover light/dark desktop plus 390px Dashboard, Insights, and Expenses with
+no console errors, overlay, or horizontal overflow. The pass caught and fixed the all-zero trend
+chart's misleading ₹0–₹4 axis.
+
+The dedicated account was seeded through the server-only fixture script, and
+`CI=true pnpm --filter @finmanager/web e2e` passes all five Chromium scenarios in 18.8 seconds.
+The admin key and generated password were subprocess-only; no credential was persisted or printed.
+AI/provider and dead-man delivery calls were intercepted, so no Anthropic request or email was sent.
+An authenticated iPhone 17 Pro Expo Go pass verified real-data Dashboard allocation, expense charts
+and legends, Insights keyboard avoidance, and hydrated dead-man settings/trusted contacts. It caught
+and fixed analytics being buried after the transaction list and a chart content-width error that
+clipped the final month. The local safety controls were inspected without using Test-send.
+Simulator mouse input did not activate Victory's press state, and Expo Go is not custom-build or
+physical-device proof. An iPad Pro 13-inch Expo Go pass also verified Dashboard, Expenses, Insights,
+and signed-out Settings at a large viewport in light/dark modes with no clipping or horizontal
+overflow.
+
+### Exact next action
+
+Finish the real-touch chart-tap/gesture check on a device or retain it explicitly as pending
+device-only evidence, as allowed by the phase plan. Then review and land this branch before rebasing
+Phase 9.
+
+### Open items / warnings
+
+- Phase 9 owns template-import UI in its paused branch. Phase 8.5 deliberately does not copy that
+  later feature backward; its shared `saveCategory` guard ensures both import clients inherit
+  `tag`/brand-teal defaults after the rebase.
+- No schema, migration, Edge Function, sync rule, Anthropic, or email delivery change belongs to
+  this phase.
+- Do not claim Expo export as real-device or gesture proof.
+
+---
+
 ## Latest Handoff: 2026-07-25 (Phase 8 raised as a PR)
 
 ### Where we are

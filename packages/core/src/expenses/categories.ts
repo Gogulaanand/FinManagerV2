@@ -1,4 +1,4 @@
-import type { CategoryKind } from '@finmanager/schema';
+import type { Category, CategoryKind } from '@finmanager/schema';
 
 export interface DefaultCategory {
   readonly key: string;
@@ -179,3 +179,51 @@ export const DEFAULT_CATEGORIES: readonly DefaultCategory[] = [
     sortOrder: 260,
   },
 ];
+
+/** Fixed presentation for user-created and legacy categories. */
+export const CUSTOM_CATEGORY_ICON = 'tag';
+export const CUSTOM_CATEGORY_COLOR = '#0F766E';
+
+const CATEGORY_ICON_KEYS = new Set([
+  ...DEFAULT_CATEGORIES.map((category) => category.icon),
+  CUSTOM_CATEGORY_ICON,
+]);
+
+export interface CategoryPresentation {
+  readonly icon: string;
+  readonly color: string;
+}
+
+export function isCategoryIconKey(value: string | null | undefined): value is string {
+  return typeof value === 'string' && CATEGORY_ICON_KEYS.has(value);
+}
+
+function categoryColor(value: string | null | undefined): string {
+  const trimmed = value?.trim();
+  return trimmed && /^#[\da-f]{6}$/i.test(trimmed) ? trimmed : CUSTOM_CATEGORY_COLOR;
+}
+
+/**
+ * Makes nullable or stale category presentation safe without mutating stored rows.
+ *
+ * Unknown icon keys intentionally resolve to the same semantic custom-category
+ * badge as null values, so clients never need a remote backfill.
+ */
+export function resolveCategoryPresentation(
+  category: Pick<Category, 'icon' | 'color'> | null | undefined,
+): CategoryPresentation {
+  return {
+    icon: isCategoryIconKey(category?.icon) ? category.icon : CUSTOM_CATEGORY_ICON,
+    color: categoryColor(category?.color),
+  };
+}
+
+/** Applies the fixed presentation to a custom category before it is inserted. */
+export function withCustomCategoryPresentation(category: Category): Category {
+  if (category.isSystem) return category;
+  return {
+    ...category,
+    icon: CUSTOM_CATEGORY_ICON,
+    color: CUSTOM_CATEGORY_COLOR,
+  };
+}

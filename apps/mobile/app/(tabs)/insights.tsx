@@ -1,13 +1,21 @@
 import type { ChatMessage, InsightScope } from '@finmanager/schema';
 import { color } from '@finmanager/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { useStatus } from '@powersync/react';
 import { useColorScheme } from 'nativewind';
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card, CardLabel, CardTitle } from '../../components/card';
-import { Choice } from '../../components/choice';
 import {
   ChatMessageBubble,
   InsightAction,
@@ -17,13 +25,17 @@ import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/mo
 import { useAuth } from '../../components/providers';
 import { useInsights } from '../../lib/insights';
 
-const scopes: readonly { value: InsightScope; label: string }[] = [
-  { value: 'everything', label: 'Everything' },
-  { value: 'expenses', label: 'Expenses' },
-  { value: 'budget', label: 'Budget' },
-  { value: 'portfolio', label: 'Portfolio' },
-  { value: 'goals', label: 'Goals' },
-  { value: 'tax', label: 'Tax' },
+const scopes: readonly {
+  value: InsightScope;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { value: 'everything', label: 'Everything', icon: 'sparkles' },
+  { value: 'expenses', label: 'Expenses', icon: 'receipt' },
+  { value: 'budget', label: 'Budget', icon: 'wallet' },
+  { value: 'portfolio', label: 'Portfolio', icon: 'pie-chart' },
+  { value: 'goals', label: 'Goals', icon: 'flag' },
+  { value: 'tax', label: 'Tax', icon: 'business' },
 ];
 
 const prompts: Readonly<Record<InsightScope, readonly string[]>> = {
@@ -110,17 +122,29 @@ function InsightsContent() {
           contentContainerClassName="gap-4 p-4"
           keyboardShouldPersistTaps="handled"
         >
-          <View>
-            <Text className="font-display text-headline-lg text-foreground">AI Insights</Text>
-            <Text className="font-body text-body-md text-foreground-muted">
-              Grounded answers from the financial data on this device.
-            </Text>
+          <View className="flex-row items-start gap-3">
+            <View className="mt-1 size-10 items-center justify-center rounded-full bg-primary/10">
+              <Ionicons name="sparkles" size={21} color={scheme.primary} />
+            </View>
+            <View className="flex-1">
+              <Text className="font-display text-headline-lg text-foreground">AI Insights</Text>
+              <Text className="font-body text-body-md text-foreground-muted">
+                A private assistant grounded in the financial data on this device.
+              </Text>
+            </View>
           </View>
 
           {api.latestSummary ? (
             <Card>
-              <CardLabel>Saved for offline</CardLabel>
-              <CardTitle>Monthly financial health</CardTitle>
+              <View className="flex-row items-center gap-3">
+                <View className="size-9 items-center justify-center rounded-full bg-primary/10">
+                  <Ionicons name="briefcase" size={18} color={scheme.primary} />
+                </View>
+                <View className="flex-1">
+                  <CardLabel>Saved for offline</CardLabel>
+                  <CardTitle>Monthly financial health</CardTitle>
+                </View>
+              </View>
               <Text className="mt-3 font-body text-body-md text-foreground">
                 {api.latestSummary.content}
               </Text>
@@ -131,27 +155,82 @@ function InsightsContent() {
           ) : null}
 
           {!api.canChat ? (
-            <Card>
-              <CardTitle>Chat is offline</CardTitle>
-              <Text className="mt-2 font-body text-body-md text-foreground-muted">
-                Connect to ask a question. Your saved monthly summary remains available.
-              </Text>
+            <Card className="flex-row gap-3">
+              <Ionicons name="cloud-offline" size={21} color={scheme.foregroundMuted} />
+              <View className="flex-1">
+                <CardTitle>Chat is offline</CardTitle>
+                <Text className="mt-1 font-body text-body-md text-foreground-muted">
+                  Connect to ask a question. Your saved monthly summary remains available.
+                </Text>
+              </View>
             </Card>
           ) : null}
 
           {error ? (
             <Card>
-              <CardTitle>
-                {error.code === 'budget_exceeded' ? 'Monthly allowance used' : 'Could not answer'}
-              </CardTitle>
-              <Text className="mt-2 font-body text-body-md text-foreground-muted">
-                {error.message}
-              </Text>
+              <View className="flex-row gap-3" accessibilityLiveRegion="polite">
+                <Ionicons
+                  name={error.code === 'budget_exceeded' ? 'information-circle' : 'warning'}
+                  size={22}
+                  color={error.code === 'budget_exceeded' ? scheme.primary : scheme.loss}
+                />
+                <View className="flex-1">
+                  <CardTitle>
+                    {error.code === 'budget_exceeded'
+                      ? 'Monthly allowance used'
+                      : 'Could not answer'}
+                  </CardTitle>
+                  <Text className="mt-1 font-body text-body-md text-foreground-muted">
+                    {error.message}
+                  </Text>
+                </View>
+              </View>
             </Card>
           ) : null}
 
-          <Card className="gap-4">
-            <Choice label="Focus area" value={scope} options={scopes} onChange={setScope} />
+          <Card className="gap-3">
+            <CardLabel>Focus area</CardLabel>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName="gap-2"
+            >
+              {scopes.map((option) => {
+                const selected = scope === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`${option.label} focus`}
+                    onPress={() => setScope(option.value)}
+                    className={`min-w-24 items-center gap-1 rounded-md border px-3 py-3 ${
+                      selected ? 'border-primary bg-primary/10' : 'border-border bg-background'
+                    }`}
+                  >
+                    <Ionicons
+                      name={option.icon}
+                      size={18}
+                      color={selected ? scheme.primary : scheme.foregroundMuted}
+                    />
+                    <Text
+                      className={`font-body text-label ${
+                        selected ? 'text-primary' : 'text-foreground'
+                      }`}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </Card>
+
+          <Card className="gap-3">
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="bulb" size={17} color={scheme.primary} />
+              <CardLabel>Suggested questions</CardLabel>
+            </View>
             <View className="flex-row flex-wrap gap-2">
               {prompts[scope].map((prompt) => (
                 <PromptChip
@@ -162,11 +241,46 @@ function InsightsContent() {
                 />
               ))}
             </View>
+          </Card>
+
+          <Card className="gap-4">
+            <View className="flex-row items-center justify-between">
+              <View>
+                <CardTitle>Conversation</CardTitle>
+                <CardLabel>Ephemeral · cleared after this session</CardLabel>
+              </View>
+              <View
+                className={`flex-row items-center gap-1 rounded-full px-3 py-1 ${
+                  api.canChat ? 'bg-primary/10' : 'bg-surface-muted'
+                }`}
+              >
+                <Ionicons
+                  name={api.canChat ? 'sparkles' : 'cloud-offline'}
+                  size={13}
+                  color={api.canChat ? scheme.primary : scheme.foregroundMuted}
+                />
+                <Text
+                  className={`font-body text-caption ${
+                    api.canChat ? 'text-primary' : 'text-foreground-muted'
+                  }`}
+                >
+                  {api.canChat ? 'Ready' : 'Offline'}
+                </Text>
+              </View>
+            </View>
             <View className="min-h-56 gap-3" accessibilityLiveRegion="polite">
               {messages.length === 0 ? (
-                <Text className="font-body text-body-md text-foreground-muted">
-                  Chat is ephemeral and clears when this session ends.
-                </Text>
+                <View className="items-center py-10">
+                  <View className="mb-3 size-12 items-center justify-center rounded-full bg-primary/10">
+                    <Ionicons name="chatbubbles" size={22} color={scheme.primary} />
+                  </View>
+                  <Text className="text-center font-display text-headline-sm text-foreground">
+                    What would you like to understand?
+                  </Text>
+                  <Text className="mt-2 text-center font-body text-body-md text-foreground-muted">
+                    Ask in your own words or begin with a suggested question.
+                  </Text>
+                </View>
               ) : (
                 messages.map((message, index) => (
                   <ChatMessageBubble
@@ -185,10 +299,12 @@ function InsightsContent() {
           <TextInput
             value={question}
             onChangeText={setQuestion}
-            placeholder="Ask about your finances"
+            placeholder={api.canChat ? 'Ask about your finances' : 'Connect to ask'}
             placeholderTextColor={scheme.foregroundMuted}
             editable={api.canChat && !sending}
             onSubmitEditing={() => void ask(question)}
+            returnKeyType="send"
+            accessibilityLabel="Ask AI Insights"
             className="min-h-11 flex-1 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
           />
           <InsightAction

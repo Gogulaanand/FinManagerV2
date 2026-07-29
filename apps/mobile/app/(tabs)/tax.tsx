@@ -1,5 +1,8 @@
 import type { AgeBand, CityClass } from '@finmanager/core';
 import { AVAILABLE_FYS, computeTax, formatInr, rulesFor } from '@finmanager/core';
+import { color } from '@finmanager/tokens';
+import { Ionicons } from '@expo/vector-icons';
+import { useColorScheme } from 'nativewind';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,6 +31,8 @@ const MODE_OPTIONS = [
 ];
 
 export default function TaxScreen() {
+  const { colorScheme } = useColorScheme();
+  const scheme = color[colorScheme === 'dark' ? 'dark' : 'light'];
   const [mode, setMode] = useState<'easy' | 'advanced'>('easy');
   const [input, setInput] = useState<ScenarioInput>(DEFAULT_SCENARIO_INPUT);
   const [name, setName] = useState('');
@@ -60,11 +65,16 @@ export default function TaxScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View>
-          <Text className="font-display text-headline-lg text-foreground">Tax</Text>
-          <Text className="font-body text-body-md text-foreground-muted">
-            Old vs new regime. Computed on your device.
-          </Text>
+        <View className="flex-row items-start gap-3">
+          <View className="mt-1 size-10 items-center justify-center rounded-full bg-primary/10">
+            <Ionicons name="calculator" size={21} color={scheme.primary} />
+          </View>
+          <View className="flex-1">
+            <Text className="font-display text-headline-lg text-foreground">Tax</Text>
+            <Text className="font-body text-body-md text-foreground-muted">
+              Old vs new regime. Computed on your device.
+            </Text>
+          </View>
         </View>
 
         <Segmented label="Mode" value={mode} options={MODE_OPTIONS} onChange={setMode} />
@@ -111,14 +121,17 @@ export default function TaxScreen() {
         {mode === 'advanced' ? <TaxAdvancedForm input={input} caps={caps} onChange={set} /> : null}
 
         <Card className="border border-primary">
-          <Text className="font-body text-body-md text-foreground">
-            <Text className="font-body text-body-md font-medium text-foreground">{better}</Text>{' '}
-            leaves you better off by{' '}
-            <Text className="font-body text-body-md font-medium text-foreground">
-              {formatInr(result.savings)}
-            </Text>{' '}
-            a year.
-          </Text>
+          <View className="flex-row items-start gap-2">
+            <Ionicons name="cash" size={19} color={scheme.primary} />
+            <Text className="flex-1 font-body text-body-md text-foreground">
+              <Text className="font-body text-body-md font-medium text-foreground">{better}</Text>{' '}
+              leaves you better off by{' '}
+              <Text className="font-body text-body-md font-medium text-foreground">
+                {formatInr(result.savings)}
+              </Text>{' '}
+              a year.
+            </Text>
+          </View>
           <Text className="mt-1 font-body text-caption text-foreground-muted">
             FY {result.fy} rules under the {result.statute}.
           </Text>
@@ -140,7 +153,10 @@ export default function TaxScreen() {
         </View>
 
         <Card className="gap-3">
-          <CardTitle>Scenarios</CardTitle>
+          <View className="flex-row items-center gap-2">
+            <Ionicons name="bookmark" size={18} color={scheme.primary} />
+            <CardTitle>Scenarios</CardTitle>
+          </View>
           <Text className="font-body text-caption text-foreground-muted">
             {canSave
               ? 'Saved to your account and synced across your devices. They work offline.'

@@ -1,7 +1,9 @@
 import type { Account, Category } from '@finmanager/schema';
+import { resolveCategoryPresentation } from '@finmanager/core';
 import { Alert, Pressable, Text, TextInput, View } from 'react-native';
 
 import { Card } from '../card';
+import { CategoryIcon } from '../category-icon';
 import { Collapsible } from '../collapsible';
 import { Field, Segmented } from '../field';
 import type { ExpensesApi } from '../../lib/expenses';
@@ -157,9 +159,13 @@ export function ExpenseSetupSections({
           {api.categories.map((category) => (
             <View
               key={category.id}
-              className="flex-row items-center justify-between border-t border-border/60 pt-2"
+              className="flex-row items-center gap-3 border-t border-border/60 pt-2"
             >
-              <View>
+              <CategoryIcon
+                {...resolveCategoryPresentation(category)}
+                label={`${category.name} category`}
+              />
+              <View className="min-w-0 flex-1">
                 <Text className="text-foreground">{category.name}</Text>
                 <Text className="text-caption text-foreground-muted">{category.kind}</Text>
               </View>

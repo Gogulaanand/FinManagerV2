@@ -111,6 +111,7 @@ describe('expense analytics', () => {
       {
         categoryId: 'food',
         label: 'Food & Dining',
+        icon: 'utensils',
         color: '#f97316',
         amount: 100,
         percentage: 100,
@@ -122,7 +123,16 @@ describe('expense analytics', () => {
         calculateBudgetProgress([budget()], transactions, categories, '2026-07')[0]!,
       ]),
     ).toEqual([
-      { categoryId: 'food', label: 'Food & Dining', budget: 100, actual: 100, range: 100 },
+      {
+        categoryId: 'food',
+        label: 'Food & Dining',
+        icon: 'utensils',
+        color: '#f97316',
+        status: 'overspent',
+        budget: 100,
+        actual: 100,
+        range: 100,
+      },
     ]);
   });
 
@@ -133,7 +143,26 @@ describe('expense analytics', () => {
       '2026-07',
     );
     expect(breakdown).toMatchObject([
-      { categoryId: null, label: 'Uncategorised', amount: 75, percentage: 100 },
+      {
+        categoryId: null,
+        label: 'Uncategorised',
+        icon: 'tag',
+        color: '#0F766E',
+        amount: 75,
+        percentage: 100,
+      },
     ]);
+  });
+
+  it('propagates category badges and safely falls back for legacy categories', () => {
+    const legacy = { ...categories[0]!, icon: 'unknown', color: null } as Category;
+    expect(calculateCategoryBreakdown([tx()], [legacy], '2026-07')[0]).toMatchObject({
+      icon: 'tag',
+      color: '#0F766E',
+    });
+    expect(calculateBudgetProgress([budget()], [tx()], [legacy], '2026-07')[0]).toMatchObject({
+      icon: 'tag',
+      color: '#0F766E',
+    });
   });
 });

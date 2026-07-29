@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Amount, Delta } from '../../components/amount';
 import { Card, CardLabel, CardTitle } from '../../components/card';
+import { CategoryIcon } from '../../components/category-icon';
+import { AssetAllocationCard } from '../../components/dashboard/asset-allocation-card';
 import { MotionProgress } from '../../components/motion';
 import { FinancialHealthCard } from '../../components/insights/financial-health-card';
 import { useDashboard } from '../../lib/dashboard';
@@ -49,6 +51,7 @@ export default function DashboardScreen() {
     monthSpendChange,
     fire,
     recentActivity,
+    allocation,
   } = useDashboard();
 
   return (
@@ -78,6 +81,8 @@ export default function DashboardScreen() {
           <StatTile label="This month spend" value={monthSpend} delta={monthSpendChange} />
           <StatTile label="Invested" value={invested} />
         </View>
+
+        <AssetAllocationCard allocation={allocation} />
 
         {fire && (
           <Card>
@@ -133,6 +138,11 @@ export default function DashboardScreen() {
                   index < recentActivity.length - 1 ? 'border-b border-border' : 'pb-0'
                 }`}
               >
+                <CategoryIcon
+                  icon={row.categoryIcon}
+                  color={row.categoryColor}
+                  label={`${row.categoryLabel} category`}
+                />
                 <View className="min-w-0 flex-1 gap-0.5">
                   <Text className="font-body text-body-md text-foreground" numberOfLines={1}>
                     {row.label}

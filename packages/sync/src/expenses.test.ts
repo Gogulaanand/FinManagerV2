@@ -1,9 +1,14 @@
 import type { AbstractPowerSyncDatabase } from '@powersync/common';
 import { describe, expect, it } from 'vitest';
 
-import type { Transaction } from '@finmanager/schema';
+import type { Category, Transaction } from '@finmanager/schema';
 
-import { commitCsvImport, materializeRecurringTransactions, saveTransaction } from './expenses';
+import {
+  commitCsvImport,
+  materializeRecurringTransactions,
+  saveCategory,
+  saveTransaction,
+} from './expenses';
 
 interface Statement {
   readonly sql: string;
@@ -37,6 +42,7 @@ function transaction(overrides: Partial<Transaction> = {}): Transaction {
 function fakeDb(
   options: {
     readonly updateRowsAffected?: number;
+    readonly existingCategoryIds?: readonly string[];
     readonly existingTransactionIds?: readonly string[];
     readonly existingOccurrenceKeys?: readonly string[];
     readonly existingImportHashes?: readonly string[];
@@ -64,6 +70,14 @@ function fakeDb(
           rowsAffected: 0,
         };
       }
+      if (sql.startsWith('SELECT id FROM categories WHERE id')) {
+        return {
+          rows: (options.existingCategoryIds ?? []).includes(String(params[0]))
+            ? [{ id: String(params[0]) }]
+            : [],
+          rowsAffected: 0,
+        };
+      }
       if (sql.startsWith('SELECT id FROM transactions')) {
         return {
           rows: (options.existingImportHashes ?? []).includes(String(params[1]))
@@ -79,6 +93,70 @@ function fakeDb(
 }
 
 describe('expense repositories', () => {
+  it('persists fixed presentation for a newly created custom category', async () => {
+    const db = fakeDb();
+    await saveCategory(db, '22222222-2222-4222-8222-222222222222', {
+      userId: '22222222-2222-4222-8222-222222222222',
+      name: 'Pet care',
+      kind: 'expense',
+      icon: null,
+      color: null,
+      parentId: null,
+      isSystem: false,
+      sortOrder: 999,
+    } as Category);
+    const insert = db.statements.find((statement) =>
+      statement.sql.startsWith('INSERT INTO categories'),
+    );
+    expect(insert?.params.slice(2, 6)).toEqual(['Pet care', 'expense', 'tag', '#0F766E']);
+  });
+
+  it('inserts a custom category with a preassigned import id and fixed presentation', async () => {
+    const db = fakeDb();
+    await saveCategory(db, '22222222-2222-4222-8222-222222222222', {
+      id: '66666666-6666-4666-8666-666666666666',
+      userId: '22222222-2222-4222-8222-222222222222',
+      name: 'Imported',
+      kind: 'expense',
+      icon: null,
+      color: null,
+      parentId: null,
+      isSystem: false,
+      sortOrder: 999,
+    } as Category);
+    expect(db.statements[0]?.sql).toMatch(/^SELECT id FROM categories/);
+    const insert = db.statements.find((statement) =>
+      statement.sql.startsWith('INSERT INTO categories'),
+    );
+    expect(insert?.params.slice(0, 6)).toEqual([
+      '66666666-6666-4666-8666-666666666666',
+      '22222222-2222-4222-8222-222222222222',
+      'Imported',
+      'expense',
+      'tag',
+      '#0F766E',
+    ]);
+  });
+
+  it('does not rewrite presentation while editing a legacy custom category', async () => {
+    const categoryId = '55555555-5555-4555-8555-555555555555';
+    const db = fakeDb({ existingCategoryIds: [categoryId] });
+    await saveCategory(db, '22222222-2222-4222-8222-222222222222', {
+      id: categoryId,
+      userId: '22222222-2222-4222-8222-222222222222',
+      name: 'Legacy',
+      kind: 'expense',
+      icon: null,
+      color: null,
+      parentId: null,
+      isSystem: false,
+      sortOrder: 999,
+    } as Category);
+    expect(db.statements[0]?.sql).toMatch(/^SELECT id FROM categories/);
+    expect(db.statements[1]?.sql).toMatch(/^UPDATE categories/);
+    expect(db.statements[1]?.params.slice(0, 4)).toEqual(['Legacy', 'expense', null, null]);
+  });
+
   it('checks existence then updates an existing row without inserting', async () => {
     const txId = '11111111-1111-4111-8111-111111111111';
     const db = fakeDb({ existingTransactionIds: [txId] });

@@ -1,9 +1,15 @@
 'use client';
 
 import { AccountSchema, CategorySchema, type Account, type Category } from '@finmanager/schema';
+import {
+  CUSTOM_CATEGORY_COLOR,
+  CUSTOM_CATEGORY_ICON,
+  resolveCategoryPresentation,
+} from '@finmanager/core';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { CategoryIcon } from '@/components/category-icon';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Field, Input, SelectField } from '@/components/ui/input';
 import type { ExpensesApi } from '@/lib/expenses';
@@ -38,7 +44,12 @@ export function ExpenseSetup({ api }: { readonly api: ExpensesApi }): React.JSX.
   }
 
   async function saveCategory() {
-    const parsed = CategorySchema.safeParse({ name: categoryName, kind: categoryKind });
+    const parsed = CategorySchema.safeParse({
+      name: categoryName,
+      kind: categoryKind,
+      icon: CUSTOM_CATEGORY_ICON,
+      color: CUSTOM_CATEGORY_COLOR,
+    });
     if (!parsed.success) return;
     await api.saveCategory(parsed.data);
     setCategoryName('');
@@ -142,9 +153,15 @@ export function ExpenseSetup({ api }: { readonly api: ExpensesApi }): React.JSX.
           {api.categories.slice(0, 8).map((category) => (
             <div
               key={category.id}
-              className="flex items-center justify-between border-t border-border/60 pt-2"
+              className="flex items-center gap-3 border-t border-border/60 pt-2"
             >
-              <span className="font-body text-body-md text-foreground">{category.name}</span>
+              <CategoryIcon
+                {...resolveCategoryPresentation(category)}
+                label={`${category.name} category`}
+              />
+              <span className="min-w-0 flex-1 font-body text-body-md text-foreground">
+                {category.name}
+              </span>
               <span className="font-body text-caption text-foreground-muted">{category.kind}</span>
               {!category.isSystem ? (
                 <Button

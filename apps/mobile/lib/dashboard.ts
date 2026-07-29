@@ -6,6 +6,7 @@
  * month's spend is the number Expenses shows.
  */
 import { selectRecentActivity, spendChangeRatio, type RecentActivityRow } from '@finmanager/core';
+import type { AllocationRow } from '@finmanager/core';
 import { useMemo } from 'react';
 
 import { useExpenses } from './expenses';
@@ -27,6 +28,7 @@ export interface DashboardApi {
     readonly target: number;
   } | null;
   readonly recentActivity: readonly RecentActivityRow[];
+  readonly allocation: readonly AllocationRow[];
 }
 
 export function useDashboard(): DashboardApi {
@@ -62,5 +64,6 @@ export function useDashboard(): DashboardApi {
     monthSpendChange: spendChangeRatio(expenses.monthlyTrend, expenses.month),
     fire,
     recentActivity,
+    allocation: portfolio.summary.allocation,
   };
 }

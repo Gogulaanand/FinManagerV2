@@ -4,8 +4,15 @@ import { describe, expect, it } from 'vitest';
 import { selectRecentActivity, spendChangeRatio } from './recent.js';
 
 const categories = [
-  { id: 'c1', name: 'Food', kind: 'expense', color: '#111', isArchived: false },
-  { id: 'c2', name: 'Salary', kind: 'income', color: '#222', isArchived: false },
+  {
+    id: 'c1',
+    name: 'Food',
+    kind: 'expense',
+    icon: 'utensils',
+    color: '#f97316',
+    isArchived: false,
+  },
+  { id: 'c2', name: 'Salary', kind: 'income', icon: null, color: null, isArchived: false },
 ] as unknown as Category[];
 
 function txn(overrides: Partial<Transaction>): Transaction {
@@ -68,6 +75,29 @@ describe('selectRecentActivity', () => {
     );
     expect(rows.find((row) => row.id === 'a')?.categoryLabel).toBe('Food');
     expect(rows.find((row) => row.id === 'b')?.categoryLabel).toBe('Uncategorised');
+  });
+
+  it('exposes category presentation with safe fallbacks', () => {
+    const rows = selectRecentActivity(
+      [
+        txn({ id: 'known', categoryId: 'c1' }),
+        txn({ id: 'legacy', categoryId: 'c2' }),
+        txn({ id: 'none', categoryId: null }),
+      ],
+      categories,
+    );
+    expect(rows.find((row) => row.id === 'known')).toMatchObject({
+      categoryIcon: 'utensils',
+      categoryColor: '#f97316',
+    });
+    expect(rows.find((row) => row.id === 'legacy')).toMatchObject({
+      categoryIcon: 'tag',
+      categoryColor: '#0F766E',
+    });
+    expect(rows.find((row) => row.id === 'none')).toMatchObject({
+      categoryIcon: 'tag',
+      categoryColor: '#0F766E',
+    });
   });
 
   it('falls back to the note, then a neutral label, when no merchant is recorded', () => {

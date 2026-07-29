@@ -2,6 +2,8 @@
 
 import { formatPercent, ratioToPercent } from '@finmanager/core';
 import { Amount, Delta } from '@/components/amount';
+import { CategoryIcon } from '@/components/category-icon';
+import { AssetAllocationCard } from '@/components/dashboard/asset-allocation-card';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { FinancialHealthCard } from '@/components/insights/financial-health-card';
 import { useDashboard } from '@/lib/dashboard';
@@ -41,6 +43,7 @@ export default function DashboardPage() {
     monthSpendChange,
     fire,
     recentActivity,
+    allocation,
   } = useDashboard();
 
   return (
@@ -65,6 +68,8 @@ export default function DashboardPage() {
         <StatTile label="This month spend" value={monthSpend} delta={monthSpendChange} />
         <StatTile label="Invested" value={invested} />
       </div>
+
+      <AssetAllocationCard allocation={allocation} />
 
       {fire && (
         <Card>
@@ -124,13 +129,20 @@ export default function DashboardPage() {
                 key={row.id}
                 className="flex items-center justify-between gap-4 border-b border-border/60 py-3 first:pt-0 last:border-0 last:pb-0"
               >
-                <div className="flex min-w-0 flex-col gap-0.5">
-                  <span className="truncate font-body text-body-md text-foreground">
-                    {row.label}
-                  </span>
-                  <span className="font-body text-caption text-foreground-muted">
-                    {row.categoryLabel} · {formatDay(row.occurredOn)}
-                  </span>
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <CategoryIcon
+                    icon={row.categoryIcon}
+                    color={row.categoryColor}
+                    label={`${row.categoryLabel} category`}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <span className="block truncate font-body text-body-md text-foreground">
+                      {row.label}
+                    </span>
+                    <span className="font-body text-caption text-foreground-muted">
+                      {row.categoryLabel} · {formatDay(row.occurredOn)}
+                    </span>
+                  </div>
                 </div>
                 <Amount value={row.amount} signed />
               </li>

@@ -1,8 +1,10 @@
 import type { Category, Transaction } from '@finmanager/schema';
+import { resolveCategoryPresentation } from '@finmanager/core';
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { Amount } from '../amount';
+import { CategoryIcon } from '../category-icon';
 
 export const TransactionRow = memo(function TransactionRow({
   transaction,
@@ -16,8 +18,10 @@ export const TransactionRow = memo(function TransactionRow({
   readonly onDelete: (transaction: Transaction) => void;
 }) {
   const signedAmount = transaction.direction === 'debit' ? -transaction.amount : transaction.amount;
+  const presentation = resolveCategoryPresentation(category);
   return (
     <View className="mx-4 flex-row items-center gap-2 border-b border-border/60 bg-surface px-4 py-3">
+      <CategoryIcon {...presentation} label={`${category?.name ?? 'Uncategorised'} category`} />
       <View className="min-w-0 flex-1">
         <Text numberOfLines={1} className="font-body text-body-md text-foreground">
           {transaction.merchant || transaction.note || 'Transaction'}

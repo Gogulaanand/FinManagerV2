@@ -5,8 +5,11 @@ import {
   type FireProjection,
   type GoalProjection,
 } from '@finmanager/core';
+import { color } from '@finmanager/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { useStatus } from '@powersync/react';
 import { router, type Href } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -92,6 +95,8 @@ export default function GoalsScreen() {
 }
 
 function GoalsContent() {
+  const { colorScheme } = useColorScheme();
+  const scheme = color[colorScheme === 'dark' ? 'dark' : 'light'];
   const api = useGoals();
   const initialSkeleton = useInitialSkeleton();
   const notice = useNotice();
@@ -103,11 +108,16 @@ function GoalsContent() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView className="flex-1" contentContainerClassName="gap-4 p-4 pb-28">
-        <View className="flex-1">
-          <Text className="font-display text-headline-lg text-foreground">Goals &amp; FIRE</Text>
-          <Text className="font-body text-body-md text-foreground-muted">
-            Targets, the SIP to close each gap, and your path to independence.
-          </Text>
+        <View className="flex-row items-start gap-3">
+          <View className="mt-1 size-10 items-center justify-center rounded-full bg-primary/10">
+            <Ionicons name="flag" size={21} color={scheme.primary} />
+          </View>
+          <View className="flex-1">
+            <Text className="font-display text-headline-lg text-foreground">Goals &amp; FIRE</Text>
+            <Text className="font-body text-body-md text-foreground-muted">
+              Targets, the SIP to close each gap, and your path to independence.
+            </Text>
+          </View>
         </View>
 
         {!api.canWrite ? (
@@ -158,7 +168,10 @@ function GoalsContent() {
           </View>
         </View>
         <Card>
-          <CardTitle>Path to FIRE</CardTitle>
+          <View className="flex-row items-center gap-2">
+            <Ionicons name="navigate" size={18} color={scheme.primary} />
+            <CardTitle>Path to FIRE</CardTitle>
+          </View>
           <Text className="mt-2 font-body text-body-md text-foreground">
             {fireStatusText(fire)}
           </Text>
@@ -185,7 +198,10 @@ function GoalsContent() {
         {/* Goals */}
         <Card>
           <View className="mb-1 flex-row items-center justify-between">
-            <CardTitle>Goals</CardTitle>
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="flag-outline" size={18} color={scheme.primary} />
+              <CardTitle>Goals</CardTitle>
+            </View>
             <Text className="font-body text-caption text-foreground-muted">
               {api.goals.length} tracked
             </Text>

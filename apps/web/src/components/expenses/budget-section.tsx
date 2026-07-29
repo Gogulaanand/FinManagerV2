@@ -5,6 +5,7 @@ import { budgetRatio } from '@finmanager/core';
 import { useState } from 'react';
 
 import { Amount } from '@/components/amount';
+import { CategoryIcon } from '@/components/category-icon';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { CurrencyField, SelectField } from '@/components/ui/input';
@@ -90,15 +91,22 @@ export function BudgetSection({
                 className="rounded-md bg-surface-muted p-3"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-body text-body-md text-foreground">{item.label}</p>
-                    <p className="font-body text-caption text-foreground-muted">
-                      {item.status === 'overspent'
-                        ? 'Overspent'
-                        : item.status === 'nearLimit'
-                          ? 'Near limit'
-                          : 'On track'}
-                    </p>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <CategoryIcon
+                      icon={item.icon}
+                      color={item.color}
+                      label={`${item.label} category`}
+                    />
+                    <div>
+                      <p className="font-body text-body-md text-foreground">{item.label}</p>
+                      <p className="font-body text-caption text-foreground-muted">
+                        {item.status === 'overspent'
+                          ? 'Overspent'
+                          : item.status === 'nearLimit'
+                            ? 'Near limit'
+                            : 'On track'}
+                      </p>
+                    </div>
                   </div>
                   <Button
                     type="button"

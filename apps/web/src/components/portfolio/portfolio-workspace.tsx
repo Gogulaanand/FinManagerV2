@@ -2,16 +2,27 @@
 
 import {
   assetClassForType,
+  assetClassPresentation,
   effectiveHoldingValue,
   formatPercent,
   formatInr,
   latestValuation,
 } from '@finmanager/core';
+import {
+  CircleDollarSign,
+  Landmark,
+  LineChart,
+  Plus,
+  RefreshCw,
+  Upload,
+  WalletCards,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useStatus } from '@powersync/react';
 
 import { Amount } from '@/components/amount';
+import { CategoryIcon } from '@/components/category-icon';
 import { useInitialSkeleton, WorkspaceSkeleton } from '@/components/motion/skeleton';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,11 +78,16 @@ function PortfolioWorkspaceContent() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-headline-lg text-foreground">Portfolio</h1>
-          <p className="font-body text-body-md text-foreground-muted">
-            Everything you own, valued locally and returned by true cash-flow history.
-          </p>
+        <div className="flex items-start gap-3">
+          <span className="mt-1 inline-flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <WalletCards aria-hidden="true" size={21} />
+          </span>
+          <div>
+            <h1 className="font-display text-headline-lg text-foreground">Portfolio</h1>
+            <p className="font-body text-body-md text-foreground-muted">
+              Everything you own, valued locally and returned by true cash-flow history.
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button
@@ -80,9 +96,11 @@ function PortfolioWorkspaceContent() {
             disabled={!api.canWrite || refreshing}
             onClick={() => void refresh()}
           >
+            <RefreshCw aria-hidden="true" size={16} />
             {refreshing ? 'Refreshing…' : 'Refresh prices'}
           </Button>
           <Button variant="outline" type="button" onClick={() => setShowImport((open) => !open)}>
+            <Upload aria-hidden="true" size={16} />
             {showImport ? 'Hide import' : 'Import'}
           </Button>
           <Button
@@ -93,6 +111,7 @@ function PortfolioWorkspaceContent() {
               setShowHoldingForm(true);
             }}
           >
+            <Plus aria-hidden="true" size={16} />
             Add holding
           </Button>
         </div>
@@ -107,7 +126,10 @@ function PortfolioWorkspaceContent() {
       {notice ? <p className="font-body text-caption text-foreground-muted">{notice}</p> : null}
       <div className="grid gap-3 md:grid-cols-4">
         <Card>
-          <CardLabel>Net worth</CardLabel>
+          <CardLabel className="flex items-center gap-2">
+            <CircleDollarSign aria-hidden="true" size={15} />
+            Net worth
+          </CardLabel>
           <Amount value={api.summary.netWorth} size="section" />
           <p className="mt-1 font-body text-caption text-foreground-muted">
             {api.summary.isComplete
@@ -116,15 +138,24 @@ function PortfolioWorkspaceContent() {
           </p>
         </Card>
         <Card>
-          <CardLabel>Invested</CardLabel>
+          <CardLabel className="flex items-center gap-2">
+            <Landmark aria-hidden="true" size={15} />
+            Invested
+          </CardLabel>
           <Amount value={api.summary.investedValue} size="section" />
         </Card>
         <Card>
-          <CardLabel>Current value</CardLabel>
+          <CardLabel className="flex items-center gap-2">
+            <WalletCards aria-hidden="true" size={15} />
+            Current value
+          </CardLabel>
           <Amount value={api.summary.currentValue} size="section" />
         </Card>
         <Card>
-          <CardLabel>Gain/loss</CardLabel>
+          <CardLabel className="flex items-center gap-2">
+            <LineChart aria-hidden="true" size={15} />
+            Gain/loss
+          </CardLabel>
           <Amount value={api.summary.gainLoss} size="section" />
         </Card>
         <Card>
@@ -155,15 +186,21 @@ function PortfolioWorkspaceContent() {
                     href={`/portfolio/${holding.id}`}
                     className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3 last:border-0 last:pb-0"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-body text-body-md text-foreground">
-                        {holding.name}
-                      </p>
-                      <p className="font-body text-caption text-foreground-muted">
-                        {holding.type.replace('_', ' ')}
-                        {holding.identifier ? ` · ${holding.identifier}` : ''}
-                        {holding.automaticPriceSource ? ` · ${holding.automaticPriceSource}` : ''}
-                      </p>
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <CategoryIcon
+                        {...assetClassPresentation(assetClassForType(holding.type))}
+                        label={`${assetClassForType(holding.type).replace('_', ' ')} holding`}
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate font-body text-body-md text-foreground">
+                          {holding.name}
+                        </p>
+                        <p className="font-body text-caption text-foreground-muted">
+                          {holding.type.replace('_', ' ')}
+                          {holding.identifier ? ` · ${holding.identifier}` : ''}
+                          {holding.automaticPriceSource ? ` · ${holding.automaticPriceSource}` : ''}
+                        </p>
+                      </div>
                     </div>
                     <div className="text-right">
                       <Amount
@@ -195,20 +232,29 @@ function PortfolioWorkspaceContent() {
           ) : (
             <div className="flex flex-col gap-3">
               {api.summary.allocation.map((item) => (
-                <div key={item.assetClass}>
-                  <div className="flex justify-between font-body text-body-md text-foreground">
-                    <span>{item.assetClass.replace('_', ' ')}</span>
-                    <span>{formatPercent(item.percentage / 100, 1)}</span>
+                <div key={item.assetClass} className="flex gap-3">
+                  <CategoryIcon
+                    {...assetClassPresentation(item.assetClass)}
+                    label={assetClassPresentation(item.assetClass).label}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex justify-between font-body text-body-md text-foreground">
+                      <span>{assetClassPresentation(item.assetClass).label}</span>
+                      <span>{formatPercent(item.percentage / 100, 1)}</span>
+                    </div>
+                    <div className="mt-1 h-2 rounded-full bg-surface-muted">
+                      <div
+                        className="h-2 rounded-full"
+                        style={{
+                          width: `${Math.min(100, item.percentage)}%`,
+                          backgroundColor: assetClassPresentation(item.assetClass).color,
+                        }}
+                      />
+                    </div>
+                    <p className="mt-1 font-body text-caption text-foreground-muted">
+                      {formatInr(item.value)}
+                    </p>
                   </div>
-                  <div className="mt-1 h-2 rounded-full bg-surface-muted">
-                    <div
-                      className="h-2 rounded-full bg-primary"
-                      style={{ width: `${Math.min(100, item.percentage)}%` }}
-                    />
-                  </div>
-                  <p className="mt-1 font-body text-caption text-foreground-muted">
-                    {formatInr(item.value)}
-                  </p>
                 </div>
               ))}
             </div>
