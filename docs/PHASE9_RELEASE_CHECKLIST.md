@@ -13,17 +13,18 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
   the dashboard after saving.
 - Auth SMTP is enabled with the verified `finmanager.sunfabb.com` sender domain. A clean signup
   email and confirmation flow still require an owner-controlled test account and are not claimed.
-- The Sentry `javascript-nextjs` project and an active client key exist, but no Sentry variables,
-  source-map upload, or intentional event evidence is present in Vercel. The Vercel variable editor
+- The Sentry `javascript-nextjs` project and an active client key exist. The Vercel variable editor
   now contains the existing non-secret DSN/org/project values for all build environments; the
-  auth/test tokens and event/source-map evidence remain absent. The redeploy of the current merged
-  production commit is READY.
+  auth/test tokens, source-map upload, and intentional event evidence remain absent. The redeploy
+  of the current merged production commit is READY.
 - A real Expo project was created in the authenticated `rgogs-team` account and its exact project
   ID is linked in `apps/mobile/app.json`. Existing Supabase/PowerSync and Sentry runtime values are
   saved across development, preview, and production; `SENTRY_AUTH_TOKEN` is not configured.
-- EAS CLI authentication, the Expo GitHub-app authorization, dead-man custom-auth approval,
-  monitor schedule/heartbeat, native builds, device checks, distribution, and paid-AI verification
-  remain open. Healthchecks has no authenticated account in the current browser session.
+- EAS CLI authentication remains open, but the Expo GitHub app is connected and Android internal
+  development build `466fd4fc` finished successfully from commit `1c2cdc7`; its APK is available for
+  device installation. Device checks, distribution, dead-man custom-auth approval, monitor
+  schedule/heartbeat, Sentry proof, and paid-AI verification remain open. Healthchecks has no
+  authenticated account in the current browser session.
 
 ## Web and CI
 
@@ -49,7 +50,8 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 
 ## Sentry
 
-- [x] Live Vercel environment audit confirms the audited project currently has no Sentry variables.
+- [x] Live Vercel environment audit confirms the existing non-secret Sentry DSN/org/project values
+      are configured across Production, Preview, and Development.
 - [ ] Web environments contain `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`,
       `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`, and
       `SENTRY_TEST_TOKEN`.
@@ -83,6 +85,8 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
       these are not native builds.
 - [ ] EAS account is authenticated and `extra.eas.projectId` comes from the linked project.
       Current CLI evidence: `Not logged in`.
+- [x] GitHub-triggered Android internal development build `466fd4fc` finished successfully from
+      commit `1c2cdc7`; an APK artifact is available in Expo.
 - [ ] Development build installed on an Android test device.
 - [ ] `native-offline-relaunch.yaml` passes and its expense later appears on web.
 - [ ] SQLCipher confirmed by inspecting the database header/file while the app is stopped.

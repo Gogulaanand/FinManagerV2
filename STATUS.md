@@ -22,7 +22,8 @@ production integration, approval, Preview, and external/device release gates rem
   non-secret DSN/org/project values are now configured in Vercel, with the current-commit
   production redeploy READY, but auth/test tokens and event/source-map evidence are absent. A real Expo
   project is linked in `apps/mobile/app.json`, with existing runtime values saved across all EAS
-  environments; CLI authentication and native builds remain open.
+  environments. The GitHub-triggered Android internal development build `466fd4fc` finished
+  successfully from commit `1c2cdc7`; device installation and native acceptance remain open.
 - Phases 0-8 are done. Phase 8.5 is merged; its real-touch Victory chart interaction remains
   pending device-only evidence.
 - Phase 9 is implemented on PR #4 from `phase-9-hardening-release`: deterministic Playwright/Maestro
@@ -43,11 +44,10 @@ production integration, approval, Preview, and external/device release gates rem
 
 ## Next Up
 
-Push the rebased Phase 9 branch with `--force-with-lease`, then require the integrated 12-test CI and
-protected Preview suites to pass. Next configure Sentry, authenticate/link EAS, record explicit
-owner approval for the deployed custom-auth functions, finish monitor/heartbeat evidence, and
-complete the real-device/family-install checklist. Do not mark Phase 9 Done before those results
-exist.
+Review draft PR #6 and its fresh checks, then require the integrated 12-test CI and protected Preview
+suites to pass. Next configure Sentry, obtain the explicit owner approval for the deployed custom-auth
+functions, finish monitor/heartbeat evidence, and complete the real-device/family-install checklist
+using APK build `466fd4fc`. Do not mark Phase 9 Done before those results exist.
 
 Plan index: [improvements](phases/plans/plan-improvements.md) · [mobile navigation/month picker](phases/plans/plan-mobile-nav-and-month-picker.md) · [Phase 8](phases/plans/plan-phase8-deadman-switch.md) · [Phase 9](phases/plans/plan-phase9-hardening-release.md) · [monetization](phases/plans/plan-monetization.md).
 

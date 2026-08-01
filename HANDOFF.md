@@ -16,22 +16,23 @@ sender domain. The current Vercel production deployment at commit
 ### Verification state
 
 Authenticated production sign-in/data sync, clean signup delivery, Sentry runtime/source-map
-evidence, dead-man approval/monitor/heartbeat, EAS/native builds, device acceptance, family
-distribution, and paid-AI verification remain unproven. The Sentry project has a client key, but
+evidence, dead-man approval/monitor/heartbeat, device acceptance, family distribution, and paid-AI
+verification remain unproven. The Sentry project has a client key, but
 the existing non-secret DSN/org/project values are now configured in Vercel and the current-commit
 production redeploy is READY; auth/test tokens and event/source-map evidence remain absent. A
 real Expo project is linked in `apps/mobile/app.json` and its existing runtime values are saved
-across all EAS environments, but EAS CLI authentication and native builds remain open. The Expo
-GitHub-app authorization page is waiting for owner repository/permission approval; Healthchecks
-has no authenticated account in the current browser session.
+across all EAS environments. The GitHub-triggered Android internal development build `466fd4fc`
+finished successfully from commit `1c2cdc7`, and its APK is available in Expo; physical-device
+installation and acceptance remain open. The Expo GitHub app is connected to `Gogulaanand/FinManagerV2`;
+Healthchecks has no authenticated account in the current browser session.
 
 ### Exact next action
 
 Owner action is required for the account-security prompt, an owner-controlled signup account, the
-explicit `verify_jwt=false` approval, EAS login/project linkage, and the device/distribution gates.
-After those boundaries are handled, configure only the approved Sentry/dead-man values, deploy the
-current commit, run the real acceptance flows, and update the checklist with build IDs and device
-evidence. Do not mark Phase 9 Done from the current browser shell or clean cron row.
+explicit `verify_jwt=false` approval, approved Sentry/dead-man values, and the device/distribution
+gates. Install APK build `466fd4fc` on an Android device, run the real acceptance flows, and update
+the checklist with device evidence. Do not mark Phase 9 Done from the current browser shell or clean
+cron row.
 
 ## Previous Handoff: 2026-07-29 (Phase 9 integrated with merged Phase 8.5)
 
