@@ -15,15 +15,38 @@ Implements the PRODUCTION_PLAN.md Phase 9 spec and resolves its carried-over ite
 | EAS dev build                      | 9c          | op-sqlite adapter swap, Maestro on device, mobile Google sign-in    |
 | Deployed web + native mobile build | 9b + 9c     | Monetization Path A shipping surface                                |
 
-## Current state (verified in repo)
+## R0 baseline — 2026-08-01
 
-- Tests exist only in packages (~232 Vitest cases across core/schema/sync/tokens); apps have no test config.
-- No Playwright, no Maestro, no E2E harness of any kind.
-- CI (`.github/workflows/ci.yml`): single job running build/test/lint/typecheck/format on push to main and PRs; no deploy jobs.
-- No `vercel.json`, no `eas.json` (`apps/mobile/app.json` is minimal), no Sentry, no export feature.
-- Mobile PowerSync uses the in-memory SQL.js adapter (`apps/mobile/lib/powersync.ts`), single-adapter with no `Constants.executionEnvironment` switch yet (D-021).
-- CSV import for expenses is solid (`packages/core/src/expenses/csv.ts`: hand-rolled parser, canonical import hash, tested); no export exists.
-- Open interactive-verification debt: Phase 5.3 scale/offline/RSU-FX scenarios (D-048), Phase 6 checklist, Phase 7 AI-calling scenarios (D-047), and all Expo Go passes.
+The implementation described by this plan is complete in the merged Phase 9 commit `38f3f63`.
+The current `phase9-operator-audit-20260801` checkout adds operator-audit evidence and documentation;
+those commits are tracked separately from the merged implementation.
+
+### Implemented
+
+- Deterministic user-scoped seed, Playwright critical paths, Maestro flows, strict expense-template
+  import, versioned JSON/CSV export, web/native Sentry wiring, EAS profiles, Google OAuth flow,
+  OP-SQLite/SQLCipher adapter, and cron observability.
+- The release checklist and Phase 9 briefing record the exact implementation surface and deployment
+  identifiers; this plan remains the historical implementation scope and dependency map.
+
+### Automated evidence complete
+
+- `CI=true pnpm turbo run build test lint typecheck` passes all 21 tasks with 323 unit tests;
+  formatting and `git diff --check` pass.
+- Both Expo JavaScript exports pass and the integrated Playwright suite collects 12 tests. Historical
+  Preview E2E run `30188066854` passed; a fresh current-head CI/Preview run still needs evidence.
+
+### External/manual evidence pending
+
+- Production authentication/data sync and clean signup, Sentry event/source-map proof, dead-man
+  approval/monitor/heartbeat, native persistence/SQLCipher/offline-relaunch, family distribution,
+  target-device export/share-sheet use, and clean-account restore remain open.
+
+### Explicitly deferred
+
+- Public signup, payments, public app-store distribution, paid AI verification, and a production-ready
+  dead-man switch are outside the personal-use MVP gate. See the canonical risk register for the
+  current personal-MVP go/no-go decision.
 
 ---
 

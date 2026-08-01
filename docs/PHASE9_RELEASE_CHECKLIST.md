@@ -1,7 +1,8 @@
 # Phase 9 Release Checklist
 
-This is an evidence checklist, not a declaration that release is complete. Record links, build IDs,
-device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
+This is an evidence checklist, not a declaration that release is complete. The canonical release
+gate and risk register is [docs/PRODUCTION_READINESS.md](PRODUCTION_READINESS.md). Record links,
+build IDs, device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 
 ## Operator audit — 2026-08-01
 
@@ -14,9 +15,9 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 - Auth SMTP is enabled with the verified `finmanager.sunfabb.com` sender domain. A clean signup
   email and confirmation flow still require an owner-controlled test account and are not claimed.
 - The Sentry `javascript-nextjs` project and an active client key exist. The Vercel variable editor
-  now contains the existing non-secret DSN/org/project values for all build environments; the
-  auth/test tokens, source-map upload, and intentional event evidence remain absent. The redeploy
-  of the current merged production commit is READY.
+  contains the existing non-secret DSN/org/project values for all build environments; auth/test
+  tokens, source-map upload, and intentional event evidence remain absent. The redeploy of the
+  current merged production commit is READY.
 - A real Expo project was created in the authenticated `rgogs-team` account and its exact project
   ID is linked in `apps/mobile/app.json`. Existing Supabase/PowerSync and Sentry runtime values are
   saved across development, preview, and production; `SENTRY_AUTH_TOKEN` is not configured.
@@ -43,7 +44,9 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 - [ ] Fresh post-rebase GitHub CI and Vercel Preview E2E pass on the current PR head.
 - [x] Current production deployment at commit `38f3f633896632a94a930d8d50fb36124c790a0f` is
       READY.
-- [ ] Production deployment is READY and sign-in/data sync work.
+- [x] The current production deployment for the merged implementation is READY.
+- [ ] Authenticated production sign-in and data sync complete on the deployed site, with a saved
+      account-scoped row ID and matching web readback as evidence.
 - [x] Supabase Auth leaked-password protection was reviewed and explicitly waived on 2026-07-26
       because it requires a paid Supabase plan; it is not a Phase 9 release gate.
 - [ ] Clean-browser signup email is received and confirmation completes without SQL.
@@ -52,11 +55,14 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 
 - [x] Live Vercel environment audit confirms the existing non-secret Sentry DSN/org/project values
       are configured across Production, Preview, and Development.
-- [ ] Web environments contain `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`,
-      `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`, and
-      `SENTRY_TEST_TOKEN`.
-- [ ] EAS environments contain `EXPO_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`,
-      `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN`.
+- [x] Web environments contain the existing non-secret `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`,
+      `SENTRY_ORG`, and `SENTRY_PROJECT` values.
+- [ ] Web environments contain approved `SENTRY_AUTH_TOKEN` and `SENTRY_TEST_TOKEN` values, and
+      the build records a successful source-map upload.
+- [x] EAS environments contain the existing `EXPO_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, and
+      `SENTRY_PROJECT` values.
+- [ ] EAS environments contain an approved `SENTRY_AUTH_TOKEN` and a native symbolicated event is
+      visible in the Sentry project.
 - [ ] Protected web monitoring route produces one symbolicated client/server event.
 - [ ] Native development build produces one symbolicated event.
 
@@ -83,7 +89,8 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 
 - [x] Local iOS and Android Metro/Hermes exports pass (3,112/15 MB and 3,193/16 MB respectively);
       these are not native builds.
-- [ ] EAS account is authenticated and `extra.eas.projectId` comes from the linked project.
+- [x] `extra.eas.projectId` is linked to the real Expo project in `apps/mobile/app.json`.
+- [ ] EAS account is authenticated for any CLI-driven build or release operation.
       Current CLI evidence: `Not logged in`.
 - [x] GitHub-triggered Android internal development build `466fd4fc` finished successfully from
       commit `1c2cdc7`; an APK artifact is available in Expo.
@@ -99,6 +106,8 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 
 - [x] JSON export parses through `parseDataExportBundle` in the round-trip test.
 - [ ] Web downloads and native share sheets manually opened on target devices.
+- [ ] One exported JSON bundle restores into a clean test account/project with equivalent row counts,
+      financial totals, dependency-order results, and a saved restore report.
 - [x] Strict template rejects malformed rows in core tests and the live Playwright second import
       created zero rows.
 - [ ] Phase 3 test account deletion has separate explicit owner approval before execution.
