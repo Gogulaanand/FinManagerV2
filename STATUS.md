@@ -1,7 +1,7 @@
 # Project Status
 
-Last updated: 2026-07-29 (Phase 9 rebased onto merged Phase 8.5; local gates pass;
-post-rebase Preview evidence and external/device release gates remain open).
+Last updated: 2026-08-01 (Phase 9 operator audit completed; local gates pass;
+production integration, approval, Preview, and external/device release gates remain open).
 
 ## Current State
 
@@ -9,10 +9,21 @@ post-rebase Preview evidence and external/device release gates remain open).
   All automated tests pass (`CI=true pnpm turbo run build test lint typecheck` green) and both phases have been manually verified.
   Phase 7 backend is deployed to Supabase `vkivzhbckfsjtvzatuiz`: migration `20260719000004` applied, `ai-insights` Edge Function live (v1, ACTIVE), `ANTHROPIC_API_KEY` set, PowerSync `ai_summaries` rule published.
 - The Vercel project `fin-manager-web` is live. Production deployment
-  `dpl_9vkdpiaMxLPBx3QoYRG4MuxbNVP3` for merged Phase 8.5 commit `93c255b` is READY, and the three
-  public Supabase/PowerSync variables exist in Development, Preview, and Production. No Sentry
-  variables are configured, so release creation, source-map upload, and intentional-event checks
-  remain blocked.
+  for commit `38f3f633896632a94a930d8d50fb36124c790a0f` is READY, and the three public
+  Supabase/PowerSync variables exist in Development, Preview, and Production. The existing
+  non-secret Sentry DSN/org/project values are also configured across the Vercel environments, but
+  release creation, source-map upload, and intentional-event checks remain blocked by missing auth
+  and test tokens. The production shell and sign-in route load, but authenticated data sync is not
+  proven.
+- The 2026-08-01 operator audit saved the canonical production, scoped Vercel preview, local
+  development, and `finmanager://auth/callback` redirects in Supabase Auth. Auth SMTP is enabled
+  with the verified `finmanager.sunfabb.com` sender domain; clean signup delivery still requires an
+  owner-controlled test account. The Sentry project exists with a client key; its existing
+  non-secret DSN/org/project values are now configured in Vercel, with the current-commit
+  production redeploy READY, but auth/test tokens and event/source-map evidence are absent. A real Expo
+  project is linked in `apps/mobile/app.json`, with existing runtime values saved across all EAS
+  environments. The GitHub-triggered Android internal development build `466fd4fc` finished
+  successfully from commit `1c2cdc7`; device installation and native acceptance remain open.
 - Phases 0-8 are done. Phase 8.5 is merged; its real-touch Victory chart interaction remains
   pending device-only evidence.
 - Phase 9 is implemented on PR #4 from `phase-9-hardening-release`: deterministic Playwright/Maestro
@@ -33,11 +44,10 @@ post-rebase Preview evidence and external/device release gates remain open).
 
 ## Next Up
 
-Push the rebased Phase 9 branch with `--force-with-lease`, then require the integrated 12-test CI and
-protected Preview suites to pass. Next configure Sentry, authenticate/link EAS, record explicit
-owner approval for the deployed custom-auth functions, finish monitor/heartbeat evidence, and
-complete the real-device/family-install checklist. Do not mark Phase 9 Done before those results
-exist.
+Review draft PR #6 and its fresh checks, then require the integrated 12-test CI and protected Preview
+suites to pass. Next configure Sentry, obtain the explicit owner approval for the deployed custom-auth
+functions, finish monitor/heartbeat evidence, and complete the real-device/family-install checklist
+using APK build `466fd4fc`. Do not mark Phase 9 Done before those results exist.
 
 Plan index: [improvements](phases/plans/plan-improvements.md) · [mobile navigation/month picker](phases/plans/plan-mobile-nav-and-month-picker.md) · [Phase 8](phases/plans/plan-phase8-deadman-switch.md) · [Phase 9](phases/plans/plan-phase9-hardening-release.md) · [monetization](phases/plans/plan-monetization.md).
 

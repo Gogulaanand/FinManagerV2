@@ -3,7 +3,38 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
-## Latest Handoff: 2026-07-29 (Phase 9 integrated with merged Phase 8.5)
+## Latest Handoff: 2026-08-01 (Phase 9 live operator audit)
+
+### Where we are
+
+The existing Brave session was used for the live audit. Supabase Auth now has the canonical
+production URL, the scoped Vercel preview pattern, the local development URL, and
+`finmanager://auth/callback`. Auth SMTP is enabled with the verified `finmanager.sunfabb.com`
+sender domain. The current Vercel production deployment at commit
+`38f3f633896632a94a930d8d50fb36124c790a0f` is READY, and its public shell and sign-in route load.
+
+### Verification state
+
+Authenticated production sign-in/data sync, clean signup delivery, Sentry runtime/source-map
+evidence, dead-man approval/monitor/heartbeat, device acceptance, family distribution, and paid-AI
+verification remain unproven. The Sentry project has a client key, but
+the existing non-secret DSN/org/project values are now configured in Vercel and the current-commit
+production redeploy is READY; auth/test tokens and event/source-map evidence remain absent. A
+real Expo project is linked in `apps/mobile/app.json` and its existing runtime values are saved
+across all EAS environments. The GitHub-triggered Android internal development build `466fd4fc`
+finished successfully from commit `1c2cdc7`, and its APK is available in Expo; physical-device
+installation and acceptance remain open. The Expo GitHub app is connected to `Gogulaanand/FinManagerV2`;
+Healthchecks has no authenticated account in the current browser session.
+
+### Exact next action
+
+Owner action is required for the account-security prompt, an owner-controlled signup account, the
+explicit `verify_jwt=false` approval, approved Sentry/dead-man values, and the device/distribution
+gates. Install APK build `466fd4fc` on an Android device, run the real acceptance flows, and update
+the checklist with device evidence. Do not mark Phase 9 Done from the current browser shell or clean
+cron row.
+
+## Previous Handoff: 2026-07-29 (Phase 9 integrated with merged Phase 8.5)
 
 ### Where we are
 

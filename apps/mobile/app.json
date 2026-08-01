@@ -5,6 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "finmanager",
+    "extra": {
+      "eas": {
+        "projectId": "d646941b-b504-4d97-8621-f77f43682f4d"
+      }
+    },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

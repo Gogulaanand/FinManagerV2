@@ -1,8 +1,29 @@
 # Phase 9 Briefing: Hardening + Release
 
-Status: Blocked as of 2026-07-29. Phase 9 is rebased onto merged Phase 8.5 (`93c255b`), and the
-integrated implementation and local automated verification are complete. Fresh post-rebase
-GitHub/Vercel evidence, production integrations, and real-device exit criteria are not.
+Status: Blocked as of 2026-08-01. The integrated implementation and local automated verification
+are complete, but production integrations, owner approvals, and real-device exit criteria are not.
+
+## Operator audit — 2026-08-01
+
+- The current Vercel production deployment at commit `38f3f633896632a94a930d8d50fb36124c790a0f`
+  is READY. The canonical production shell and sign-in route load in the owner’s existing Brave
+  session; authenticated sign-in and data sync remain unproven.
+- Supabase Auth’s saved redirect configuration contains the canonical production URL, the scoped
+  Vercel preview pattern, the local development URL, and `finmanager://auth/callback`.
+- Supabase Auth SMTP is enabled with the verified `finmanager.sunfabb.com` sender domain. Clean
+  signup delivery/confirmation is still pending an owner-controlled test account.
+- The Sentry project has an active client key, but Vercel Sentry variables, source-map upload, and
+  intentional-event evidence are absent. The existing non-secret DSN/org/project values are now
+  saved in Vercel across Production, Preview, and Development; auth/test tokens are absent. The
+  redeploy of the current merged production commit is READY.
+- A real Expo project was created in the authenticated `rgogs-team` account and its exact project
+  ID is linked in `apps/mobile/app.json`. Existing Supabase/PowerSync and Sentry runtime values are
+  saved across all three EAS environments, but `SENTRY_AUTH_TOKEN` is not configured.
+- EAS CLI authentication remains open, but the Expo GitHub app is connected and Android internal
+  development build `466fd4fc` finished successfully from commit `1c2cdc7`; its APK is available
+  for device installation. The dead-man custom-auth approval, monitor/heartbeat proof, device
+  acceptance, distribution, Sentry proof, and paid-AI verification remain open. Healthchecks has
+  no authenticated account in the current browser session.
 
 ## Implemented
 
@@ -37,15 +58,17 @@ GitHub/Vercel evidence, production integrations, and real-device exit criteria a
 - Seven GitHub E2E secrets are configured, including `VERCEL_AUTOMATION_BYPASS_SECRET` (last updated
   2026-07-26), without storing their values in the checkout. Historical Preview E2E run
   `30188066854` passed on pre-rebase commit `b020d01`; fresh integrated proof is still required.
-- Vercel production deployment `dpl_9vkdpiaMxLPBx3QoYRG4MuxbNVP3` is READY at commit `93c255b`.
-  Public Supabase and PowerSync variables exist in Development, Preview, and Production. No Sentry
-  variables are configured in the audited Vercel project.
+- The current Vercel production deployment for the merged production commit is READY. Public
+  Supabase and PowerSync variables, plus the existing non-secret Sentry DSN/org/project values,
+  exist in Development, Preview, and Production; Sentry auth/test tokens and event/source-map
+  proof are absent.
 - Supabase migration `20260726015958` is applied. `ai-insights` v8, `deadman-check` v11, and
   `deadman-monitor` v1 are ACTIVE with `verify_jwt=false`; this observed state is not a substitute
   for the required owner approval. Only `deadman-daily` is scheduled. Its latest run at
   `2026-07-29T03:00:04.225557+00:00` wrote `failed=0`, but no external heartbeat or monitor schedule
   is configured.
-- EAS CLI reports `Not logged in`; no EAS build or real-device evidence exists.
+- EAS CLI reports `Not logged in`; the GitHub-triggered Android internal development build
+  `466fd4fc` finished successfully from commit `1c2cdc7`, but no real-device evidence exists.
 
 ## Required release evidence
 
@@ -61,8 +84,9 @@ GitHub/Vercel evidence, production integrations, and real-device exit criteria a
    `DEADMAN_MONITOR_EMAIL` and `DEADMAN_HEARTBEAT_URL`, set the
    `deadman_monitor_enabled=true` Vault flag, schedule the monitor, and prove both a clean
    `cron_runs` record and the external heartbeat.
-5. Log in to EAS, create/link the Expo project (do not invent a project ID), then build development,
-   internal Android APK, and production iOS/TestFlight artifacts.
+5. Log in to EAS if CLI-driven builds are required. The linked Expo project and GitHub-triggered
+   Android internal development APK `466fd4fc` are complete; production iOS/TestFlight artifacts
+   remain open.
 6. On a real device: prove OP-SQLite persistence across relaunch, inspect SQLCipher encryption,
    perform airplane-mode write/relaunch/reconnect, run Maestro, and record mid-range Android cold
    start/list/chart measurements.

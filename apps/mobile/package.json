@@ -4,6 +4,7 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
+    "postinstall": "cd ../.. && pnpm --filter @finmanager/tokens build && pnpm --filter @finmanager/schema build && pnpm --filter @finmanager/core build && pnpm --filter @finmanager/sync build",
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
