@@ -1,8 +1,27 @@
 # Phase 9 Briefing: Hardening + Release
 
-Status: Blocked as of 2026-07-29. Phase 9 is rebased onto merged Phase 8.5 (`93c255b`), and the
-integrated implementation and local automated verification are complete. Fresh post-rebase
-GitHub/Vercel evidence, production integrations, and real-device exit criteria are not.
+Status: Blocked as of 2026-08-01. The integrated implementation and local automated verification
+are complete, but production integrations, owner approvals, and real-device exit criteria are not.
+
+## Operator audit — 2026-08-01
+
+- The current Vercel production deployment at commit `38f3f633896632a94a930d8d50fb36124c790a0f`
+  is READY. The canonical production shell and sign-in route load in the owner’s existing Brave
+  session; authenticated sign-in and data sync remain unproven.
+- Supabase Auth’s saved redirect configuration contains the canonical production URL, the scoped
+  Vercel preview pattern, the local development URL, and `finmanager://auth/callback`.
+- Supabase Auth SMTP is enabled with the verified `finmanager.sunfabb.com` sender domain. Clean
+  signup delivery/confirmation is still pending an owner-controlled test account.
+- The Sentry project has an active client key, but Vercel Sentry variables, source-map upload, and
+  intentional-event evidence are absent. The existing non-secret DSN/org/project values are now
+  saved in Vercel across Production, Preview, and Development; auth/test tokens are absent. The
+  redeploy of the current merged production commit is READY.
+- A real Expo project was created in the authenticated `rgogs-team` account and its exact project
+  ID is linked in `apps/mobile/app.json`. Existing Supabase/PowerSync and Sentry runtime values are
+  saved across all three EAS environments, but `SENTRY_AUTH_TOKEN` is not configured.
+- EAS CLI authentication, Expo GitHub-app authorization, the dead-man custom-auth approval,
+  monitor/heartbeat proof, native/device gates, distribution, and paid-AI verification remain
+  open. Healthchecks has no authenticated account in the current browser session.
 
 ## Implemented
 

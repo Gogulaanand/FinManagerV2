@@ -3,6 +3,28 @@
 This is an evidence checklist, not a declaration that release is complete. Record links, build IDs,
 device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 
+## Operator audit — 2026-08-01
+
+- The current Vercel production deployment at commit `38f3f633896632a94a930d8d50fb36124c790a0f`
+  is READY. The canonical site and sign-in route load in the owner’s existing Brave session;
+  authenticated sign-in and data sync are not proven.
+- Supabase Auth now has the canonical production URL, the scoped Vercel preview pattern, the
+  local development URL, and `finmanager://auth/callback`; the saved configuration was reread in
+  the dashboard after saving.
+- Auth SMTP is enabled with the verified `finmanager.sunfabb.com` sender domain. A clean signup
+  email and confirmation flow still require an owner-controlled test account and are not claimed.
+- The Sentry `javascript-nextjs` project and an active client key exist, but no Sentry variables,
+  source-map upload, or intentional event evidence is present in Vercel. The Vercel variable editor
+  now contains the existing non-secret DSN/org/project values for all build environments; the
+  auth/test tokens and event/source-map evidence remain absent. The redeploy of the current merged
+  production commit is READY.
+- A real Expo project was created in the authenticated `rgogs-team` account and its exact project
+  ID is linked in `apps/mobile/app.json`. Existing Supabase/PowerSync and Sentry runtime values are
+  saved across development, preview, and production; `SENTRY_AUTH_TOKEN` is not configured.
+- EAS CLI authentication, the Expo GitHub-app authorization, dead-man custom-auth approval,
+  monitor schedule/heartbeat, native builds, device checks, distribution, and paid-AI verification
+  remain open. Healthchecks has no authenticated account in the current browser session.
+
 ## Web and CI
 
 - [x] GitHub secrets exist: `NEXT_PUBLIC_SUPABASE_URL`,
@@ -18,8 +40,8 @@ device/OS versions, timestamps, and screenshots in `phases/briefing/phase-9.md`.
 - [x] Historical Preview E2E run `30188066854` passes with the Automation Bypass secret on
       pre-rebase commit `b020d01`.
 - [ ] Fresh post-rebase GitHub CI and Vercel Preview E2E pass on the current PR head.
-- [x] Production deployment `dpl_9vkdpiaMxLPBx3QoYRG4MuxbNVP3` is READY at merged Phase 8.5 commit
-      `93c255b`.
+- [x] Current production deployment at commit `38f3f633896632a94a930d8d50fb36124c790a0f` is
+      READY.
 - [ ] Production deployment is READY and sign-in/data sync work.
 - [x] Supabase Auth leaked-password protection was reviewed and explicitly waived on 2026-07-26
       because it requires a paid Supabase plan; it is not a Phase 9 release gate.
