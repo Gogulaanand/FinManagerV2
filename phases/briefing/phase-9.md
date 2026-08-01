@@ -3,6 +3,8 @@
 Status: Blocked as of 2026-08-01. The integrated implementation and local automated verification
 are complete, but production integrations, owner approvals, and real-device exit criteria are not.
 
+Canonical release gate: [docs/PRODUCTION_READINESS.md](../../docs/PRODUCTION_READINESS.md).
+
 ## Operator audit — 2026-08-01
 
 - The current Vercel production deployment at commit `38f3f633896632a94a930d8d50fb36124c790a0f`
@@ -12,10 +14,10 @@ are complete, but production integrations, owner approvals, and real-device exit
   Vercel preview pattern, the local development URL, and `finmanager://auth/callback`.
 - Supabase Auth SMTP is enabled with the verified `finmanager.sunfabb.com` sender domain. Clean
   signup delivery/confirmation is still pending an owner-controlled test account.
-- The Sentry project has an active client key, but Vercel Sentry variables, source-map upload, and
-  intentional-event evidence are absent. The existing non-secret DSN/org/project values are now
-  saved in Vercel across Production, Preview, and Development; auth/test tokens are absent. The
-  redeploy of the current merged production commit is READY.
+- The Sentry project has an active client key. The existing non-secret DSN/org/project values are
+  saved in Vercel across Production, Preview, and Development; auth/test tokens, source-map upload,
+  and intentional-event evidence are absent. The redeploy of the current merged production commit
+  is READY.
 - A real Expo project was created in the authenticated `rgogs-team` account and its exact project
   ID is linked in `apps/mobile/app.json`. Existing Supabase/PowerSync and Sentry runtime values are
   saved across all three EAS environments, but `SENTRY_AUTH_TOKEN` is not configured.
@@ -72,13 +74,13 @@ are complete, but production integrations, owner approvals, and real-device exit
 
 ## Required release evidence
 
-1. Push the rebased phase branch and prove fresh GitHub CI and Vercel Preview jobs with all 12
-   Playwright tests.
+1. Record fresh GitHub CI and Vercel Preview jobs for the current release head with all 12 Playwright
+   tests; the local branch name or a historical run is not sufficient evidence.
 2. Configure Sentry org/project, web/native DSNs and auth token; deploy; trigger the protected
    intentional error and confirm the event and source map in Sentry.
-3. Complete Auth SMTP, perform a clean deployed signup, and add `finmanager://auth/callback` to the
-   Supabase redirect allow list; verify Google sign-in on a real device. Leaked-password protection
-   was explicitly waived on 2026-07-26 because it requires a paid Supabase plan.
+3. Perform a clean deployed signup and verify password sign-in/data sync; `finmanager://auth/callback`
+   is already present in the saved redirect allow list. Verify Google sign-in on a real device.
+   Leaked-password protection was explicitly waived on 2026-07-26 because it requires a paid plan.
 4. Explicitly approve retaining the already-deployed `verify_jwt=false` configuration for
    `deadman-check` and `deadman-monitor`, whose code authenticates requests itself. Configure
    `DEADMAN_MONITOR_EMAIL` and `DEADMAN_HEARTBEAT_URL`, set the

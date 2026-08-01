@@ -3,36 +3,45 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
-## Latest Handoff: 2026-08-01 (Phase 9 live operator audit)
+## Latest Handoff: 2026-08-01 (R0 production-readiness baseline)
 
 ### Where we are
 
-The existing Brave session was used for the live audit. Supabase Auth now has the canonical
-production URL, the scoped Vercel preview pattern, the local development URL, and
-`finmanager://auth/callback`. Auth SMTP is enabled with the verified `finmanager.sunfabb.com`
-sender domain. The current Vercel production deployment at commit
-`38f3f633896632a94a930d8d50fb36124c790a0f` is READY, and its public shell and sign-in route load.
+R0 reconciled `STATUS.md`, this handoff, the Phase 9 briefing, the release checklist, and the
+Phase 9 plan, and added the canonical [production-readiness risk register](docs/PRODUCTION_READINESS.md).
+The current checkout is `phase9-operator-audit-20260801` at `9bfc03a`; Phase 9 implementation is
+merged at `38f3f63`, while the operator-audit follow-up remains branch-local evidence unless a merge
+is separately recorded.
+
+The live audit evidence remains: Supabase Auth has the canonical production URL, scoped Vercel
+preview pattern, local development URL, and `finmanager://auth/callback`; Auth SMTP is enabled with
+the verified `finmanager.sunfabb.com` sender domain; and the Vercel production deployment for
+`38f3f633896632a94a930d8d50fb36124c790a0f` is READY with its public shell and sign-in route loading.
 
 ### Verification state
 
-Authenticated production sign-in/data sync, clean signup delivery, Sentry runtime/source-map
-evidence, dead-man approval/monitor/heartbeat, device acceptance, family distribution, and paid-AI
-verification remain unproven. The Sentry project has a client key, but
-the existing non-secret DSN/org/project values are now configured in Vercel and the current-commit
-production redeploy is READY; auth/test tokens and event/source-map evidence remain absent. A
-real Expo project is linked in `apps/mobile/app.json` and its existing runtime values are saved
-across all EAS environments. The GitHub-triggered Android internal development build `466fd4fc`
-finished successfully from commit `1c2cdc7`, and its APK is available in Expo; physical-device
-installation and acceptance remain open. The Expo GitHub app is connected to `Gogulaanand/FinManagerV2`;
-Healthchecks has no authenticated account in the current browser session.
+Automated repository evidence is complete for the implemented Phase 9 surface: the 21/21 Turbo gate,
+323 unit tests, formatting, Expo exports, and integrated Playwright collection pass as recorded in
+the briefing and checklist. Authenticated production sign-in/data sync, clean signup delivery, Sentry
+runtime/source-map evidence, dead-man approval/monitor/heartbeat, device acceptance, family
+distribution, full backup restore, and paid-AI verification remain unproven. Existing non-secret
+Sentry DSN/org/project values are configured in Vercel; auth/test tokens and event/source-map evidence
+remain absent. A real Expo project is linked in `apps/mobile/app.json`, existing runtime values are
+saved across EAS environments, and Android build `466fd4fc` finished successfully from commit
+`1c2cdc7`; physical-device installation and acceptance remain open.
 
 ### Exact next action
 
-Owner action is required for the account-security prompt, an owner-controlled signup account, the
-explicit `verify_jwt=false` approval, approved Sentry/dead-man values, and the device/distribution
-gates. Install APK build `466fd4fc` on an Android device, run the real acceptance flows, and update
-the checklist with device evidence. Do not mark Phase 9 Done from the current browser shell or clean
-cron row.
+The next implementation action is R1.1: write the focused fatal-sync architecture decision and its
+durable failure-record contract. Do not implement R1.1 and R1.2 concurrently. Owner action remains
+required for the production/auth, Sentry, dead-man, and device/distribution gates; do not mark Phase 9
+Done from the current browser shell, clean cron row, JavaScript export, or successful build alone.
+
+### Files in flight
+
+R0 changed the five release/status documents named in the production-readiness plan and added
+`docs/PRODUCTION_READINESS.md`. The untracked plan files supplied for this work remain user-owned.
+`.codegraph/` is local-only and must not be staged.
 
 ## Previous Handoff: 2026-07-29 (Phase 9 integrated with merged Phase 8.5)
 
