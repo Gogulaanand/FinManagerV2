@@ -1,8 +1,9 @@
 # Project Status
 
-Last updated: 2026-08-02 (R1.1 sync durability, R1.2 safe auth transitions, and R1.3 sync-health
-surfaces are merged and protected CI/Preview verified; R2.1 recovery-export hardening is complete
-locally and its restore, production-auth, and device gates remain open).
+Last updated: 2026-08-02 (R1.1 sync durability, R1.2 safe auth transitions, R1.3 sync-health
+surfaces, and R2.1 recovery-export hardening are merged and protected CI/Preview verified; R2.2
+restore implementation is complete on its focused branch and clean-account, production-auth, and
+device gates remain open).
 
 ## Current State
 
@@ -23,12 +24,18 @@ data. The contract is recorded in [docs/R1.2_AUTH_TRANSITION_SAFETY.md](docs/R1.
 and D-077. R1.3 is merged as PR #10 (`ec17b2f`): web and mobile Settings now expose synced,
 syncing, offline, and action-required states, queue/failure counts, last complete sync, safe failure
 summaries, and a retry/reconnect action.
-R2.1 is implemented on `codex/r2-recovery-export`: schema-v2 recovery bundles now carry the app
+R2.1 is merged as PR #11 (`27f6d2f`): schema-v2 recovery bundles now carry the app
 version, anonymized account fingerprint, source platform, PowerSync sync state, per-collection row
 counts, deterministic checksums, and explicit completeness warnings. Every exported domain row is
 validated through its relevant Zod schema adapter before serialization. Complete backups require a
 full sync, no unresolved failed writes or sync errors, and explicit acknowledgement when pending
 writes are included; recovery exports remain available for unsafe local state.
+R2.2 is implemented on `codex/r2-restore`: dry-run planning validates schema-v2 bundles, detects
+target conflicts and missing dependencies, supports empty/merge/replace modes, computes row-count
+and financial-total projections, and prepares dependency-ordered operations. Web and mobile Settings
+now preview and apply restores. The linked Supabase project has the authenticated transactional
+restore RPC and replay ledger applied as migrations `20260802071518` and the verified loop fix
+`20260802072228`; a clean-account restore drill and protected PR evidence remain open.
 
 ### Implemented
 
@@ -80,6 +87,10 @@ writes are included; recovery exports remain available for unsafe local state.
 - R2.1 adds five core export tests covering schema-v2 round trips, warning/completeness gates,
   checksums, and domain-row rejection; the sync recovery-artifact test verifies PowerSync-derived
   metadata and account fingerprinting.
+- R2.2 adds four core restore-planning tests and three sync restore-boundary tests. Core now passes
+  211 tests and sync passes 85; affected web/mobile typecheck and lint pass; the Supabase API
+  verifies `apply_data_restore(text,text,text,jsonb)`, `restore_runs`, and the authenticated execute
+  grant.
 
 ### Observed deployed state (not release proof)
 
@@ -108,10 +119,9 @@ writes are included; recovery exports remain available for unsafe local state.
 
 ## Next Up
 
-After the R2.1 PR is checked and merged, start R2.2 restore on a fresh branch: dependency-ordered
-restore, conflict policy, dry-run/reporting, and a clean-account proof remain separate from export
-creation. In parallel, the owner-controlled production, Sentry, dead-man, and Android-device gates
-remain external evidence work. Do not mark Phase 9 Done before its required evidence exists.
+After the R2.2 PR is checked and merged, start R2.3 server backup policy on a fresh branch. The
+clean-account restore drill, production/auth, Sentry, dead-man, and Android-device gates remain
+external evidence work. Do not mark Phase 9 Done before its required evidence exists.
 
 Plan index: [improvements](phases/plans/plan-improvements.md) · [mobile navigation/month picker](phases/plans/plan-mobile-nav-and-month-picker.md) · [Phase 8](phases/plans/plan-phase8-deadman-switch.md) · [Phase 9](phases/plans/plan-phase9-hardening-release.md) · [monetization](phases/plans/plan-monetization.md).
 

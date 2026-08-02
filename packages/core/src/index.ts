@@ -204,7 +204,14 @@ export {
   accountFingerprintForUserId,
   createDataExportBundle,
   createModuleCsvExports,
+  calculateRestoreTotals,
+  createRestorePlan,
+  createRestoreReport,
+  parseAndPlanRestore,
+  prepareServerRestoreCollections,
   parseDataExportBundle,
+  RESTORE_CONFLICT_KINDS,
+  RESTORE_MODES,
   serializeDataExportBundle,
 } from './export/index.js';
 export type {
@@ -216,4 +223,11 @@ export type {
   DataExportSyncState,
   DataExportWarningCode,
   JsonRecord,
+  RestoreConflict,
+  RestoreConflictKind,
+  RestoreMode,
+  RestoreOperation,
+  RestorePlan,
+  RestoreReport,
+  RestoreTotals,
 } from './export/index.js';

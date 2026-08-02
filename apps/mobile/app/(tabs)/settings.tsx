@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card, CardLabel, CardTitle } from '../../components/card';
 import { DeadmanSettings } from '../../components/settings/deadman-settings';
+import { MobileDataRestore } from '../../components/settings/data-restore';
 import { MobileSyncHealth } from '../../components/settings/sync-health';
 import { useAuth } from '../../components/providers';
 import { MobileSafeSignOut } from '../../components/safe-sign-out';
@@ -118,6 +119,7 @@ export default function SettingsScreen() {
           )}
         </Card>
         <MobileSyncHealth />
+        <MobileDataRestore />
         <DeadmanSettings />
       </ScrollView>
     </SafeAreaView>
