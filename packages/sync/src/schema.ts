@@ -17,18 +17,21 @@
  */
 import { column, Schema, Table } from '@powersync/common';
 
-const profiles = new Table({
-  user_id: column.text,
-  full_name: column.text,
-  pan: column.text,
-  default_fy: column.text,
-  preferred_regime: column.text,
-  currency: column.text,
-  onboarded: column.integer,
-  csv_mappings: column.text,
-  created_at: column.text,
-  updated_at: column.text,
-});
+const profiles = new Table(
+  {
+    user_id: column.text,
+    full_name: column.text,
+    pan: column.text,
+    default_fy: column.text,
+    preferred_regime: column.text,
+    currency: column.text,
+    onboarded: column.integer,
+    csv_mappings: column.text,
+    created_at: column.text,
+    updated_at: column.text,
+  },
+  { trackPrevious: true },
+);
 
 const trusted_contacts = new Table(
   {
@@ -44,7 +47,7 @@ const trusted_contacts = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { by_user: ['user_id'] } },
+  { indexes: { by_user: ['user_id'] }, trackPrevious: true },
 );
 
 const activity_log = new Table(
@@ -57,7 +60,7 @@ const activity_log = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { by_user: ['user_id'] } },
+  { indexes: { by_user: ['user_id'] }, trackPrevious: true },
 );
 
 const tax_scenarios = new Table(
@@ -69,7 +72,7 @@ const tax_scenarios = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { by_user: ['user_id'] } },
+  { indexes: { by_user: ['user_id'] }, trackPrevious: true },
 );
 
 const accounts = new Table(
@@ -84,7 +87,7 @@ const accounts = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { by_user: ['user_id'] } },
+  { indexes: { by_user: ['user_id'] }, trackPrevious: true },
 );
 
 const categories = new Table(
@@ -100,7 +103,7 @@ const categories = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { by_user: ['user_id'] } },
+  { indexes: { by_user: ['user_id'] }, trackPrevious: true },
 );
 
 const transactions = new Table(
@@ -125,7 +128,10 @@ const transactions = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { by_user: ['user_id'], by_account: ['account_id'], by_date: ['occurred_on'] } },
+  {
+    indexes: { by_user: ['user_id'], by_account: ['account_id'], by_date: ['occurred_on'] },
+    trackPrevious: true,
+  },
 );
 
 const budgets = new Table(
@@ -138,7 +144,7 @@ const budgets = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { by_user: ['user_id'], by_category: ['category_id'] } },
+  { indexes: { by_user: ['user_id'], by_category: ['category_id'] }, trackPrevious: true },
 );
 
 const holdings = new Table(
@@ -166,7 +172,7 @@ const holdings = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { by_user: ['user_id'] } },
+  { indexes: { by_user: ['user_id'] }, trackPrevious: true },
 );
 
 const holding_events = new Table(
@@ -185,7 +191,7 @@ const holding_events = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { by_user: ['user_id'], by_holding: ['holding_id'] } },
+  { indexes: { by_user: ['user_id'], by_holding: ['holding_id'] }, trackPrevious: true },
 );
 
 const valuations = new Table(
@@ -200,7 +206,7 @@ const valuations = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { by_user: ['user_id'], by_holding: ['holding_id'] } },
+  { indexes: { by_user: ['user_id'], by_holding: ['holding_id'] }, trackPrevious: true },
 );
 
 const goals = new Table(
@@ -218,23 +224,26 @@ const goals = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { by_user: ['user_id'] } },
+  { indexes: { by_user: ['user_id'] }, trackPrevious: true },
 );
 
-const fire_settings = new Table({
-  user_id: column.text,
-  annual_expenses: column.real,
-  withdrawal_rate: column.real,
-  expected_return: column.real,
-  inflation: column.real,
-  current_age: column.integer,
-  retirement_age: column.integer,
-  lean_multiplier: column.real,
-  fat_multiplier: column.real,
-  monthly_investment: column.real,
-  created_at: column.text,
-  updated_at: column.text,
-});
+const fire_settings = new Table(
+  {
+    user_id: column.text,
+    annual_expenses: column.real,
+    withdrawal_rate: column.real,
+    expected_return: column.real,
+    inflation: column.real,
+    current_age: column.integer,
+    retirement_age: column.integer,
+    lean_multiplier: column.real,
+    fat_multiplier: column.real,
+    monthly_investment: column.real,
+    created_at: column.text,
+    updated_at: column.text,
+  },
+  { trackPrevious: true },
+);
 
 const ai_summaries = new Table(
   {
@@ -244,17 +253,20 @@ const ai_summaries = new Table(
     content: column.text,
     generated_at: column.text,
   },
-  { indexes: { by_user: ['user_id'], by_month: ['month'] } },
+  { indexes: { by_user: ['user_id'], by_month: ['month'] }, trackPrevious: true },
 );
 
-const deadman_settings = new Table({
-  user_id: column.text,
-  is_enabled: column.integer,
-  threshold_days: column.integer,
-  disclosure_note: column.text,
-  created_at: column.text,
-  updated_at: column.text,
-});
+const deadman_settings = new Table(
+  {
+    user_id: column.text,
+    is_enabled: column.integer,
+    threshold_days: column.integer,
+    disclosure_note: column.text,
+    created_at: column.text,
+    updated_at: column.text,
+  },
+  { trackPrevious: true },
+);
 
 const escalation_events = new Table(
   {
@@ -266,7 +278,52 @@ const escalation_events = new Table(
     created_at: column.text,
     sent_at: column.text,
   },
-  { indexes: { by_user: ['user_id'], by_created: ['created_at'] } },
+  { indexes: { by_user: ['user_id'], by_created: ['created_at'] }, trackPrevious: true },
+);
+
+/**
+ * Local-only state used to make upload identity stable across retries. These
+ * rows must survive a deliberate disconnect when the caller is preserving
+ * recovery data, but they never enter PowerSync sync rules.
+ */
+const sync_metadata = new Table(
+  {
+    key: column.text,
+    value: column.text,
+  },
+  { localOnly: true, indexes: { by_key: ['key'] } },
+);
+
+/**
+ * Local-only journal for rejected or ambiguous upload transactions. Financial
+ * payloads stay on-device for recovery and are never sent to telemetry.
+ */
+const sync_failures = new Table(
+  {
+    user_id: column.text,
+    client_instance_id: column.text,
+    transaction_id: column.integer,
+    client_operation_id: column.integer,
+    table_name: column.text,
+    row_id: column.text,
+    operation: column.text,
+    operation_data: column.text,
+    previous_values: column.text,
+    payload_hash: column.text,
+    failure_class: column.text,
+    error_code: column.text,
+    safe_error_message: column.text,
+    first_failed_at: column.text,
+    last_failed_at: column.text,
+    retry_count: column.integer,
+    resolution_state: column.text,
+    resolved_at: column.text,
+    resolution_reason: column.text,
+  },
+  {
+    localOnly: true,
+    indexes: { by_user: ['user_id'], by_transaction: ['client_instance_id', 'transaction_id'] },
+  },
 );
 
 export const AppSchema = new Schema({
@@ -286,6 +343,8 @@ export const AppSchema = new Schema({
   ai_summaries,
   deadman_settings,
   escalation_events,
+  sync_metadata,
+  sync_failures,
 });
 
 /** The row types the on-device tables produce, keyed by table name. */

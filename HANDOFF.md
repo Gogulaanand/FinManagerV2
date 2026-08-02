@@ -3,6 +3,43 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
+## Latest Handoff: 2026-08-02 (R1.1 sync durability complete)
+
+### Where we are
+
+The checkout is `codex/r1-production-readiness`, based on refreshed `origin/main` at `4523bba` after
+the R0 PR merge. R1.1 is implemented and locally verified. The connector submits each PowerSync CRUD
+transaction through the authenticated `apply_sync_transaction` RPC; the server applies the
+allowlisted batch atomically under caller RLS and records both client and server payload hashes for
+idempotent replay.
+
+Rejected and ambiguous uploads remain queued and create user-scoped local failure records. Fatal
+errors block automatic resubmission, transient retries are bounded, all synced tables track previous
+values, and explicit discard requires a matching failure, a reason, and the actual queue head. Web
+and mobile auth providers and sync UI are intentionally untouched; those are R1.2 and R1.3.
+
+### Verification state
+
+The exact 21/21 repository Turbo gate passes. The sync package passes 68 tests, build, typecheck, and
+lint; web and mobile consumer typechecks pass; Prettier and `git diff --check` pass. The complete
+local database suite passes 47 pgTAP assertions, including 32 R1.1 behavioral assertions for atomic
+rollback, RLS, allowlisting, idempotent replay before/after commit, payload mismatch, user isolation,
+unique/check conflicts, PATCH preservation, and fail-closed DELETE behavior. The migration is
+applied only to the local Supabase stack, not the linked production project.
+
+### Exact next action
+
+Commit and raise the focused R1.1 PR. After it merges, begin R1.2 safe sign-out/session-loss handling
+in a new session on a new branch from refreshed `origin/main`. Do not apply the migration to the
+linked project merely to prove the PR, and do not combine R1.2 or R1.3 into this branch.
+
+### Files in flight
+
+`DECISIONS.md`, `STATUS.md`, this handoff, `docs/R1.1_SYNC_DURABILITY.md`, the focused
+`packages/sync` source/tests, and the new Supabase migration/pgTAP file are the R1.1 PR scope. The
+user-supplied untracked plan/release documents, workflow scaffolding, `AGENTS.md`, and local
+`.codegraph/` remain preserved and must not be staged.
+
 ## Latest Handoff: 2026-08-01 (R0 production-readiness baseline)
 
 ### Where we are
