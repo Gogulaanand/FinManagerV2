@@ -2,6 +2,16 @@ import { expect, test } from '@playwright/test';
 
 import { signIn } from './auth';
 
+async function revealTransaction(page: import('@playwright/test').Page, merchant: string) {
+  const transaction = page.getByText(merchant, { exact: true });
+  for (let attempt = 0; attempt < 10 && (await transaction.count()) === 0; attempt += 1) {
+    const loadMore = page.getByRole('button', { name: /^Load more \(showing/ });
+    if ((await loadMore.count()) === 0) break;
+    await loadMore.click();
+  }
+  await expect(transaction).toBeVisible();
+}
+
 test.beforeEach(async ({ page }) => {
   await signIn(page);
 });
@@ -113,7 +123,7 @@ test('sign-out preserves an offline write until recovery and discard are acknowl
   await page.getByLabel('Amount').fill('431');
   await page.getByLabel('Merchant').fill(merchant);
   await page.getByRole('button', { name: 'Save transaction' }).click();
-  await expect(page.getByText(merchant)).toBeVisible();
+  await revealTransaction(page, merchant);
 
   // Client-side navigation preserves the deliberately disconnected PowerSync instance.
   await page.getByRole('link', { name: 'Settings' }).click();
@@ -139,8 +149,8 @@ test('sign-out preserves an offline write until recovery and discard are acknowl
 
   await context.setOffline(false);
   await page.getByRole('link', { name: 'Expenses' }).click();
+  await revealTransaction(page, merchant);
   const row = page.getByRole('listitem').filter({ hasText: merchant });
-  await expect(row).toBeVisible();
   page.once('dialog', (confirmation) => confirmation.accept());
   await row.getByRole('button', { name: 'Delete' }).click();
   await expect(page.getByText(merchant)).toHaveCount(0);
