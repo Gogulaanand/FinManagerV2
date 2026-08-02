@@ -667,3 +667,25 @@ queue or failure journal says otherwise.
 
 Rejected: embedding the raw user id, hashing unsorted JSON, silently treating incomplete sync as a
 complete backup, and coupling export creation to the future restore transaction.
+
+## D-080: Restore is dry-run first and server-transactional (2026-08-02)
+
+R2.2 consumes only schema-v2 complete bundles. The shared core planner validates target ownership
+shape, duplicate ids, dependency references, empty/merge/replace conflicts, category parent order,
+row-count projections, and transaction/portfolio/goal totals before an apply is allowed. Merge adds
+missing ids without overwriting existing rows; empty requires a clean account; replace requires an
+explicit destructive confirmation. The planner remaps every restored row's `user_id` to the current
+authenticated target and never trusts the source account id.
+
+The Supabase `apply_data_restore(text,text,text,jsonb)` SECURITY INVOKER RPC performs the chosen
+operation in one database transaction, inserts in dependency order, deletes in reverse dependency
+order for replace, enforces the authenticated tenant boundary, limits payload size, and records an
+idempotent `restore_runs` replay ledger. Web and mobile expose the same dry-run/report/apply contract.
+
+Why: dozens of independent client inserts can leave a partial financial restore, while source
+ownership must not cross accounts. A local report makes conflicts and totals reviewable before the
+server transaction, and the replay ledger makes retries safe.
+
+Rejected: client-only row-by-row restore, trusting source `user_id`, silently replacing conflicts,
+and treating structural JSON parsing or a migration-application check as a clean-account restore
+drill.

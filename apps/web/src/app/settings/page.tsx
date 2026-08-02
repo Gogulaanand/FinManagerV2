@@ -5,6 +5,7 @@ import { DeadmanSettingsPanel } from '@/components/settings/deadman-settings';
 import { Card, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/providers';
 import { DataExportPanel } from '@/components/settings/data-export';
+import { DataRestorePanel } from '@/components/settings/data-restore';
 import { SafeSignOut } from '@/components/safe-sign-out';
 import { SyncHealthPanel } from '@/components/sync-health';
 
@@ -36,6 +37,7 @@ export default function SettingsPage() {
       </Card>
       <SyncHealthPanel />
       <DataExportPanel />
+      <DataRestorePanel />
       <DeadmanSettingsPanel />
     </div>
   );

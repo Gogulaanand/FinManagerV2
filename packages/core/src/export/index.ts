@@ -20,3 +20,21 @@ export type {
   DataExportWarningCode,
   JsonRecord,
 } from './data-export.js';
+export {
+  calculateRestoreTotals,
+  createRestorePlan,
+  createRestoreReport,
+  parseAndPlanRestore,
+  prepareServerRestoreCollections,
+  RESTORE_CONFLICT_KINDS,
+  RESTORE_MODES,
+} from './data-restore.js';
+export type {
+  RestoreConflict,
+  RestoreConflictKind,
+  RestoreMode,
+  RestoreOperation,
+  RestorePlan,
+  RestoreReport,
+  RestoreTotals,
+} from './data-restore.js';

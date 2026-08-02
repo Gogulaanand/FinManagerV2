@@ -63,6 +63,8 @@ export type {
 } from './health';
 export { createRecoveryExportArtifact, readDataExportCollections } from './export';
 export type { RecoveryExportArtifact, RecoveryExportOptions } from './export';
+export { applyRecoveryRestore, planRecoveryRestore, RestoreBlockedError } from './restore';
+export type { RestoreOptions } from './restore';
 export {
   DEFAULT_SCENARIO_INPUT,
   SCENARIOS_QUERY,
