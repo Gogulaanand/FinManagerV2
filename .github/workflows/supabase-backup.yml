@@ -1,0 +1,106 @@
+name: Supabase encrypted logical backup
+
+on:
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: supabase-logical-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Dump, encrypt, and retain the database
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_BACKUP_PASSPHRASE: ${{ secrets.SUPABASE_BACKUP_PASSPHRASE }}
+      BACKUP_RETENTION_DAYS: 35
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.109.1
+
+      - name: Validate backup configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${SUPABASE_DB_URL:?SUPABASE_DB_URL is required}"
+          : "${SUPABASE_BACKUP_PASSPHRASE:?SUPABASE_BACKUP_PASSPHRASE is required}"
+          if (( ${#SUPABASE_BACKUP_PASSPHRASE} < 32 )); then
+            echo 'SUPABASE_BACKUP_PASSPHRASE must be at least 32 characters.' >&2
+            exit 1
+          fi
+
+      - name: Dump roles, schema, and data
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p backup
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/schema.sql
+          supabase db dump \
+            --db-url "$SUPABASE_DB_URL" \
+            -f backup/data.sql \
+            --data-only \
+            --use-copy \
+            -x 'storage.buckets_vectors' \
+            -x 'storage.vector_indexes'
+          (cd backup && sha256sum roles.sql schema.sql data.sql > checksums.sha256)
+          cat > backup/manifest.json <<EOF
+          {
+            "format": "finmanager-supabase-logical-backup-v1",
+            "createdAt": "${{ github.run_started_at }}",
+            "runId": "${{ github.run_id }}",
+            "repository": "${{ github.repository }}",
+            "retentionDays": ${BACKUP_RETENTION_DAYS},
+            "files": ["roles.sql", "schema.sql", "data.sql", "checksums.sha256"]
+          }
+          EOF
+
+      - name: Encrypt backup archive
+        id: encrypt
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          passphrase_file="$RUNNER_TEMP/supabase-backup-passphrase"
+          archive="$RUNNER_TEMP/finmanager-supabase-${GITHUB_RUN_ID}.tar.gz"
+          encrypted="$RUNNER_TEMP/finmanager-supabase-${GITHUB_RUN_ID}.tar.gz.gpg"
+          printf '%s' "$SUPABASE_BACKUP_PASSPHRASE" > "$passphrase_file"
+          tar -C backup -czf "$archive" .
+          gpg \
+            --batch \
+            --yes \
+            --pinentry-mode loopback \
+            --passphrase-file "$passphrase_file" \
+            --symmetric \
+            --cipher-algo AES256 \
+            --output "$encrypted" \
+            "$archive"
+          gpg \
+            --batch \
+            --yes \
+            --pinentry-mode loopback \
+            --passphrase-file "$passphrase_file" \
+            --decrypt \
+            --output "$RUNNER_TEMP/verified-backup.tar.gz" \
+            "$encrypted"
+          tar -tzf "$RUNNER_TEMP/verified-backup.tar.gz" >/dev/null
+          rm -f "$passphrase_file" "$archive" "$RUNNER_TEMP/verified-backup.tar.gz"
+          echo "path=$encrypted" >> "$GITHUB_OUTPUT"
+
+      - name: Upload encrypted backup outside Supabase
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-logical-backup-${{ github.run_id }}
+          path: ${{ steps.encrypt.outputs.path }}
+          if-no-files-found: error
+          retention-days: 35

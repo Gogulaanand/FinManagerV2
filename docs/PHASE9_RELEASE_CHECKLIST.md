@@ -108,6 +108,11 @@ build IDs, device/OS versions, timestamps, and screenshots in `phases/briefing/p
 - [ ] Web downloads and native share sheets manually opened on target devices.
 - [ ] One exported JSON bundle restores into a clean test account/project with equivalent row counts,
       financial totals, dependency-order results, and a saved restore report.
+- [x] R2.3 backup-policy workflows define a daily encrypted logical dump, 35-day external artifact
+      retention, explicit RPO/RTO targets, and a monthly disposable-project rehearsal.
+- [ ] Configure `SUPABASE_DB_URL`, `SUPABASE_BACKUP_PASSPHRASE`, and
+      `DISPOSABLE_SUPABASE_DB_URL`; retain one successful backup run and one successful rehearsal
+      run with measured recovery duration.
 - [x] Strict template rejects malformed rows in core tests and the live Playwright second import
       created zero rows.
 - [ ] Phase 3 test account deletion has separate explicit owner approval before execution.

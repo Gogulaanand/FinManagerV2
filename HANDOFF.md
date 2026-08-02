@@ -3,11 +3,11 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
-## Latest Handoff: 2026-08-02 (R2.2 restore implementation complete locally)
+## Latest Handoff: 2026-08-02 (R2.2 merged; R2.3 backup policy in progress)
 
 ### Where we are
 
-The checkout is `codex/r2-restore`, based on merged PR #11 commit `27f6d2f` from refreshed
+The checkout is `codex/r2.3-backup-policy`, based on merged PR #12 commit `9c78e3b` from refreshed
 `origin/main`. R1.1's atomic RPC migration is applied and verified on the linked Supabase project;
 R2.2's transactional restore migrations are also applied as remote versions `20260802071518` and
 `20260802072228`; the corrected RPC, replay ledger, and authenticated execute grant are API-verified.
@@ -32,9 +32,10 @@ complete sync, pending/failed counts, sanitized failure summaries, and retry/rec
 ### Verification state
 
 The targeted R2.2 gate passes: core has 211 tests and sync has 85 tests; core/sync build, typecheck,
-and lint pass; web/mobile typecheck and lint pass; Prettier and `git diff --check` pass. The linked
-Supabase API verifies the restore function and replay ledger. The full 21/21 repository gate and
-protected PR/Preview checks remain to be run on the final branch head.
+and lint pass; web/mobile typecheck and lint pass; Prettier and `git diff --check` pass. PR #12
+current-head CI run `30737883377` and Preview E2E run `30737893361` passed all required checks. The
+R2.3 workflow/policy files are now branch-local; secret configuration and retained backup/rehearsal
+evidence are intentionally not claimed.
 
 The prior exact 21/21 repository Turbo gate passed with 358 unit tests. The sync package passes 82 tests,
 build, typecheck, and lint; web and mobile typecheck/lint pass; Prettier and `git diff --check`
@@ -44,17 +45,19 @@ paths; its Vercel Preview E2E also passes all 13 protected paths.
 
 ### Exact next action
 
-Create the R2.2 PR from this branch through the authenticated browser PR form, wait for all required
-CI/Preview checks, and merge it automatically when green. Then refresh `origin/main` and begin R2.3
-server backup policy separately. The clean-account restore drill is still external evidence and must
-not be claimed from local unit tests or migration application alone.
+Validate the R2.3 workflow/policy changes, create the PR through the authenticated browser PR form,
+and merge it automatically when all required checks pass. Then configure
+`SUPABASE_DB_URL`, `SUPABASE_BACKUP_PASSPHRASE`, and `DISPOSABLE_SUPABASE_DB_URL`, run one manual
+backup and rehearsal, and retain their run evidence. The clean-account restore drill is still
+external evidence and must not be claimed from local unit tests or migration application alone.
 
 ### Files in flight
 
-R2.2 scope includes `packages/core/src/export/data-restore*`, `packages/sync/src/restore*`, the
-web/mobile Settings restore panels, and `supabase/migrations/20260802000001_r2_restore.sql` plus
-tests. The user-supplied untracked plan/release documents, workflow scaffolding, `AGENTS.md`, local
-`agent_docs/`, and `.codegraph/` remain preserved and must not be staged.
+R2.3 scope includes `.github/workflows/supabase-backup.yml`,
+`.github/workflows/supabase-restore-rehearsal.yml`, and `docs/SUPABASE_BACKUP_POLICY.md` plus the
+release/status/decision updates. The user-supplied untracked plan/release documents, workflow
+scaffolding, `AGENTS.md`, local `agent_docs/`, and `.codegraph/` remain preserved and must not be
+staged.
 
 ## Latest Handoff: 2026-08-01 (R0 production-readiness baseline)
 
