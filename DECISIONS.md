@@ -689,3 +689,23 @@ server transaction, and the replay ledger makes retries safe.
 Rejected: client-only row-by-row restore, trusting source `user_id`, silently replacing conflicts,
 and treating structural JSON parsing or a migration-application check as a clean-account restore
 drill.
+
+## D-081: Daily encrypted logical backups live outside Supabase (2026-08-02)
+
+R2.3 uses the Supabase CLI to create separate roles, schema, and data dumps once per day. The files
+are checksummed, archived, and encrypted with AES-256 GPG before they are uploaded as a private
+GitHub Actions artifact with a 35-day retention window. The repository never commits plaintext
+financial data, a database URL, or the encryption passphrase.
+
+The policy targets a 24-hour RPO and a four-hour manual project-loss RTO, subject to measurement.
+A first-day-of-month workflow selects the latest successful encrypted backup, verifies its
+checksums, and restores schema/data in one transaction into a disposable Supabase project. The
+roles dump is retained but is not applied automatically because managed Supabase roles are
+project-specific and require operator review during full recovery.
+
+Why: personal MVP needs a recoverable copy outside the production project without assuming paid
+PITR. Separating backup creation from restore rehearsal makes missing secrets, expired artifacts,
+checksum failures, and disposable-project mistakes visible as operational failures.
+
+Rejected: committing dumps to the repository, uploading plaintext artifacts, treating Supabase's
+platform backup as the only recovery proof, and pointing the rehearsal workflow at production.

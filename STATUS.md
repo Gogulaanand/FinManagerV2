@@ -1,9 +1,9 @@
 # Project Status
 
 Last updated: 2026-08-02 (R1.1 sync durability, R1.2 safe auth transitions, R1.3 sync-health
-surfaces, and R2.1 recovery-export hardening are merged and protected CI/Preview verified; R2.2
-restore implementation is complete on its focused branch and clean-account, production-auth, and
-device gates remain open).
+surfaces, R2.1 recovery-export hardening, and R2.2 transactional restore are merged and protected
+CI/Preview verified; R2.3 backup-policy implementation is in progress and clean-account,
+backup-evidence, production-auth, and device gates remain open).
 
 ## Current State
 
@@ -30,12 +30,13 @@ counts, deterministic checksums, and explicit completeness warnings. Every expor
 validated through its relevant Zod schema adapter before serialization. Complete backups require a
 full sync, no unresolved failed writes or sync errors, and explicit acknowledgement when pending
 writes are included; recovery exports remain available for unsafe local state.
-R2.2 is implemented on `codex/r2-restore`: dry-run planning validates schema-v2 bundles, detects
-target conflicts and missing dependencies, supports empty/merge/replace modes, computes row-count
-and financial-total projections, and prepares dependency-ordered operations. Web and mobile Settings
-now preview and apply restores. The linked Supabase project has the authenticated transactional
-restore RPC and replay ledger applied as migrations `20260802071518` and the verified loop fix
-`20260802072228`; a clean-account restore drill and protected PR evidence remain open.
+R2.2 is merged as PR #12 (`9c78e3b`): dry-run planning validates schema-v2 bundles, detects target
+conflicts and missing dependencies, supports empty/merge/replace modes, computes row-count and
+financial-total projections, and prepares dependency-ordered operations. Web and mobile Settings now
+preview and apply restores. The linked Supabase project has the authenticated transactional restore
+RPC and replay ledger applied as migrations `20260802071518` and the verified loop fix
+`20260802072228`. R2.3 now adds scheduled encrypted logical backups and a disposable-project
+restore rehearsal; secret setup and retained operational evidence remain open.
 
 ### Implemented
 
@@ -91,6 +92,8 @@ restore RPC and replay ledger applied as migrations `20260802071518` and the ver
   211 tests and sync passes 85; affected web/mobile typecheck and lint pass; the Supabase API
   verifies `apply_data_restore(text,text,text,jsonb)`, `restore_runs`, and the authenticated execute
   grant.
+- PR #12 current-head CI run `30737883377` and Preview E2E run `30737893361` passed; the Vercel
+  deployment and preview comments also passed.
 
 ### Observed deployed state (not release proof)
 
@@ -119,9 +122,10 @@ restore RPC and replay ledger applied as migrations `20260802071518` and the ver
 
 ## Next Up
 
-After the R2.2 PR is checked and merged, start R2.3 server backup policy on a fresh branch. The
-clean-account restore drill, production/auth, Sentry, dead-man, and Android-device gates remain
-external evidence work. Do not mark Phase 9 Done before its required evidence exists.
+Complete R2.3 server backup policy on `codex/r2.3-backup-policy`, then configure its secrets and
+retain first-run backup/rehearsal evidence. The clean-account restore drill, production/auth,
+Sentry, dead-man, and Android-device gates remain external evidence work. Do not mark Phase 9 Done
+before its required evidence exists.
 
 Plan index: [improvements](phases/plans/plan-improvements.md) · [mobile navigation/month picker](phases/plans/plan-mobile-nav-and-month-picker.md) · [Phase 8](phases/plans/plan-phase8-deadman-switch.md) · [Phase 9](phases/plans/plan-phase9-hardening-release.md) · [monetization](phases/plans/plan-monetization.md).
 
