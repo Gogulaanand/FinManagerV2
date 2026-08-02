@@ -12,7 +12,14 @@ type Mode = 'signin' | 'signup';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { session, loading, signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth();
+  const {
+    session,
+    loading,
+    signInWithPassword,
+    signUpWithPassword,
+    signInWithGoogle,
+    authTransitionError,
+  } = useAuth();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -69,6 +76,8 @@ export default function LoginPage() {
           <label className="flex flex-col gap-1.5">
             <span className="font-body text-label font-medium text-foreground">Email</span>
             <Input
+              id="email"
+              name="email"
               type="email"
               autoComplete="email"
               required
@@ -83,6 +92,8 @@ export default function LoginPage() {
           <label className="flex flex-col gap-1.5">
             <span className="font-body text-label font-medium text-foreground">Password</span>
             <Input
+              id="password"
+              name="password"
               type="password"
               autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
               required
@@ -95,9 +106,9 @@ export default function LoginPage() {
             />
           </label>
 
-          {error && (
+          {(error ?? authTransitionError) && (
             <p role="alert" className="font-body text-caption text-loss">
-              {error}
+              {error ?? authTransitionError}
             </p>
           )}
           {notice && <p className="font-body text-caption text-foreground-muted">{notice}</p>}

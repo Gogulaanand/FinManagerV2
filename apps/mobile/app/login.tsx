@@ -10,7 +10,8 @@ type Mode = 'signin' | 'signup';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { session, signInWithPassword, signInWithGoogle, signUpWithPassword } = useAuth();
+  const { session, signInWithPassword, signInWithGoogle, signUpWithPassword, authTransitionError } =
+    useAuth();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -101,7 +102,9 @@ export default function LoginScreen() {
             />
           </View>
 
-          {error ? <Text className="font-body text-caption text-loss">{error}</Text> : null}
+          {(error ?? authTransitionError) ? (
+            <Text className="font-body text-caption text-loss">{error ?? authTransitionError}</Text>
+          ) : null}
           {notice ? (
             <Text className="font-body text-caption text-foreground-muted">{notice}</Text>
           ) : null}

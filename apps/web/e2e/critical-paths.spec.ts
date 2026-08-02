@@ -2,6 +2,14 @@ import { expect, test } from '@playwright/test';
 
 import { signIn } from './auth';
 
+type PowerSyncTestWindow = Window & {
+  readonly __ps: {
+    readonly db: { waitForFirstSync: () => Promise<void> };
+    readonly goOffline: () => Promise<void>;
+    readonly goOnline: () => Promise<void>;
+  };
+};
+
 test.beforeEach(async ({ page }) => {
   await signIn(page);
 });
@@ -96,6 +104,56 @@ test('expense can be added, edited, and deleted through the offline-first UI', a
     .getByRole('button', { name: 'Delete' })
     .click();
   await expect(page.getByText(updatedMerchant)).toHaveCount(0);
+});
+
+test('sign-out preserves an offline write until recovery and discard are acknowledged', async ({
+  page,
+}) => {
+  const merchant = `E2E sign-out recovery ${Date.now()}`;
+
+  await page.goto('/expenses');
+  await page.waitForFunction(() => '__ps' in window);
+  await page.evaluate(async () => {
+    const handle = (window as unknown as PowerSyncTestWindow).__ps;
+    await handle.db.waitForFirstSync();
+    await handle.goOffline();
+  });
+
+  await page.getByRole('button', { name: 'Add transaction' }).click();
+  await page.getByLabel('Amount').fill('431');
+  await page.getByLabel('Merchant').fill(merchant);
+  await page.getByRole('button', { name: 'Save transaction' }).click();
+  await expect(page.getByText(merchant)).toBeVisible();
+
+  // Client-side navigation preserves the deliberately disconnected PowerSync instance.
+  await page.getByRole('link', { name: 'Settings' }).click();
+  await page.getByRole('button', { name: 'Sign out', exact: true }).last().click();
+
+  const dialog = page.getByRole('dialog', { name: 'Unsynced work is still on this device' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText(/queued write\(s\)/)).toBeVisible();
+
+  const downloadPromise = page.waitForEvent('download');
+  await dialog.getByRole('button', { name: 'Download recovery' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^finmanager-recovery-\d{4}-\d{2}-\d{2}\.json$/);
+
+  const discard = dialog.getByRole('button', {
+    name: 'Discard local-only changes and sign out',
+  });
+  await expect(discard).toBeDisabled();
+  await dialog.getByRole('checkbox').check();
+  await expect(discard).toBeEnabled();
+  await dialog.getByRole('button', { name: 'Stay signed in' }).click();
+  await expect(dialog).toHaveCount(0);
+
+  await page.evaluate(async () => (window as unknown as PowerSyncTestWindow).__ps.goOnline());
+  await page.getByRole('link', { name: 'Expenses' }).click();
+  const row = page.getByRole('listitem').filter({ hasText: merchant });
+  await expect(row).toBeVisible();
+  page.once('dialog', (confirmation) => confirmation.accept());
+  await row.getByRole('button', { name: 'Delete' }).click();
+  await expect(page.getByText(merchant)).toHaveCount(0);
 });
 
 test('tax calculator compares regimes without network data', async ({ page }) => {

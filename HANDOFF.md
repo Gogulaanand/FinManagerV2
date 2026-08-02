@@ -3,42 +3,44 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
-## Latest Handoff: 2026-08-02 (R1.1 sync durability complete)
+## Latest Handoff: 2026-08-02 (R1.2 safe auth transitions complete)
 
 ### Where we are
 
-The checkout is `codex/r1-production-readiness`, based on refreshed `origin/main` at `4523bba` after
-the R0 PR merge. R1.1 is implemented and locally verified. The connector submits each PowerSync CRUD
-transaction through the authenticated `apply_sync_transaction` RPC; the server applies the
-allowlisted batch atomically under caller RLS and records both client and server payload hashes for
-idempotent replay.
+The checkout is `codex/r1-auth-session-safety`, based on merged R1.1 commit `641d5e4` from refreshed
+`origin/main`. R1.2 is implemented without a database migration. Web and mobile explicit sign-out
+now wait up to eight seconds for pending uploads and unresolved failures to clear. Unsafe work keeps
+the session and local database intact and opens retry, recovery-export, stay-signed-in, and
+explicitly acknowledged discard choices.
 
-Rejected and ambiguous uploads remain queued and create user-scoped local failure records. Fatal
-errors block automatic resubmission, transient retries are bounded, all synced tables track previous
-values, and explicit discard requires a matching failure, a reason, and the actual queue head. Web
-and mobile auth providers and sync UI are intentionally untouched; those are R1.2 and R1.3.
+Transient null sessions disconnect without clearing. A restored same-user session reconnects to the
+retained database; a different account can replace only a clean cache and is rejected while the
+previous account has pending or failed work. Auth transitions are serialized to preserve event
+order. R1.3's general sync-health UI and R2 restore remain intentionally untouched.
 
 ### Verification state
 
-The exact 21/21 repository Turbo gate passes. The sync package passes 68 tests, build, typecheck, and
-lint; web and mobile consumer typechecks pass; Prettier and `git diff --check` pass. The complete
-local database suite passes 47 pgTAP assertions, including 32 R1.1 behavioral assertions for atomic
-rollback, RLS, allowlisting, idempotent replay before/after commit, payload mismatch, user isolation,
-unique/check conflicts, PATCH preservation, and fail-closed DELETE behavior. The migration is
-applied only to the local Supabase stack, not the linked production project.
+The exact 21/21 repository Turbo gate passes with 352 unit tests. The sync package passes 78 tests,
+build, typecheck, and lint; web and mobile typecheck/lint pass; Prettier and `git diff --check` pass.
+Browser verification loads Dashboard, Settings, and Login without a framework overlay; the only
+observed 404 is the pre-existing favicon request. The new protected Playwright case covers an
+offline queued write through warning, recovery download, acknowledgement, stay/reconnect, and
+cleanup. It is collected and typechecked locally but awaits protected CI credentials for execution.
 
 ### Exact next action
 
-Commit and raise the focused R1.1 PR. After it merges, begin R1.2 safe sign-out/session-loss handling
-in a new session on a new branch from refreshed `origin/main`. Do not apply the migration to the
-linked project merely to prove the PR, and do not combine R1.2 or R1.3 into this branch.
+Commit and raise the focused R1.2 PR, then require CI and Preview E2E to execute the authenticated
+offline-sign-out case. After merge, begin R1.3 sync-health UI in a new session and branch from
+refreshed `origin/main`; do not stack it on this branch. No linked-project mutation is needed for
+R1.2.
 
 ### Files in flight
 
-`DECISIONS.md`, `STATUS.md`, this handoff, `docs/R1.1_SYNC_DURABILITY.md`, the focused
-`packages/sync` source/tests, and the new Supabase migration/pgTAP file are the R1.1 PR scope. The
-user-supplied untracked plan/release documents, workflow scaffolding, `AGENTS.md`, and local
-`.codegraph/` remain preserved and must not be staged.
+`DECISIONS.md`, `STATUS.md`, this handoff, `docs/R1.2_AUTH_TRANSITION_SAFETY.md`, the focused shared
+sync policy/tests, web/mobile provider and sign-out UI, login accessibility fix, and protected
+Playwright case are the R1.2 PR scope. The user-supplied untracked plan/release documents, workflow
+scaffolding, `AGENTS.md`, local `agent_docs/`, and `.codegraph/` remain preserved and must not be
+staged.
 
 ## Latest Handoff: 2026-08-01 (R0 production-readiness baseline)
 

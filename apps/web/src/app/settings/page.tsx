@@ -4,11 +4,11 @@ import { Settings } from 'lucide-react';
 import { DeadmanSettingsPanel } from '@/components/settings/deadman-settings';
 import { Card, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/providers';
-import { Button } from '@/components/ui/button';
 import { DataExportPanel } from '@/components/settings/data-export';
+import { SafeSignOut } from '@/components/safe-sign-out';
 
 export default function SettingsPage() {
-  const { session, signOut } = useAuth();
+  const { session } = useAuth();
   return (
     <div className="space-y-6">
       <div>
@@ -25,9 +25,7 @@ export default function SettingsPage() {
         {session ? (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <span className="font-body text-body-md">{session.user.email}</span>
-            <Button variant="outline" onClick={() => void signOut()}>
-              Sign out
-            </Button>
+            <SafeSignOut variant="outline" />
           </div>
         ) : (
           <p className="mt-2 font-body text-body-md text-foreground-muted">

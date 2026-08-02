@@ -599,3 +599,29 @@ Implemented and verified locally on 2026-08-02: the RPC is `SECURITY INVOKER`, a
 atomic, and idempotent; the local journal preserves recovery data and blocks rejected queue heads;
 and the PostgreSQL behavior suite proves rollback, replay, ownership, and conflict behavior. The
 migration remains unapplied to the linked production project until the reviewed PR is merged.
+
+## D-077: Null auth sessions preserve local data unless sign-out was deliberately reconciled (2026-08-02)
+
+Web and mobile now treat Supabase's null session as a transient auth boundary by default: the app
+removes the visible session and disconnects PowerSync, but does not clear the local database. An
+explicit sign-out first waits a bounded eight seconds for the upload queue and unresolved failure
+journal to become clean. Remaining work keeps the user signed in until they retry, stay, or create a
+recovery export and explicitly acknowledge forced discard.
+
+Account isolation is enforced before an incoming session reaches consumers. The same account may
+reattach to retained data; a different account may replace a clean cache, but is rejected while the
+previous account owns pending or failed work. Auth transitions are serialized so rapid session loss
+and restoration cannot leave the restored session attached to a late disconnect.
+
+Why: a null session can mean token-refresh/network loss rather than user intent, so unconditional
+`disconnectAndClear()` can silently erase offline writes. Preserving every null transition without
+an account gate would solve data loss by creating cross-account disclosure instead.
+
+Rejected: unconditional clear on null session; unconditional preservation across account changes;
+sign-out warnings without a bounded final sync; forced clear based on confirmation alone; putting
+financial payloads or access tokens into auth-flow state or telemetry.
+
+Consequence: deliberate clean sign-out still clears downloaded account data, transient loss is
+recoverable by the same user, unsafe account switching fails closed, and a forced discard is
+available only after a local recovery artifact and explicit acknowledgement. R1.3 remains
+responsible for the persistent sync-health surface, and R2 remains responsible for restore.
