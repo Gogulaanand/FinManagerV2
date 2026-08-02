@@ -3,11 +3,11 @@
 import Link from 'next/link';
 
 import { useAuth } from '@/components/providers';
-import { Button } from '@/components/ui/button';
+import { SafeSignOut } from '@/components/safe-sign-out';
 
 /** Header control: the signed-in email + sign out, or a link to the login screen. */
 export function AuthStatus() {
-  const { session, loading, signOut } = useAuth();
+  const { session, loading } = useAuth();
 
   if (loading) return null;
 
@@ -27,15 +27,7 @@ export function AuthStatus() {
       <span className="hidden max-w-[12rem] truncate font-body text-caption text-foreground-muted sm:inline">
         {session.user.email}
       </span>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => {
-          void signOut();
-        }}
-      >
-        Sign out
-      </Button>
+      <SafeSignOut variant="ghost" size="sm" />
     </div>
   );
 }

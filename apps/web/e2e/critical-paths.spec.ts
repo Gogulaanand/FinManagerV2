@@ -98,6 +98,82 @@ test('expense can be added, edited, and deleted through the offline-first UI', a
   await expect(page.getByText(updatedMerchant)).toHaveCount(0);
 });
 
+test('sign-out preserves an offline write until recovery and discard are acknowledged', async ({
+  page,
+  context,
+}) => {
+  const merchant = `E2E sign-out recovery ${Date.now()}`;
+
+  await page.goto('/expenses');
+  await expect(page.getByRole('heading', { name: 'Expenses' })).toBeVisible();
+  await expect(page.getByText('50 of 120 this month')).toBeVisible();
+  const currentMonth = page.getByRole('button', { expanded: false }).filter({ hasText: /20\d{2}/ });
+  const currentLabel = (await currentMonth.textContent())?.trim() ?? '';
+  const parsedLabel = currentLabel.match(/^([A-Za-z]+)\s+(\d{4})$/);
+  if (!parsedLabel) throw new Error(`Unable to parse current month label: ${currentLabel}`);
+  const monthIndex = new Date(`${parsedLabel[1]} 1, ${parsedLabel[2]}`).getMonth();
+  const lastDay = new Date(Number(parsedLabel[2]), monthIndex + 1, 0).getDate();
+  const occurredOn = `${parsedLabel[2]}-${String(monthIndex + 1).padStart(2, '0')}-${String(
+    lastDay,
+  ).padStart(2, '0')}`;
+
+  // Warm the client-side route while connected. Next dev cannot fetch an uncached RSC
+  // response after the browser is taken offline, while the production preview is
+  // commonly prefetched before this point.
+  await page.getByRole('link', { name: 'Settings' }).click();
+  await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('main').getByRole('button', { name: 'Sign out', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: 'Expenses' }).click();
+  await expect(page.getByRole('heading', { name: 'Expenses' })).toBeVisible();
+  await expect(page.getByText('50 of 120 this month')).toBeVisible();
+
+  await context.setOffline(true);
+
+  await page.getByRole('button', { name: 'Add transaction' }).click();
+  await page.getByLabel('Amount').fill('431');
+  await page.getByLabel('Date').fill(occurredOn);
+  await page.getByLabel('Merchant').fill(merchant);
+  await page.getByRole('button', { name: 'Save transaction' }).click();
+  await expect(page.getByText(merchant, { exact: true })).toBeVisible();
+
+  // Browser history restores the warmed route without an offline RSC fetch.
+  await page.goBack();
+  await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
+  const settingsSignOut = page
+    .getByRole('main')
+    .getByRole('button', { name: 'Sign out', exact: true });
+  await expect(settingsSignOut).toBeVisible();
+  await settingsSignOut.click({ force: true });
+
+  const dialog = page.getByRole('dialog', { name: 'Unsynced work is still on this device' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText(/queued write\(s\)/)).toBeVisible();
+
+  const downloadPromise = page.waitForEvent('download');
+  await dialog.getByRole('button', { name: 'Download recovery' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^finmanager-recovery-\d{4}-\d{2}-\d{2}\.json$/);
+
+  const discard = dialog.getByRole('button', {
+    name: 'Discard local-only changes and sign out',
+  });
+  await expect(discard).toBeDisabled();
+  await dialog.getByRole('checkbox').check();
+  await expect(discard).toBeEnabled();
+  await dialog.getByRole('button', { name: 'Stay signed in' }).click();
+  await expect(dialog).toHaveCount(0);
+
+  await context.setOffline(false);
+  await page.getByRole('link', { name: 'Expenses' }).click();
+  await expect(page.getByText(merchant, { exact: true })).toBeVisible();
+  const row = page.getByRole('listitem').filter({ hasText: merchant });
+  page.once('dialog', (confirmation) => confirmation.accept());
+  await row.getByRole('button', { name: 'Delete' }).click();
+  await expect(page.getByText(merchant)).toHaveCount(0);
+});
+
 test('tax calculator compares regimes without network data', async ({ page }) => {
   await page.goto('/tax');
   await expect(page.getByRole('heading', { name: 'Tax' })).toBeVisible();

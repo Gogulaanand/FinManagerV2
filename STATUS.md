@@ -1,8 +1,8 @@
 # Project Status
 
-Last updated: 2026-08-02 (R1.1 sync durability is implemented and locally verified; R1.2 sign-out
-safety and the remaining personal-MVP data-integrity, production-auth, recovery, and device gates
-remain open).
+Last updated: 2026-08-02 (R1.1 sync durability and R1.2 safe auth transitions are implemented and
+locally verified; protected authenticated E2E plus the remaining personal-MVP sync-health,
+recovery, production-auth, and device gates remain open).
 
 ## Current State
 
@@ -15,6 +15,11 @@ one authenticated atomic RPC, rejected/ambiguous transactions remain queued with
 records, bounded retries fail closed, explicit discard is user-scoped, and all synced tables track
 previous values. The migration is applied and verified on local Supabase only; it has not been
 applied to the linked production project.
+R1.2 is implemented on `codex/r1-auth-session-safety`: explicit sign-out waits up to eight seconds
+for the upload queue, unresolved work opens a retry/recovery/acknowledged-discard flow, transient
+session loss disconnects without clearing, and a different account cannot attach to retained unsafe
+data. The contract is recorded in [docs/R1.2_AUTH_TRANSITION_SAFETY.md](docs/R1.2_AUTH_TRANSITION_SAFETY.md)
+and D-077. No database migration or production deployment is part of R1.2.
 
 ### Implemented
 
@@ -50,13 +55,18 @@ applied to the linked production project.
 
 ### Automated evidence complete
 
-- The exact 21/21 Turbo gate passes with 342 unit tests; formatting and `git diff --check` pass.
+- The exact 21/21 Turbo gate passes with 352 unit tests; formatting and `git diff --check` pass.
   Both Expo exports pass, and 12 integrated Chromium tests collect. Seven GitHub E2E secrets exist,
   including `VERCEL_AUTOMATION_BYPASS_SECRET`; historical Preview E2E run `30188066854` passed.
 - R1.1 adds 68 passing sync-package tests and a 32-assertion PostgreSQL behavior matrix. The full
   local database suite passes 47 assertions, including atomic rollback, RLS/allowlisting,
   idempotent replay before and after commit, ownership isolation, conflict handling, and typed
   PATCH/DELETE behavior.
+- R1.2 raises the sync package to 78 passing tests. Ten focused cases cover bounded online drain,
+  offline timeout, failed writes, export/acknowledgement guards, transient loss, same/different-user
+  isolation, and recovery-artifact contents. Web/mobile typecheck and lint pass, and browser checks
+  load Dashboard, Settings, and Login without framework overlays. The authenticated Playwright case
+  is collected but awaits protected CI credentials on the PR.
 
 ### Observed deployed state (not release proof)
 
@@ -85,10 +95,11 @@ applied to the linked production project.
 
 ## Next Up
 
-After the R1.1 PR merges, start R1.2 sign-out/session-loss safety from refreshed `origin/main` in a
-new session and branch. Keep R1.3 UI separate until the R1.2 auth-transition contract is stable. In
-parallel, the owner-controlled production, Sentry, dead-man, and Android-device gates remain
-external evidence work. Do not mark Phase 9 Done before its required evidence exists.
+Commit and raise the focused R1.2 PR, then require its protected authenticated Playwright job to
+prove the offline-write warning/recovery path. After merge, start R1.3 sync-health UI from refreshed
+`origin/main` in a new session and branch. In parallel, the owner-controlled production, Sentry,
+dead-man, and Android-device gates remain external evidence work. Do not mark Phase 9 Done before
+its required evidence exists.
 
 Plan index: [improvements](phases/plans/plan-improvements.md) · [mobile navigation/month picker](phases/plans/plan-mobile-nav-and-month-picker.md) · [Phase 8](phases/plans/plan-phase8-deadman-switch.md) · [Phase 9](phases/plans/plan-phase9-hardening-release.md) · [monetization](phases/plans/plan-monetization.md).
 

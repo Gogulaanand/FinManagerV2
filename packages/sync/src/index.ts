@@ -32,7 +32,25 @@ export type {
   SyncFailureState,
   SyncOperation,
 } from './failures';
-export { readDataExportCollections } from './export';
+export {
+  assertForcedSignOutAllowed,
+  DEFAULT_FINAL_SYNC_POLL_MS,
+  DEFAULT_FINAL_SYNC_TIMEOUT_MS,
+  disconnectForSessionLoss,
+  getLocalSyncSafetySnapshot,
+  isLocalSyncSafe,
+  reconcileLocalAccount,
+  waitForFinalSync,
+} from './sign-out';
+export type {
+  AccountReconciliation,
+  FinalSyncOptions,
+  FinalSyncResult,
+  ForcedSignOutConfirmation,
+  LocalSyncSafetySnapshot,
+} from './sign-out';
+export { createRecoveryExportArtifact, readDataExportCollections } from './export';
+export type { RecoveryExportArtifact } from './export';
 export {
   DEFAULT_SCENARIO_INPUT,
   SCENARIOS_QUERY,

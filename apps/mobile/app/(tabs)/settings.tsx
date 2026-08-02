@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card, CardLabel, CardTitle } from '../../components/card';
 import { DeadmanSettings } from '../../components/settings/deadman-settings';
 import { useAuth } from '../../components/providers';
+import { MobileSafeSignOut } from '../../components/safe-sign-out';
 
 type Choice = 'light' | 'system' | 'dark';
 
@@ -33,7 +34,7 @@ export default function SettingsScreen() {
   const { colorScheme, setColorScheme } = useColorScheme();
   const scheme = color[colorScheme === 'dark' ? 'dark' : 'light'];
   const router = useRouter();
-  const { session, signOut } = useAuth();
+  const { session } = useAuth();
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -98,13 +99,7 @@ export default function SettingsScreen() {
                 {session.user.email}
               </Text>
               <CardLabel>Signed in. Your data syncs across your devices.</CardLabel>
-              <Pressable
-                onPress={() => void signOut()}
-                accessibilityRole="button"
-                className="h-11 justify-center rounded-md bg-surface-muted px-4"
-              >
-                <Text className="text-center font-body text-body-md text-foreground">Sign out</Text>
-              </Pressable>
+              <MobileSafeSignOut />
             </>
           ) : (
             <>
