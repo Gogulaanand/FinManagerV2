@@ -116,6 +116,17 @@ test('sign-out preserves an offline write until recovery and discard are acknowl
   const occurredOn = `${parsedLabel[2]}-${String(monthIndex + 1).padStart(2, '0')}-${String(
     lastDay,
   ).padStart(2, '0')}`;
+
+  // Warm the client-side route while connected. Next dev cannot fetch an uncached RSC
+  // response after the browser is taken offline, while the production preview is
+  // commonly prefetched before this point.
+  await page.getByRole('link', { name: 'Settings' }).click();
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Expenses' }).click();
+  await expect(page.getByRole('heading', { name: 'Expenses' })).toBeVisible();
+  await expect(page.getByText('50 of 120 this month')).toBeVisible();
+
   await context.setOffline(true);
 
   await page.getByRole('button', { name: 'Add transaction' }).click();
