@@ -138,8 +138,9 @@ test('sign-out preserves an offline write until recovery and discard are acknowl
   await page.getByRole('button', { name: 'Save transaction' }).click();
   await expect(page.getByText(merchant, { exact: true })).toBeVisible();
 
-  // Client-side navigation preserves the deliberately disconnected PowerSync instance.
-  await page.getByRole('link', { name: 'Settings' }).click();
+  // Browser history restores the warmed route without an offline RSC fetch.
+  await page.goBack();
+  await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
   const settingsSignOut = page
     .getByRole('main')
     .getByRole('button', { name: 'Sign out', exact: true });
