@@ -49,6 +49,18 @@ export type {
   ForcedSignOutConfirmation,
   LocalSyncSafetySnapshot,
 } from './sign-out';
+export {
+  getSyncFailureSummaries,
+  getSyncHealthSnapshot,
+  resolveSyncHealthStatus,
+  retrySyncFailures,
+} from './health';
+export type {
+  SyncFailureSummary,
+  SyncHealthSnapshot,
+  SyncHealthStatus,
+  SyncHealthStatusInput,
+} from './health';
 export { createRecoveryExportArtifact, readDataExportCollections } from './export';
 export type { RecoveryExportArtifact } from './export';
 export {

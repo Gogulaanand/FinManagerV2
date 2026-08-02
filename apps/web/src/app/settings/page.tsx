@@ -6,6 +6,7 @@ import { Card, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/providers';
 import { DataExportPanel } from '@/components/settings/data-export';
 import { SafeSignOut } from '@/components/safe-sign-out';
+import { SyncHealthPanel } from '@/components/sync-health';
 
 export default function SettingsPage() {
   const { session } = useAuth();
@@ -33,6 +34,7 @@ export default function SettingsPage() {
           </p>
         )}
       </Card>
+      <SyncHealthPanel />
       <DataExportPanel />
       <DeadmanSettingsPanel />
     </div>
