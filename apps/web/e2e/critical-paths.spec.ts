@@ -121,7 +121,7 @@ test('sign-out preserves an offline write until recovery and discard are acknowl
   // response after the browser is taken offline, while the production preview is
   // commonly prefetched before this point.
   await page.getByRole('link', { name: 'Settings' }).click();
-  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Expenses' }).click();
   await expect(page.getByRole('heading', { name: 'Expenses' })).toBeVisible();
