@@ -2,14 +2,6 @@ import { expect, test } from '@playwright/test';
 
 import { signIn } from './auth';
 
-type PowerSyncTestWindow = Window & {
-  readonly __ps: {
-    readonly db: { waitForFirstSync: () => Promise<void> };
-    readonly goOffline: () => Promise<void>;
-    readonly goOnline: () => Promise<void>;
-  };
-};
-
 test.beforeEach(async ({ page }) => {
   await signIn(page);
 });
@@ -108,16 +100,14 @@ test('expense can be added, edited, and deleted through the offline-first UI', a
 
 test('sign-out preserves an offline write until recovery and discard are acknowledged', async ({
   page,
+  context,
 }) => {
   const merchant = `E2E sign-out recovery ${Date.now()}`;
 
   await page.goto('/expenses');
-  await page.waitForFunction(() => '__ps' in window);
-  await page.evaluate(async () => {
-    const handle = (window as unknown as PowerSyncTestWindow).__ps;
-    await handle.db.waitForFirstSync();
-    await handle.goOffline();
-  });
+  await expect(page.getByRole('heading', { name: 'Expenses' })).toBeVisible();
+  await expect(page.getByText('50 of 120 this month')).toBeVisible();
+  await context.setOffline(true);
 
   await page.getByRole('button', { name: 'Add transaction' }).click();
   await page.getByLabel('Amount').fill('431');
@@ -147,7 +137,7 @@ test('sign-out preserves an offline write until recovery and discard are acknowl
   await dialog.getByRole('button', { name: 'Stay signed in' }).click();
   await expect(dialog).toHaveCount(0);
 
-  await page.evaluate(async () => (window as unknown as PowerSyncTestWindow).__ps.goOnline());
+  await context.setOffline(false);
   await page.getByRole('link', { name: 'Expenses' }).click();
   const row = page.getByRole('listitem').filter({ hasText: merchant });
   await expect(row).toBeVisible();
