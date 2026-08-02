@@ -595,10 +595,11 @@ telemetry.
 Rejected: continuing the current fatal completion behavior; direct PostgREST per-operation fallback;
 an unjournaled blocked queue; a service-role Edge Function that would bypass the caller's RLS boundary.
 
-Implemented and verified locally on 2026-08-02: the RPC is `SECURITY INVOKER`, allowlisted, RLS-bound,
-atomic, and idempotent; the local journal preserves recovery data and blocks rejected queue heads;
-and the PostgreSQL behavior suite proves rollback, replay, ownership, and conflict behavior. The
-migration remains unapplied to the linked production project until the reviewed PR is merged.
+Implemented and verified on 2026-08-02: the RPC is `SECURITY INVOKER`, allowlisted, RLS-bound, atomic,
+and idempotent; the local journal preserves recovery data and blocks rejected queue heads; and the
+PostgreSQL behavior suite proves rollback, replay, ownership, and conflict behavior. The migration
+was applied to the linked Supabase project as remote version `20260802043941`; API verification
+confirmed the RPC, journal table, and authenticated execute grant.
 
 ## D-077: Null auth sessions preserve local data unless sign-out was deliberately reconciled (2026-08-02)
 
@@ -623,5 +624,46 @@ financial payloads or access tokens into auth-flow state or telemetry.
 
 Consequence: deliberate clean sign-out still clears downloaded account data, transient loss is
 recoverable by the same user, unsafe account switching fails closed, and a forced discard is
-available only after a local recovery artifact and explicit acknowledgement. R1.3 remains
-responsible for the persistent sync-health surface, and R2 remains responsible for restore.
+available only after a local recovery artifact and explicit acknowledgement. R1.3 now supplies the
+persistent sync-health surface; R2 remains responsible for export hardening and restore.
+
+## D-078: Sync health is derived from PowerSync status plus the local failure journal (2026-08-02)
+
+The R1.3 status surface combines PowerSync connection/data-flow state with local upload-queue counts
+and the user-scoped `sync_failures` journal. It presents only pending/failed counts and the journal's
+sanitized `safe_error_message`; operation payloads and financial row values remain local. Status
+precedence is action-required for unresolved failures or sync errors, then syncing for active
+connection/data flow, synced after a completed sync, and offline otherwise. Retry moves retryable or
+blocked journal transactions back to `retryable` and reconnects PowerSync so the existing uploader
+replays the still-queued CRUD transaction.
+
+Why: users need a compact, actionable indication of freshness without exposing financial payloads or
+duplicating upload semantics in each client. Keeping retry inside the shared sync package preserves
+web/mobile parity and the R1.1 non-lossy queue contract.
+
+Rejected: inferring health from connection state alone; displaying raw server errors or operation
+payloads; and implementing independent web/mobile retry protocols.
+
+## D-079: Recovery exports are self-describing and fail closed for complete backups (2026-08-02)
+
+R2.1 export bundles use schema version 2 and include the application version, a deterministic
+anonymized account fingerprint, source platform, PowerSync sync state, per-collection row counts,
+stable checksums, warning codes, and a complete/pending-write-acknowledgement decision. The shared
+core validates every known local row through its domain Zod schema after adapting PowerSync's
+snake_case, SQLite boolean, and JSON-column representation. Storage-only collections still receive
+structural and JSON-serializability validation. The sync package derives status and failure counts
+from PowerSync plus the user-scoped failure journal, so recovery artifacts include unsynced local
+state without exposing operation payloads.
+
+Complete backup creation is gated on one full sync, zero unresolved failed writes, and no active
+sync errors; pending writes are allowed only after an explicit user acknowledgement. Recovery export
+remains available without that gate so the safe sign-out flow can preserve local-only work. Restore
+is intentionally deferred to R2.2 and must consume this contract through dependency ordering,
+conflict policy, dry-run reporting, and clean-account evidence.
+
+Why: recovery files need enough provenance and integrity information to be actionable after a
+session/device failure, while a "complete" label must not imply server durability when the local
+queue or failure journal says otherwise.
+
+Rejected: embedding the raw user id, hashing unsorted JSON, silently treating incomplete sync as a
+complete backup, and coupling export creation to the future restore transaction.

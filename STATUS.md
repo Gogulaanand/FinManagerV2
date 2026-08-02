@@ -1,8 +1,8 @@
 # Project Status
 
-Last updated: 2026-08-02 (R1.1 sync durability and R1.2 safe auth transitions are implemented and
-locally verified; protected authenticated E2E plus the remaining personal-MVP sync-health,
-recovery, production-auth, and device gates remain open).
+Last updated: 2026-08-02 (R1.1 sync durability, R1.2 safe auth transitions, and R1.3 sync-health
+surfaces are merged and protected CI/Preview verified; R2.1 recovery-export hardening is complete
+locally and its restore, production-auth, and device gates remain open).
 
 ## Current State
 
@@ -13,13 +13,22 @@ R1.1 is complete on `codex/r1-production-readiness`: the sync-durability archite
 [docs/R1.1_SYNC_DURABILITY.md](docs/R1.1_SYNC_DURABILITY.md) and D-076. The shared connector now uses
 one authenticated atomic RPC, rejected/ambiguous transactions remain queued with local recovery
 records, bounded retries fail closed, explicit discard is user-scoped, and all synced tables track
-previous values. The migration is applied and verified on local Supabase only; it has not been
-applied to the linked production project.
-R1.2 is implemented on `codex/r1-auth-session-safety`: explicit sign-out waits up to eight seconds
+previous values. The migration is applied to the linked Supabase project and verified through the
+Supabase API: the RPC, journal table, and authenticated execute grant exist (remote migration
+version `20260802043941`).
+R1.2 is merged as PR #9 (`60b54c9`): explicit sign-out waits up to eight seconds
 for the upload queue, unresolved work opens a retry/recovery/acknowledged-discard flow, transient
 session loss disconnects without clearing, and a different account cannot attach to retained unsafe
 data. The contract is recorded in [docs/R1.2_AUTH_TRANSITION_SAFETY.md](docs/R1.2_AUTH_TRANSITION_SAFETY.md)
-and D-077. No database migration or production deployment is part of R1.2.
+and D-077. R1.3 is merged as PR #10 (`ec17b2f`): web and mobile Settings now expose synced,
+syncing, offline, and action-required states, queue/failure counts, last complete sync, safe failure
+summaries, and a retry/reconnect action.
+R2.1 is implemented on `codex/r2-recovery-export`: schema-v2 recovery bundles now carry the app
+version, anonymized account fingerprint, source platform, PowerSync sync state, per-collection row
+counts, deterministic checksums, and explicit completeness warnings. Every exported domain row is
+validated through its relevant Zod schema adapter before serialization. Complete backups require a
+full sync, no unresolved failed writes or sync errors, and explicit acknowledgement when pending
+writes are included; recovery exports remain available for unsafe local state.
 
 ### Implemented
 
@@ -55,18 +64,22 @@ and D-077. No database migration or production deployment is part of R1.2.
 
 ### Automated evidence complete
 
-- The exact 21/21 Turbo gate passes with 352 unit tests; formatting and `git diff --check` pass.
-  Both Expo exports pass, and 12 integrated Chromium tests collect. Seven GitHub E2E secrets exist,
+- The exact 21/21 Turbo gate passes with 358 unit tests; formatting and `git diff --check` pass.
+  Both Expo exports pass, and 13 integrated Chromium tests collect. Seven GitHub E2E secrets exist,
   including `VERCEL_AUTOMATION_BYPASS_SECRET`; historical Preview E2E run `30188066854` passed.
 - R1.1 adds 68 passing sync-package tests and a 32-assertion PostgreSQL behavior matrix. The full
   local database suite passes 47 assertions, including atomic rollback, RLS/allowlisting,
   idempotent replay before and after commit, ownership isolation, conflict handling, and typed
   PATCH/DELETE behavior.
-- R1.2 raises the sync package to 78 passing tests. Ten focused cases cover bounded online drain,
+- R1.2/R1.3 keep the sync package at 82 passing tests. Ten R1.2 policy/recovery cases plus four
+  R1.3 health/retry/status cases cover bounded online drain,
   offline timeout, failed writes, export/acknowledgement guards, transient loss, same/different-user
-  isolation, and recovery-artifact contents. Web/mobile typecheck and lint pass, and browser checks
-  load Dashboard, Settings, and Login without framework overlays. The authenticated Playwright case
-  is collected but awaits protected CI credentials on the PR.
+  isolation, recovery-artifact contents, health counts, safe summaries, retry transitions, and
+  status precedence. Web/mobile typecheck and lint pass; PR #10 CI and Preview E2E each pass all 13
+  critical-path tests.
+- R2.1 adds five core export tests covering schema-v2 round trips, warning/completeness gates,
+  checksums, and domain-row rejection; the sync recovery-artifact test verifies PowerSync-derived
+  metadata and account fingerprinting.
 
 ### Observed deployed state (not release proof)
 
@@ -95,11 +108,10 @@ and D-077. No database migration or production deployment is part of R1.2.
 
 ## Next Up
 
-Commit and raise the focused R1.2 PR, then require its protected authenticated Playwright job to
-prove the offline-write warning/recovery path. After merge, start R1.3 sync-health UI from refreshed
-`origin/main` in a new session and branch. In parallel, the owner-controlled production, Sentry,
-dead-man, and Android-device gates remain external evidence work. Do not mark Phase 9 Done before
-its required evidence exists.
+After the R2.1 PR is checked and merged, start R2.2 restore on a fresh branch: dependency-ordered
+restore, conflict policy, dry-run/reporting, and a clean-account proof remain separate from export
+creation. In parallel, the owner-controlled production, Sentry, dead-man, and Android-device gates
+remain external evidence work. Do not mark Phase 9 Done before its required evidence exists.
 
 Plan index: [improvements](phases/plans/plan-improvements.md) · [mobile navigation/month picker](phases/plans/plan-mobile-nav-and-month-picker.md) · [Phase 8](phases/plans/plan-phase8-deadman-switch.md) · [Phase 9](phases/plans/plan-phase9-hardening-release.md) · [monetization](phases/plans/plan-monetization.md).
 

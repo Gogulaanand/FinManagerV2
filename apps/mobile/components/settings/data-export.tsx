@@ -1,15 +1,12 @@
-import {
-  createDataExportBundle,
-  createModuleCsvExports,
-  serializeDataExportBundle,
-} from '@finmanager/core';
-import { readDataExportCollections } from '@finmanager/sync';
+import { createModuleCsvExports } from '@finmanager/core';
+import { createRecoveryExportArtifact, readDataExportCollections } from '@finmanager/sync';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 
 import { getPowerSync } from '../../lib/powersync';
+import { useAuth } from '../providers';
 import { Card, CardLabel, CardTitle } from '../card';
 
 async function shareFile(filename: string, content: string, mimeType: string): Promise<void> {
@@ -20,7 +17,21 @@ async function shareFile(filename: string, content: string, mimeType: string): P
   await Sharing.shareAsync(file.uri, { mimeType, dialogTitle: `Share ${filename}` });
 }
 
+function confirmPendingWrites(): Promise<boolean> {
+  return new Promise((resolve) => {
+    Alert.alert(
+      'Pending writes',
+      'Pending writes are included in this local backup. Acknowledge that they may not be on the server yet?',
+      [
+        { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+        { text: 'Acknowledge', onPress: () => resolve(true) },
+      ],
+    );
+  });
+}
+
 export function MobileDataExport() {
+  const { session } = useAuth();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -30,10 +41,33 @@ export function MobileDataExport() {
     try {
       const collections = await readDataExportCollections(getPowerSync());
       if (mode === 'json') {
+        if (!session) throw new Error('Sign in before exporting data.');
+        let artifact;
+        try {
+          artifact = await createRecoveryExportArtifact(getPowerSync(), {
+            userId: session.user.id,
+            sourcePlatform: 'mobile',
+            requireComplete: true,
+          });
+        } catch (error) {
+          if (
+            !(error instanceof Error) ||
+            !error.message.includes('Acknowledge pending writes') ||
+            !(await confirmPendingWrites())
+          ) {
+            throw error;
+          }
+          artifact = await createRecoveryExportArtifact(getPowerSync(), {
+            userId: session.user.id,
+            sourcePlatform: 'mobile',
+            requireComplete: true,
+            acknowledgePendingWrites: true,
+          });
+        }
         await shareFile(
-          `finmanager-backup-${new Date().toISOString().slice(0, 10)}.json`,
-          serializeDataExportBundle(createDataExportBundle(collections)),
-          'application/json',
+          artifact.filename.replace('recovery', 'backup'),
+          artifact.contents,
+          artifact.mimeType,
         );
       } else {
         const exports = createModuleCsvExports(collections);

@@ -62,7 +62,7 @@ export type {
   SyncHealthStatusInput,
 } from './health';
 export { createRecoveryExportArtifact, readDataExportCollections } from './export';
-export type { RecoveryExportArtifact } from './export';
+export type { RecoveryExportArtifact, RecoveryExportOptions } from './export';
 export {
   DEFAULT_SCENARIO_INPUT,
   SCENARIOS_QUERY,
