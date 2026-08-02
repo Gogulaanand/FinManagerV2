@@ -17,6 +17,8 @@
     "check": "turbo run build test lint typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "recovery:drill": "node scripts/r2-recovery-drill.mjs",
+    "test:recovery-drill": "node --test scripts/r2-recovery-drill.test.mjs",
     "test:ai-usage-concurrency": "node scripts/test-ai-usage-concurrency.mjs",
     "web": "pnpm --filter @finmanager/web dev",
     "mobile": "pnpm --filter @finmanager/mobile start"

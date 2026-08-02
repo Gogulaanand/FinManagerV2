@@ -106,8 +106,11 @@ build IDs, device/OS versions, timestamps, and screenshots in `phases/briefing/p
 
 - [x] JSON export parses through `parseDataExportBundle` in the round-trip test.
 - [ ] Web downloads and native share sheets manually opened on target devices.
-- [ ] One exported JSON bundle restores into a clean test account/project with equivalent row counts,
-      financial totals, dependency-order results, and a saved restore report.
+- [ ] One exported JSON bundle restores into a clean Supabase test account/project with equivalent
+      row counts, financial totals, dependency-order results, and a saved restore report.
+- [x] R2.4 sanitized local drill covers all six recovery scenarios and records timestamps, measured
+      durations, and clean-project comparisons for row counts, referential relationships, balances,
+      monthly totals, XIRR inputs, and goal totals in [the drill report](evidence/r2.4-recovery-drill.json).
 - [x] R2.3 backup-policy workflows define a daily encrypted logical dump, 35-day external artifact
       retention, explicit RPO/RTO targets, and a monthly disposable-project rehearsal.
 - [ ] Configure `SUPABASE_DB_URL`, `SUPABASE_BACKUP_PASSPHRASE`, and

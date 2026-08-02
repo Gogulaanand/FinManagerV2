@@ -1,0 +1,209 @@
+{
+  "format": "finmanager-r2.4-recovery-drill-v1",
+  "environment": "temporary local isolated state; sanitized fixture only",
+  "startedAt": "2026-08-02T13:56:34.711Z",
+  "completedAt": "2026-08-02T13:56:34.895Z",
+  "durationMs": 183.071333,
+  "scenarios": [
+    {
+      "id": "R24-01",
+      "title": "Accidental transaction deletion",
+      "status": "passed",
+      "startedAt": "2026-08-02T13:56:34.712Z",
+      "completedAt": "2026-08-02T13:56:34.718Z",
+      "durationMs": 5.939375,
+      "steps": [
+        "Freeze the sanitized fixture and record the missing transaction id.",
+        "Compare the damaged fixture with the pre-deletion recovery artifact.",
+        "Restore only the matching transaction by stable id.",
+        "Recompute all recovery metrics and confirm equality."
+      ],
+      "assertions": {
+        "deletionDetected": true,
+        "transactionRestored": true,
+        "metricsMatch": true
+      },
+      "evidence": [
+        "sanitized-recovery-artifact",
+        "restored-transaction:00000000-0000-4000-8000-000000000030"
+      ]
+    },
+    {
+      "id": "R24-02",
+      "title": "Malformed migration and forward repair",
+      "status": "passed",
+      "startedAt": "2026-08-02T13:56:34.718Z",
+      "completedAt": "2026-08-02T13:56:34.887Z",
+      "durationMs": 169.334125,
+      "steps": [
+        "Clone the sanitized SQLite database and capture the pre-migration row.",
+        "Apply a NOT NULL migration without a default and require failure.",
+        "Verify the original row remains unchanged after the failed migration.",
+        "Apply a versioned forward repair with a safe default and verify the marker."
+      ],
+      "assertions": {
+        "malformedMigrationRejected": true,
+        "dataPreserved": true,
+        "forwardRepairApplied": true
+      },
+      "evidence": [
+        "isolated-sqlite-before",
+        "isolated-sqlite-failed-migration",
+        "isolated-sqlite-forward-repair"
+      ]
+    },
+    {
+      "id": "R24-03",
+      "title": "Lost mobile SecureStore key",
+      "status": "passed",
+      "startedAt": "2026-08-02T13:56:34.887Z",
+      "completedAt": "2026-08-02T13:56:34.890Z",
+      "durationMs": 3.209709,
+      "steps": [
+        "Stop the isolated mobile database and remove only its simulated device-only key.",
+        "Require the old encrypted database to fail closed.",
+        "Create a new key/database and re-sync the sanitized fixture.",
+        "Compare the re-synced metrics with the server-shaped fixture."
+      ],
+      "assertions": {
+        "oldKeyRejected": true,
+        "newDatabaseCreated": true,
+        "resyncMetricsMatch": true
+      },
+      "evidence": ["simulated-secure-store-key-removed", "fresh-local-database", "sanitized-resync"]
+    },
+    {
+      "id": "R24-04",
+      "title": "Corrupted local database",
+      "status": "passed",
+      "startedAt": "2026-08-02T13:56:34.890Z",
+      "completedAt": "2026-08-02T13:56:34.892Z",
+      "durationMs": 2.1235,
+      "steps": [
+        "Stop the isolated local database and corrupt its encrypted bytes.",
+        "Require checksum/authentication failure before reading local rows.",
+        "Discard only the disposable local copy and create a clean database.",
+        "Re-sync the sanitized fixture and compare the required metrics."
+      ],
+      "assertions": {
+        "corruptionRejected": true,
+        "cleanDatabaseCreated": true,
+        "resyncMetricsMatch": true
+      },
+      "evidence": ["corrupted-local-database", "fresh-local-database", "sanitized-resync"]
+    },
+    {
+      "id": "R24-05",
+      "title": "Compromised account session",
+      "status": "passed",
+      "startedAt": "2026-08-02T13:56:34.892Z",
+      "completedAt": "2026-08-02T13:56:34.892Z",
+      "durationMs": 0.168625,
+      "steps": [
+        "Revoke the simulated compromised session and record the incident timestamp.",
+        "Reject the revoked session before returning any account data.",
+        "Create a new session for the sanitized test account.",
+        "Verify same-account access and different-account isolation."
+      ],
+      "assertions": {
+        "revokedSessionRejected": true,
+        "reauthenticationSucceeded": true,
+        "ownershipIsolated": true
+      },
+      "evidence": [
+        "revoked-simulated-session",
+        "fresh-simulated-session",
+        "cross-account-read-rejected"
+      ]
+    },
+    {
+      "id": "R24-06",
+      "title": "Full disposable-project loss",
+      "status": "passed",
+      "startedAt": "2026-08-02T13:56:34.892Z",
+      "completedAt": "2026-08-02T13:56:34.895Z",
+      "durationMs": 2.18325,
+      "steps": [
+        "Freeze the isolated source project and record simulated project loss.",
+        "Use the local encrypted backup artifact and verify its SHA-256 manifest before restore.",
+        "Decrypt into a fresh replacement project and write the restored data in one isolated step.",
+        "Compare row counts, relationships, balances, monthly totals, XIRR inputs, and goal totals.",
+        "Remove decrypted/temp material after the comparison."
+      ],
+      "assertions": {
+        "checksumVerified": true,
+        "replacementProjectCreated": true,
+        "invariantMatches": {
+          "rowCounts": true,
+          "referentialRelationships": true,
+          "balances": true,
+          "monthlyTotals": true,
+          "xirrInputs": true,
+          "goalTotals": true
+        }
+      },
+      "evidence": [
+        "local-encrypted-backup-artifact",
+        "sha256-manifest-verified",
+        "fresh-replacement-project"
+      ],
+      "encryption": "AES-256-GCM local isolated harness",
+      "sourceMetrics": {
+        "rowCounts": {
+          "accounts": 1,
+          "categories": 1,
+          "transactions": 2,
+          "holdings": 1,
+          "holding_events": 2,
+          "valuations": 1,
+          "goals": 1,
+          "fire_settings": 1
+        },
+        "referentialRelationships": { "valid": true, "missing": [] },
+        "balances": {
+          "accounts": [
+            {
+              "id": "00000000-0000-4000-8000-000000000010",
+              "amount": 125000
+            }
+          ],
+          "total": 125000
+        },
+        "monthlyTotals": { "2026-07": { "debit": 1250, "credit": 50000 } },
+        "xirrInputs": [
+          { "date": "2026-06-15", "amount": -80000 },
+          { "date": "2026-07-31", "amount": 100000 }
+        ],
+        "goalTotals": { "target": 300000, "current": 125000 }
+      },
+      "restoredMetrics": {
+        "rowCounts": {
+          "accounts": 1,
+          "categories": 1,
+          "transactions": 2,
+          "holdings": 1,
+          "holding_events": 2,
+          "valuations": 1,
+          "goals": 1,
+          "fire_settings": 1
+        },
+        "referentialRelationships": { "valid": true, "missing": [] },
+        "balances": {
+          "accounts": [
+            {
+              "id": "00000000-0000-4000-8000-000000000010",
+              "amount": 125000
+            }
+          ],
+          "total": 125000
+        },
+        "monthlyTotals": { "2026-07": { "debit": 1250, "credit": 50000 } },
+        "xirrInputs": [
+          { "date": "2026-06-15", "amount": -80000 },
+          { "date": "2026-07-31", "amount": 100000 }
+        ],
+        "goalTotals": { "target": 300000, "current": 125000 }
+      }
+    }
+  ]
+}
