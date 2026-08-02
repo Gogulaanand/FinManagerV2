@@ -140,7 +140,11 @@ test('sign-out preserves an offline write until recovery and discard are acknowl
 
   // Client-side navigation preserves the deliberately disconnected PowerSync instance.
   await page.getByRole('link', { name: 'Settings' }).click();
-  await page.getByRole('button', { name: 'Sign out', exact: true }).last().click();
+  const settingsSignOut = page
+    .getByRole('main')
+    .getByRole('button', { name: 'Sign out', exact: true });
+  await expect(settingsSignOut).toBeVisible();
+  await settingsSignOut.click({ force: true });
 
   const dialog = page.getByRole('dialog', { name: 'Unsynced work is still on this device' });
   await expect(dialog).toBeVisible();
