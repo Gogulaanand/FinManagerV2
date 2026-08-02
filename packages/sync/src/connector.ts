@@ -18,24 +18,19 @@ import {
   type PowerSyncCredentials,
   UpdateType,
 } from '@powersync/common';
-import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
+import {
+  getClientInstanceId,
+  getLastKnownUserId,
+  hashSyncOperations,
+  isSyncTransactionBlocked,
+  markSyncFailuresResolved,
+  rememberUserId,
+  recordSyncFailure,
+  type SyncOperation,
+} from './failures';
 import { JSON_COLUMNS } from './schema';
-
-/**
- * PostgREST error codes that mean "this write will never succeed" (constraint
- * violation, RLS denial, bad type). Discard the op instead of retrying forever;
- * anything else (network, 5xx) is transient and should be retried.
- */
-const FATAL_RESPONSE_CODES = [
-  /^22\d{3}$/, // data exception (invalid type, numeric out of range, ...)
-  /^23\d{3}$/, // integrity constraint violation
-  /^42\d{3}$/, // syntax / access rule violation (includes RLS 42501)
-] as const;
-
-function isFatalPostgrestError(error: PostgrestError): boolean {
-  return typeof error.code === 'string' && FATAL_RESPONSE_CODES.some((re) => re.test(error.code));
-}
 
 /**
  * Reverse the client-side JSON stringification for a table's jsonb columns.
@@ -58,7 +53,7 @@ function decodeJsonColumns(
         out[col] = JSON.parse(value);
       } catch {
         // Leave a malformed string as-is; the write will fail fatally and be
-        // discarded rather than wedging the queue.
+        // journaled and blocked for explicit resolution.
       }
     }
   }
@@ -89,58 +84,106 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
 
   /**
    * Drain one transaction from the local write queue and apply it to Supabase.
-   * On a transient failure we throw (PowerSync retries later); on a fatal one we
-   * complete the transaction to drop the doomed op so the queue keeps moving.
+   * The RPC is the server-side atomicity boundary. Any rejected or ambiguous
+   * request is journaled locally and thrown so PowerSync keeps the transaction
+   * queued; only an applied result is completed.
    */
   async uploadData(database: AbstractPowerSyncDatabase): Promise<void> {
     const transaction = await database.getNextCrudTransaction();
     if (!transaction) return;
 
+    const operations: SyncOperation[] = transaction.crud.map((op) => ({
+      clientId: op.clientId,
+      table: op.table,
+      id: op.id,
+      op: op.op,
+      opData:
+        op.op === UpdateType.DELETE
+          ? undefined
+          : decodeJsonColumns(op.table, { ...(op.opData ?? {}), id: op.id }),
+      previousValues: op.previousValues,
+    }));
+    const transactionId = transaction.transactionId ?? transaction.crud[0]?.clientId;
+    if (transactionId === undefined) {
+      throw new Error('PowerSync returned an upload transaction without an operation id');
+    }
+
+    const clientInstanceId = await getClientInstanceId(database);
+    if (await isSyncTransactionBlocked(database, clientInstanceId, transactionId)) {
+      throw Object.assign(
+        new Error('This sync transaction is blocked until the user resolves it'),
+        { code: 'SYNC_TRANSACTION_BLOCKED' },
+      );
+    }
+    const lastKnownUserId = await getLastKnownUserId(database);
+    let userId: string | null = null;
+
     try {
-      for (const op of transaction.crud) {
-        const table = this.supabase.from(op.table);
-        let error: PostgrestError | null = null;
-
-        switch (op.op) {
-          case UpdateType.PUT: {
-            const record = decodeJsonColumns(op.table, { ...op.opData, id: op.id });
-            ({ error } = await table.upsert(record));
-            break;
-          }
-          case UpdateType.PATCH: {
-            const record = decodeJsonColumns(op.table, { ...op.opData });
-            ({ error } = await table.update(record).eq('id', op.id));
-            break;
-          }
-          case UpdateType.DELETE: {
-            ({ error } = await table.delete().eq('id', op.id));
-            break;
-          }
-        }
-
-        if (error) throw error;
+      const { data: sessionData, error: sessionError } = await this.supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      userId = sessionData.session?.user.id ?? null;
+      if (!userId) {
+        const sessionRequired = new Error(
+          'Cannot upload PowerSync data without an authenticated user',
+        ) as Error & { readonly code: string; readonly status: number };
+        Object.assign(sessionRequired, { code: 'AUTH_REQUIRED', status: 401 });
+        throw sessionRequired;
       }
+      await rememberUserId(database, userId);
+
+      const { data, error } = await this.supabase.rpc('apply_sync_transaction', {
+        p_client_instance_id: clientInstanceId,
+        p_transaction_id: transactionId,
+        p_payload_hash: hashSyncOperations(operations),
+        p_operations: operations.map((operation) => ({
+          clientId: operation.clientId,
+          table: operation.table,
+          id: operation.id,
+          op: operation.op,
+          data: operation.opData ?? null,
+          previousValues: operation.previousValues ?? null,
+        })),
+      });
+      if (error) throw error;
+      if (!isSuccessfulUploadResponse(data)) {
+        throw Object.assign(new Error('Sync upload returned an invalid protocol response'), {
+          code: 'SYNC_PROTOCOL_ERROR',
+        });
+      }
+
+      await markSyncFailuresResolved(
+        database,
+        userId,
+        clientInstanceId,
+        transactionId,
+        'resolved',
+        data.status,
+      );
       await transaction.complete();
-    } catch (ex) {
-      if (isPostgrestError(ex) && isFatalPostgrestError(ex)) {
-        // Doomed write (constraint / RLS / type). Drop it rather than blocking
-        // every later change behind an op that can never land.
-        console.error('Discarding unrecoverable PowerSync upload op', ex);
-        await transaction.complete();
-      } else {
-        // Transient (offline, 5xx). Leave the transaction so PowerSync retries.
-        throw ex;
-      }
+    } catch (error) {
+      const failureUserId =
+        userId ??
+        lastKnownUserId ??
+        operations.find((operation) => typeof operation.opData?.user_id === 'string')?.opData
+          ?.user_id;
+      if (typeof failureUserId !== 'string' || failureUserId.length === 0) throw error;
+      await recordSyncFailure({
+        database,
+        userId: failureUserId,
+        clientInstanceId,
+        transactionId,
+        operations,
+        error,
+      });
+      throw error;
     }
   }
 }
 
-function isPostgrestError(value: unknown): value is PostgrestError {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'code' in value &&
-    'message' in value &&
-    'details' in value
-  );
+function isSuccessfulUploadResponse(
+  value: unknown,
+): value is { readonly status: 'applied' | 'already_applied' } {
+  if (typeof value !== 'object' || value === null || !('status' in value)) return false;
+  const status = (value as { status?: unknown }).status;
+  return status === 'applied' || status === 'already_applied';
 }

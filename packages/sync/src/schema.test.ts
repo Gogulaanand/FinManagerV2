@@ -3,8 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { AppSchema, JSON_COLUMNS } from './schema';
 
 // A drift guard: the client schema must mirror the synced Postgres tables from
-// supabase/migrations. If a migration adds or removes a table, this fails until
-// packages/sync/schema.ts is updated to match.
+// supabase/migrations. Local-only recovery tables are intentionally excluded.
 const EXPECTED_TABLES = [
   'profiles',
   'trusted_contacts',
@@ -25,8 +24,11 @@ const EXPECTED_TABLES = [
 ] as const;
 
 describe('AppSchema', () => {
-  it('defines exactly the 14 synced tables', () => {
-    const names = AppSchema.tables.map((t) => t.name).sort();
+  it('defines exactly the synced tables', () => {
+    const names = AppSchema.tables
+      .filter((table) => !table.localOnly)
+      .map((t) => t.name)
+      .sort();
     expect(names).toEqual([...EXPECTED_TABLES].sort());
   });
 
@@ -37,8 +39,19 @@ describe('AppSchema', () => {
   });
 
   it('scopes every table with a user_id column for per-user sync', () => {
-    for (const table of AppSchema.tables) {
+    for (const table of AppSchema.tables.filter((item) => !item.localOnly)) {
       expect(table.columns.map((c) => c.name)).toContain('user_id');
+    }
+  });
+
+  it('keeps recovery tables local-only', () => {
+    expect(AppSchema.tables.find((table) => table.name === 'sync_metadata')?.localOnly).toBe(true);
+    expect(AppSchema.tables.find((table) => table.name === 'sync_failures')?.localOnly).toBe(true);
+  });
+
+  it('tracks previous values for every synced table so blocked writes remain recoverable', () => {
+    for (const table of AppSchema.tables.filter((item) => !item.localOnly)) {
+      expect(table.trackPrevious, table.name).toBe(true);
     }
   });
 });

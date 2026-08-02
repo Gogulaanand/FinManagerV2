@@ -10,6 +10,28 @@ export { AppSchema, JSON_COLUMNS } from './schema';
 export type { Database } from './schema';
 export { SupabaseConnector } from './connector';
 export { uuidv4 } from './ids';
+export {
+  classifySyncError,
+  discardSyncTransaction,
+  getClientInstanceId,
+  getLastKnownUserId,
+  hashSyncOperations,
+  isSyncTransactionBlocked,
+  MAX_AUTOMATIC_SYNC_RETRIES,
+  markSyncFailuresResolved,
+  rememberUserId,
+  recordSyncFailure,
+  retrySyncTransaction,
+  SYNC_FAILURES_QUERY,
+} from './failures';
+export type {
+  SyncFailureClass,
+  SyncFailureClassification,
+  SyncFailureInput,
+  SyncFailureRow,
+  SyncFailureState,
+  SyncOperation,
+} from './failures';
 export { readDataExportCollections } from './export';
 export {
   DEFAULT_SCENARIO_INPUT,

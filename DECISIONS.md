@@ -576,3 +576,26 @@ the Phase 9 pagination contract beyond 120 rows.
 Consequence: CI collects 12 Chromium tests across the three suites. Future seed changes must keep
 the count, design categories, allocation, saved Insights, dead-man preview, and cost-free AI states
 coherent.
+
+## D-076: R1.1 uses an atomic batch RPC plus a local blocked-failure journal (2026-08-01)
+
+PowerSync upload transactions will be submitted through a typed, authenticated, server-side batch
+function that applies all operations atomically and records an idempotency key in the same database
+transaction. The connector will retain a rejected or ambiguous PowerSync transaction in the local
+queue and write a local-only failure record containing operation identity, recovery data, a payload
+hash, redacted error details, retry state, and explicit resolution state. `transaction.complete()` is
+allowed only after `applied`, `already_applied`, or an explicit user discard action.
+
+Why: the current direct per-operation PostgREST loop can partially apply a multi-operation local
+transaction, and its fatal branch completes the queue after console logging, which can silently lose
+the rejected write. A blocked queue alone preserves the write but does not provide server atomicity;
+the RPC plus journal supplies both properties while retaining RLS and avoiding financial payloads in
+telemetry.
+
+Rejected: continuing the current fatal completion behavior; direct PostgREST per-operation fallback;
+an unjournaled blocked queue; a service-role Edge Function that would bypass the caller's RLS boundary.
+
+Implemented and verified locally on 2026-08-02: the RPC is `SECURITY INVOKER`, allowlisted, RLS-bound,
+atomic, and idempotent; the local journal preserves recovery data and blocks rejected queue heads;
+and the PostgreSQL behavior suite proves rollback, replay, ownership, and conflict behavior. The
+migration remains unapplied to the linked production project until the reviewed PR is merged.
