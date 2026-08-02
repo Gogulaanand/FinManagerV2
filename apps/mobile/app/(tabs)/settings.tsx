@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card, CardLabel, CardTitle } from '../../components/card';
 import { DeadmanSettings } from '../../components/settings/deadman-settings';
+import { MobileSyncHealth } from '../../components/settings/sync-health';
 import { useAuth } from '../../components/providers';
 import { MobileSafeSignOut } from '../../components/safe-sign-out';
 
@@ -27,8 +28,8 @@ const choices: ReadonlyArray<{
  * to hang it off, and burning a tab-bar slot on it would break parity with the
  * web sidebar's six modules.
  *
- * The rest of this module (account, sync status, export) arrives in Phase 3
- * with the data layer.
+ * Account, sync health, recovery export, and inactivity protection stay here so
+ * the tab bar remains focused on day-to-day finance modules.
  */
 export default function SettingsScreen() {
   const { colorScheme, setColorScheme } = useColorScheme();
@@ -116,6 +117,7 @@ export default function SettingsScreen() {
             </>
           )}
         </Card>
+        <MobileSyncHealth />
         <DeadmanSettings />
       </ScrollView>
     </SafeAreaView>
