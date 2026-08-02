@@ -8,11 +8,14 @@ import { getPowerSync } from '../lib/powersync';
 import { useAuth } from './providers';
 import { CardLabel } from './card';
 
-async function shareRecovery(): Promise<void> {
+async function shareRecovery(userId: string | undefined): Promise<void> {
   if (!(await Sharing.isAvailableAsync())) {
     throw new Error('Sharing is unavailable on this device.');
   }
-  const artifact = await createRecoveryExportArtifact(getPowerSync());
+  const artifact = await createRecoveryExportArtifact(getPowerSync(), {
+    ...(userId ? { userId } : {}),
+    sourcePlatform: 'mobile',
+  });
   const file = new File(Paths.cache, artifact.filename);
   file.write(artifact.contents);
   await Sharing.shareAsync(file.uri, {
@@ -22,7 +25,7 @@ async function shareRecovery(): Promise<void> {
 }
 
 export function MobileSafeSignOut() {
-  const { signOut, forceSignOut } = useAuth();
+  const { session, signOut, forceSignOut } = useAuth();
   const [result, setResult] = useState<FinalSyncResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [recoveryExported, setRecoveryExported] = useState(false);
@@ -48,7 +51,7 @@ export function MobileSafeSignOut() {
     setBusy(true);
     setError(null);
     try {
-      await shareRecovery();
+      await shareRecovery(session?.user.id);
       setRecoveryExported(true);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Could not create the recovery export.');

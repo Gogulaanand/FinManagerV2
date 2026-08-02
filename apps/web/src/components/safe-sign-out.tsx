@@ -22,7 +22,7 @@ function download(filename: string, contents: string, mimeType: string): void {
 
 export function SafeSignOut({ children = 'Sign out', ...buttonProps }: SafeSignOutProps) {
   const db = usePowerSync();
-  const { signOut, forceSignOut } = useAuth();
+  const { session, signOut, forceSignOut } = useAuth();
   const [result, setResult] = useState<FinalSyncResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [recoveryExported, setRecoveryExported] = useState(false);
@@ -48,7 +48,10 @@ export function SafeSignOut({ children = 'Sign out', ...buttonProps }: SafeSignO
     setBusy(true);
     setError(null);
     try {
-      const artifact = await createRecoveryExportArtifact(db);
+      const artifact = await createRecoveryExportArtifact(db, {
+        ...(session ? { userId: session.user.id } : {}),
+        sourcePlatform: 'web',
+      });
       download(artifact.filename, artifact.contents, artifact.mimeType);
       setRecoveryExported(true);
     } catch (reason) {

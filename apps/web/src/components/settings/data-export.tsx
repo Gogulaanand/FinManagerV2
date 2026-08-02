@@ -1,11 +1,7 @@
 'use client';
 
-import {
-  createDataExportBundle,
-  createModuleCsvExports,
-  serializeDataExportBundle,
-} from '@finmanager/core';
-import { readDataExportCollections } from '@finmanager/sync';
+import { createModuleCsvExports } from '@finmanager/core';
+import { createRecoveryExportArtifact, readDataExportCollections } from '@finmanager/sync';
 import { usePowerSync } from '@powersync/react';
 import { useState } from 'react';
 
@@ -33,19 +29,35 @@ export function DataExportPanel() {
     return readDataExportCollections(db);
   }
 
-  async function exportJson() {
+  async function exportJson(acknowledgePendingWrites = false) {
     setBusy(true);
     setNotice(null);
     try {
-      const bundle = createDataExportBundle(await collections());
-      const day = bundle.exportedAt.slice(0, 10);
+      if (!session) throw new Error('Sign in before exporting data.');
+      const artifact = await createRecoveryExportArtifact(db, {
+        userId: session.user.id,
+        sourcePlatform: 'web',
+        requireComplete: true,
+        acknowledgePendingWrites,
+      });
       download(
-        `finmanager-backup-${day}.json`,
-        serializeDataExportBundle(bundle),
-        'application/json',
+        artifact.filename.replace('recovery', 'backup'),
+        artifact.contents,
+        artifact.mimeType,
       );
-      setNotice(`Version ${bundle.schemaVersion} backup created from the local synced database.`);
+      setNotice('Complete versioned backup created from the local synced database.');
     } catch (error) {
+      if (
+        !acknowledgePendingWrites &&
+        error instanceof Error &&
+        error.message.includes('Acknowledge pending writes') &&
+        window.confirm(
+          'Pending writes are included in this local backup. Acknowledge that they may not be on the server yet?',
+        )
+      ) {
+        await exportJson(true);
+        return;
+      }
       setNotice(error instanceof Error ? error.message : 'Could not create the backup.');
     } finally {
       setBusy(false);
