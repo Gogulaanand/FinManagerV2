@@ -122,7 +122,9 @@ test('sign-out preserves an offline write until recovery and discard are acknowl
   // commonly prefetched before this point.
   await page.getByRole('link', { name: 'Settings' }).click();
   await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('main').getByRole('button', { name: 'Sign out', exact: true }),
+  ).toBeVisible();
   await page.getByRole('link', { name: 'Expenses' }).click();
   await expect(page.getByRole('heading', { name: 'Expenses' })).toBeVisible();
   await expect(page.getByText('50 of 120 this month')).toBeVisible();
