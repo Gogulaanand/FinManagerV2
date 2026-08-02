@@ -3,25 +3,24 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
-## Latest Handoff: 2026-08-02 (R2.2 merged; R2.3 backup policy in progress)
+## Latest Handoff: 2026-08-02 (R2.4 local recovery drill verified; R2.3 evidence open)
 
 ### Where we are
 
-The checkout is `codex/r2.3-backup-policy`, based on merged PR #12 commit `9c78e3b` from refreshed
-`origin/main`. R1.1's atomic RPC migration is applied and verified on the linked Supabase project;
-R2.2's transactional restore migrations are also applied as remote versions `20260802071518` and
+The checkout is `codex/r2.4-recovery-drill`, freshly branched from `origin/main` at `cbb32cca`.
+R1.1's atomic RPC migration is applied and verified on the linked Supabase project; R2.2's
+transactional restore migrations are also applied as remote versions `20260802071518` and
 `20260802072228`; the corrected RPC, replay ledger, and authenticated execute grant are API-verified.
-R1.2 is merged as PR #9 (`60b54c9`) without a database migration. Web and mobile explicit sign-out
-wait up to eight seconds for pending uploads and unresolved failures to clear. Unsafe work keeps the
-session and local database intact and opens retry, recovery-export, stay-signed-in, and explicitly
-acknowledged discard choices. R2.1 now adds schema-v2 recovery metadata, deterministic per-collection
-checksums, anonymized account fingerprints, PowerSync-derived sync state, warning codes, complete-
-backup gating, and Zod-backed row validation. Web and mobile full-backup actions require a full sync
-and no unresolved failures; pending writes require an explicit acknowledgement. R2.2 adds shared
-dry-run planning, conflict/dependency reporting, dependency-ordered operation plans, empty/merge/
-replace modes, server ownership remapping, immutable reports, and financial-total projections.
-Web and mobile Settings now select a JSON backup, preview it, and apply only after the dry-run; the
-replace path requires explicit destructive confirmation.
+R1.2 is merged as PR #9 (`60b54c9`) without a database migration. R2.1 and R2.2 provide the
+schema-v2 recovery artifact, complete-backup gating, dry-run planning, ownership remapping,
+dependency ordering, immutable reports, and transactional restore boundary. R2.3's encrypted
+backup/rehearsal workflows are present, but their three repository secrets and retained operational
+runs are not configured.
+
+R2.4 adds the secret-free [recovery drill runbook](docs/R2.4_RECOVERY_DRILL.md), the Node harness,
+focused tests, and a sanitized report. The harness exercises all six scenarios in temporary local
+state and compares row counts, referential relationships, balances, monthly totals, XIRR inputs,
+and goal totals after a clean isolated restore.
 
 Transient null sessions disconnect without clearing. A restored same-user session reconnects to the
 retained database; a different account can replace only a clean cache and is rejected while the
@@ -31,11 +30,12 @@ complete sync, pending/failed counts, sanitized failure summaries, and retry/rec
 
 ### Verification state
 
+The focused R2.4 tests pass four Node tests, and the drill passes six sequential scenarios in
+`183.071333ms` as recorded in [docs/evidence/r2.4-recovery-drill.json](docs/evidence/r2.4-recovery-drill.json).
 The targeted R2.2 gate passes: core has 211 tests and sync has 85 tests; core/sync build, typecheck,
 and lint pass; web/mobile typecheck and lint pass; Prettier and `git diff --check` pass. PR #12
-current-head CI run `30737883377` and Preview E2E run `30737893361` passed all required checks. The
-R2.3 workflow/policy files are now branch-local; secret configuration and retained backup/rehearsal
-evidence are intentionally not claimed.
+current-head CI run `30737883377` and Preview E2E run `30737893361` passed all required checks.
+No R2.3 backup run, artifact retention, or remote rehearsal is claimed.
 
 The prior exact 21/21 repository Turbo gate passed with 358 unit tests. The sync package passes 82 tests,
 build, typecheck, and lint; web and mobile typecheck/lint pass; Prettier and `git diff --check`
@@ -45,19 +45,20 @@ paths; its Vercel Preview E2E also passes all 13 protected paths.
 
 ### Exact next action
 
-Validate the R2.3 workflow/policy changes, create the PR through the authenticated browser PR form,
-and merge it automatically when all required checks pass. Then configure
-`SUPABASE_DB_URL`, `SUPABASE_BACKUP_PASSPHRASE`, and `DISPOSABLE_SUPABASE_DB_URL`, run one manual
-backup and rehearsal, and retain their run evidence. The clean-account restore drill is still
-external evidence and must not be claimed from local unit tests or migration application alone.
+Run the full repository gate, review the exact focused diff, push this branch, and create the R2.4
+PR through the authenticated browser PR form. Auto-merge only after every required check passes.
+The GitHub Actions secrets page was checked in the authenticated browser on 2026-08-02 and does not
+contain `SUPABASE_DB_URL`, `SUPABASE_BACKUP_PASSPHRASE`, or `DISPOSABLE_SUPABASE_DB_URL`; do not
+dispatch the R2.3 workflows until those secrets are configured and the target rehearsal project is
+confirmed disposable.
 
 ### Files in flight
 
-R2.3 scope includes `.github/workflows/supabase-backup.yml`,
-`.github/workflows/supabase-restore-rehearsal.yml`, and `docs/SUPABASE_BACKUP_POLICY.md` plus the
-release/status/decision updates. The user-supplied untracked plan/release documents, workflow
-scaffolding, `AGENTS.md`, local `agent_docs/`, and `.codegraph/` remain preserved and must not be
-staged.
+R2.4 scope includes `scripts/r2-recovery-drill.mjs`,
+`scripts/r2-recovery-drill.test.mjs`, `docs/R2.4_RECOVERY_DRILL.md`,
+`docs/evidence/r2.4-recovery-drill.json`, and the release/status/decision updates. The user-supplied
+untracked plan/release documents, workflow scaffolding, `AGENTS.md`, local `agent_docs/`, and
+`.codegraph/` remain preserved and must not be staged.
 
 ## Latest Handoff: 2026-08-01 (R0 production-readiness baseline)
 

@@ -709,3 +709,27 @@ checksum failures, and disposable-project mistakes visible as operational failur
 
 Rejected: committing dumps to the repository, uploading plaintext artifacts, treating Supabase's
 platform backup as the only recovery proof, and pointing the rehearsal workflow at production.
+
+## D-082: R2.4 local recovery evidence is separate from R2.3 operational proof (2026-08-02)
+
+The R2.4 drill runs only against a sanitized production-shaped fixture in temporary local state.
+It exercises accidental transaction deletion, malformed migration and forward repair, lost mobile
+SecureStore key, corrupted local database, compromised account session, and full disposable-project
+loss. The full-loss scenario decrypts a local encrypted artifact, verifies its SHA-256 manifest, and
+restores into a fresh isolated project. The clean-project comparison covers row counts, referential
+relationships, balances, monthly totals, XIRR inputs, and goal totals.
+
+The passing execution is recorded in
+`docs/evidence/r2.4-recovery-drill.json`: six scenarios passed from
+`2026-08-02T13:56:34.711Z` through `2026-08-02T13:56:34.895Z`, with measured total duration
+`183.071333ms`. Four focused Node tests pass through `pnpm test:recovery-drill`, and the drill is
+repeatable through `pnpm recovery:drill`.
+
+Why: local disposable evidence proves the recovery control flow without risking production or
+requiring real credentials, while R2.3 still needs concrete GitHub run IDs, encrypted artifact
+retention, checksum verification, disposable Supabase restore output, and measured duration before
+its operational gate can be closed.
+
+Rejected: treating source inspection, migration application, a local unit test, or a clean cron row
+as proof of a retained production backup; using real financial data in the drill; or dispatching the
+backup/rehearsal workflows while the three required repository secrets are absent.
