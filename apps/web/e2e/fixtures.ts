@@ -16,6 +16,13 @@ type WorkerFixtures = {
 export const test = base.extend<{}, WorkerFixtures>({
   storageState: ({ workerStorageState }, provide) => provide(workerStorageState),
 
+  page: async ({ page }, provide) => {
+    // Preserve the authenticated starting route that signIn previously left
+    // behind, without signing in or performing a full sync for every test.
+    await page.goto('/');
+    await provide(page);
+  },
+
   workerStorageState: [
     async ({ browser }, use, workerInfo) => {
       const fileName = path.resolve(
