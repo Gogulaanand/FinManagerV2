@@ -1,10 +1,4 @@
-import { expect, test } from '@playwright/test';
-
-import { signIn } from './auth';
-
-test.beforeEach(async ({ page }) => {
-  await signIn(page);
-});
+import { expect, test } from './fixtures';
 
 test('dashboard exposes real allocation and category badges from the seeded account', async ({
   page,
