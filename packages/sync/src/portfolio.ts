@@ -3,10 +3,12 @@ import {
   HoldingEventSchema,
   HoldingSchema,
   PortfolioImportRowSchema,
+  QuoteSchema,
   ValuationSchema,
   type Holding,
   type HoldingEvent,
   type PortfolioImportRow,
+  type Quote,
   type Valuation,
 } from '@finmanager/schema';
 
@@ -197,23 +199,21 @@ export async function saveAutomaticQuote(
   db: AbstractPowerSyncDatabase,
   userId: string,
   holdingId: string,
-  quote: {
-    readonly price: number;
-    readonly asOf: string;
-    readonly source: string;
-    readonly provider: string;
-    readonly fxRateToInr: number | null;
-  },
+  quote: Quote,
 ): Promise<void> {
+  const savedQuote = QuoteSchema.parse(quote);
+  if (savedQuote.holdingId !== holdingId) {
+    throw new Error('Automatic quote holding reference does not match the target holding');
+  }
   await db.writeTransaction(async (tx) => {
     await tx.execute(
       `UPDATE holdings SET automatic_price = ?, automatic_price_as_of = ?, automatic_price_source = ?, automatic_price_provider = ?, automatic_price_fx_rate_to_inr = ?, updated_at = ? WHERE user_id = ? AND id = ?`,
       [
-        quote.price,
-        quote.asOf,
-        quote.source,
-        quote.provider,
-        quote.fxRateToInr,
+        savedQuote.price,
+        savedQuote.asOf,
+        savedQuote.source,
+        savedQuote.provider,
+        savedQuote.fxRateToInr,
         new Date().toISOString(),
         userId,
         holdingId,

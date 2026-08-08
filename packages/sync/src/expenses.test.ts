@@ -6,6 +6,8 @@ import type { Category, Transaction } from '@finmanager/schema';
 import {
   commitCsvImport,
   materializeRecurringTransactions,
+  saveAccount,
+  saveBudget,
   saveCategory,
   saveTransaction,
 } from './expenses';
@@ -93,6 +95,58 @@ function fakeDb(
 }
 
 describe('expense repositories', () => {
+  it('rejects invalid financial writes before touching local persistence', async () => {
+    const invalidTransactions = [
+      { ...transaction(), amount: Number.NaN },
+      { ...transaction(), amount: -1 },
+      { ...transaction(), direction: 'transfer' },
+      { ...transaction(), occurredOn: '2026-02-30' },
+      { ...transaction(), accountId: 'not-a-uuid' },
+    ];
+
+    for (const invalid of invalidTransactions) {
+      const db = fakeDb();
+      await expect(
+        saveTransaction(
+          db,
+          '22222222-2222-4222-8222-222222222222',
+          invalid as unknown as Transaction,
+        ),
+      ).rejects.toThrow();
+      expect(db.statements).toEqual([]);
+    }
+
+    const accountDb = fakeDb();
+    await expect(
+      saveAccount(accountDb, '22222222-2222-4222-8222-222222222222', {
+        name: 'Primary',
+        type: 'bank',
+        institution: null,
+        currency: 'INR',
+        currentBalance: Number.POSITIVE_INFINITY,
+        isActive: true,
+      }),
+    ).rejects.toThrow();
+    expect(accountDb.statements).toEqual([]);
+
+    const budgetDb = fakeDb();
+    await expect(
+      saveBudget(budgetDb, '22222222-2222-4222-8222-222222222222', {
+        categoryId: null,
+        period: 'monthly',
+        periodStart: '2026-07-01',
+        amount: -1,
+      }),
+    ).rejects.toThrow();
+    expect(budgetDb.statements).toEqual([]);
+  });
+
+  it('rejects a missing owner before any expense write', async () => {
+    const db = fakeDb();
+    await expect(saveTransaction(db, '', transaction())).rejects.toThrow();
+    expect(db.statements).toEqual([]);
+  });
+
   it('persists fixed presentation for a newly created custom category', async () => {
     const db = fakeDb();
     await saveCategory(db, '22222222-2222-4222-8222-222222222222', {

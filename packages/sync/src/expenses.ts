@@ -184,7 +184,8 @@ export async function saveAccount(
   account: Account,
 ): Promise<void> {
   const isNew = !account.id;
-  const id = idFor(account.id);
+  const savedAccount = AccountSchema.parse({ ...account, id: idFor(account.id), userId });
+  const id = savedAccount.id!;
   const now = new Date().toISOString();
   if (isNew) {
     await db.execute(
@@ -193,12 +194,12 @@ export async function saveAccount(
       [
         id,
         userId,
-        account.name,
-        account.type,
-        account.institution,
-        account.currency,
-        account.currentBalance,
-        account.isActive ? 1 : 0,
+        savedAccount.name,
+        savedAccount.type,
+        savedAccount.institution,
+        savedAccount.currency,
+        savedAccount.currentBalance,
+        savedAccount.isActive ? 1 : 0,
         now,
         now,
       ],
@@ -207,12 +208,12 @@ export async function saveAccount(
     await db.execute(
       `UPDATE accounts SET name = ?, type = ?, institution = ?, currency = ?, current_balance = ?, is_active = ?, updated_at = ? WHERE id = ?`,
       [
-        account.name,
-        account.type,
-        account.institution,
-        account.currency,
-        account.currentBalance,
-        account.isActive ? 1 : 0,
+        savedAccount.name,
+        savedAccount.type,
+        savedAccount.institution,
+        savedAccount.currency,
+        savedAccount.currentBalance,
+        savedAccount.isActive ? 1 : 0,
         now,
         id,
       ],
@@ -229,30 +230,31 @@ export async function saveCategory(
   userId: string,
   category: Category,
 ): Promise<void> {
-  const id = idFor(category.id);
+  const savedCategory = CategorySchema.parse({ ...category, id: idFor(category.id), userId });
+  const id = savedCategory.id!;
   const now = new Date().toISOString();
   let exists = false;
   if (category.id) {
     const check = (await db.execute('SELECT id FROM categories WHERE id = ? LIMIT 1', [
-      category.id,
+      savedCategory.id,
     ])) as unknown as SqlResult;
     exists = rowsOf(check).length > 0;
   }
   if (!exists) {
-    const savedCategory = withCustomCategoryPresentation(category);
+    const insertedCategory = withCustomCategoryPresentation(savedCategory);
     await db.execute(
       `INSERT INTO categories (id, user_id, name, kind, icon, color, parent_id, is_system, sort_order, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         userId,
-        savedCategory.name,
-        savedCategory.kind,
-        savedCategory.icon,
-        savedCategory.color,
-        savedCategory.parentId,
-        savedCategory.isSystem ? 1 : 0,
-        savedCategory.sortOrder,
+        insertedCategory.name,
+        insertedCategory.kind,
+        insertedCategory.icon,
+        insertedCategory.color,
+        insertedCategory.parentId,
+        insertedCategory.isSystem ? 1 : 0,
+        insertedCategory.sortOrder,
         now,
         now,
       ],
@@ -261,13 +263,13 @@ export async function saveCategory(
     await db.execute(
       `UPDATE categories SET name = ?, kind = ?, icon = ?, color = ?, parent_id = ?, is_system = ?, sort_order = ?, updated_at = ? WHERE id = ?`,
       [
-        category.name,
-        category.kind,
-        category.icon,
-        category.color,
-        category.parentId,
-        category.isSystem ? 1 : 0,
-        category.sortOrder,
+        savedCategory.name,
+        savedCategory.kind,
+        savedCategory.icon,
+        savedCategory.color,
+        savedCategory.parentId,
+        savedCategory.isSystem ? 1 : 0,
+        savedCategory.sortOrder,
         now,
         id,
       ],
@@ -284,12 +286,17 @@ export async function saveTransaction(
   userId: string,
   transaction: Transaction,
 ): Promise<void> {
-  const id = idFor(transaction.id);
+  const savedTransaction = TransactionSchema.parse({
+    ...transaction,
+    id: idFor(transaction.id),
+    userId,
+  });
+  const id = savedTransaction.id!;
   const now = new Date().toISOString();
   let exists = false;
   if (transaction.id) {
     const check = (await db.execute('SELECT id FROM transactions WHERE id = ? LIMIT 1', [
-      transaction.id,
+      savedTransaction.id,
     ])) as unknown as SqlResult;
     exists = rowsOf(check).length > 0;
   }
@@ -302,22 +309,22 @@ export async function saveTransaction(
       [
         id,
         userId,
-        transaction.accountId,
-        transaction.categoryId,
-        transaction.amount,
-        transaction.direction,
-        transaction.currency,
-        transaction.occurredOn,
-        transaction.note,
-        transaction.merchant,
-        transaction.isRecurring ? 1 : 0,
-        transaction.recurringId,
-        transaction.recurrenceFrequency,
-        transaction.recurrenceInterval,
-        transaction.recurrenceEndOn,
-        transaction.recurrenceGeneratedThrough,
-        transaction.occurrenceKey,
-        transaction.importHash,
+        savedTransaction.accountId,
+        savedTransaction.categoryId,
+        savedTransaction.amount,
+        savedTransaction.direction,
+        savedTransaction.currency,
+        savedTransaction.occurredOn,
+        savedTransaction.note,
+        savedTransaction.merchant,
+        savedTransaction.isRecurring ? 1 : 0,
+        savedTransaction.recurringId,
+        savedTransaction.recurrenceFrequency,
+        savedTransaction.recurrenceInterval,
+        savedTransaction.recurrenceEndOn,
+        savedTransaction.recurrenceGeneratedThrough,
+        savedTransaction.occurrenceKey,
+        savedTransaction.importHash,
         now,
         now,
       ],
@@ -328,22 +335,22 @@ export async function saveTransaction(
         note = ?, merchant = ?, is_recurring = ?, recurring_id = ?, recurrence_frequency = ?, recurrence_interval = ?,
         recurrence_end_on = ?, recurrence_generated_through = ?, occurrence_key = ?, import_hash = ?, updated_at = ? WHERE id = ?`,
       [
-        transaction.accountId,
-        transaction.categoryId,
-        transaction.amount,
-        transaction.direction,
-        transaction.currency,
-        transaction.occurredOn,
-        transaction.note,
-        transaction.merchant,
-        transaction.isRecurring ? 1 : 0,
-        transaction.recurringId,
-        transaction.recurrenceFrequency,
-        transaction.recurrenceInterval,
-        transaction.recurrenceEndOn,
-        transaction.recurrenceGeneratedThrough,
-        transaction.occurrenceKey,
-        transaction.importHash,
+        savedTransaction.accountId,
+        savedTransaction.categoryId,
+        savedTransaction.amount,
+        savedTransaction.direction,
+        savedTransaction.currency,
+        savedTransaction.occurredOn,
+        savedTransaction.note,
+        savedTransaction.merchant,
+        savedTransaction.isRecurring ? 1 : 0,
+        savedTransaction.recurringId,
+        savedTransaction.recurrenceFrequency,
+        savedTransaction.recurrenceInterval,
+        savedTransaction.recurrenceEndOn,
+        savedTransaction.recurrenceGeneratedThrough,
+        savedTransaction.occurrenceKey,
+        savedTransaction.importHash,
         now,
         id,
       ],
@@ -411,14 +418,15 @@ export async function saveBudget(
   userId: string,
   budget: Budget,
 ): Promise<void> {
-  const id = idFor(budget.id);
+  const savedBudget = BudgetSchema.parse({ ...budget, id: idFor(budget.id), userId });
+  const id = savedBudget.id!;
   const now = new Date().toISOString();
   const updateSql = `UPDATE budgets SET category_id = ?, period = ?, period_start = ?, amount = ?, updated_at = ? WHERE id = ?`;
   const updateParams = [
-    budget.categoryId,
-    budget.period,
-    budget.periodStart,
-    budget.amount,
+    savedBudget.categoryId,
+    savedBudget.period,
+    savedBudget.periodStart,
+    savedBudget.amount,
     now,
     id,
   ];
@@ -426,7 +434,7 @@ export async function saveBudget(
   if (updated.rowsAffected) return;
   const existing = (await db.execute(
     'SELECT id FROM budgets WHERE user_id = ? AND category_id IS ? AND period = ? AND period_start = ? LIMIT 1',
-    [userId, budget.categoryId, budget.period, budget.periodStart],
+    [userId, savedBudget.categoryId, savedBudget.period, savedBudget.periodStart],
   )) as unknown as SqlResult;
   const existingId = stringValue(rowsOf(existing)[0]?.id);
   if (existingId) {
@@ -436,7 +444,16 @@ export async function saveBudget(
   await db.execute(
     `INSERT INTO budgets (id, user_id, category_id, period, period_start, amount, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, userId, budget.categoryId, budget.period, budget.periodStart, budget.amount, now, now],
+    [
+      id,
+      userId,
+      savedBudget.categoryId,
+      savedBudget.period,
+      savedBudget.periodStart,
+      savedBudget.amount,
+      now,
+      now,
+    ],
   );
 }
 

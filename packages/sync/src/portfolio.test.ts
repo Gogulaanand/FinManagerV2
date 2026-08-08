@@ -8,6 +8,8 @@ import {
   mapHoldingEventRows,
   mapHoldingRows,
   saveHolding,
+  saveAutomaticQuote,
+  saveHoldingEvent,
 } from './portfolio';
 
 const userId = '22222222-2222-4222-8222-222222222222';
@@ -110,6 +112,33 @@ describe('portfolio mappers and repositories', () => {
     expect(db.statements[0]).toMatch(/^UPDATE holdings/);
     expect(db.statements.some((sql) => sql.includes('ON CONFLICT'))).toBe(false);
     expect(db.statements.some((sql) => sql.startsWith('INSERT'))).toBe(false);
+  });
+
+  it('rejects a malformed required holding reference before local persistence', async () => {
+    const db = fakeDb();
+    await expect(
+      saveHoldingEvent(db, userId, {
+        ...event,
+        holdingId: 'not-a-uuid',
+      } as unknown as HoldingEvent),
+    ).rejects.toThrow();
+    expect(db.statements).toEqual([]);
+  });
+
+  it('rejects an invalid automatic quote before local persistence', async () => {
+    const db = fakeDb();
+    await expect(
+      saveAutomaticQuote(db, userId, holdingId, {
+        holdingId,
+        price: Number.NaN,
+        asOf: '2026-02-30',
+        currency: 'INR',
+        fxRateToInr: 1,
+        source: 'test',
+        provider: 'test',
+      }),
+    ).rejects.toThrow();
+    expect(db.statements).toEqual([]);
   });
 });
 
