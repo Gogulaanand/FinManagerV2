@@ -20,6 +20,7 @@
     "recovery:drill": "node scripts/r2-recovery-drill.mjs",
     "test:recovery-drill": "node --test scripts/r2-recovery-drill.test.mjs",
     "test:ai-usage-concurrency": "node scripts/test-ai-usage-concurrency.mjs",
+    "test:database:fresh": "node scripts/test-l3-1-fresh-migration.mjs",
     "web": "pnpm --filter @finmanager/web dev",
     "mobile": "pnpm --filter @finmanager/mobile start"
   },

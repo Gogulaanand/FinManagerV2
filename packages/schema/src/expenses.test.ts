@@ -32,4 +32,19 @@ describe('expense contracts', () => {
       TransactionSchema.parse({ amount: 1, direction: 'transfer', occurredOn: '2026-07-18' }),
     ).toThrow();
   });
+
+  it('rejects malformed dates, ownership ids, and references', () => {
+    expect(() =>
+      TransactionSchema.parse({ amount: 1, direction: 'debit', occurredOn: '2026-02-30' }),
+    ).toThrow();
+    expect(() =>
+      TransactionSchema.parse({
+        userId: 'not-a-uuid',
+        accountId: 'not-a-uuid',
+        amount: 1,
+        direction: 'debit',
+        occurredOn: '2026-07-18',
+      }),
+    ).toThrow();
+  });
 });
