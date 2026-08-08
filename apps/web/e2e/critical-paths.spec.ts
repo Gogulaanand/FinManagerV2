@@ -1,10 +1,4 @@
-import { expect, test } from '@playwright/test';
-
-import { signIn } from './auth';
-
-test.beforeEach(async ({ page }) => {
-  await signIn(page);
-});
+import { expect, test } from './fixtures';
 
 test('seeded account exposes the scale, portfolio, and goals fixtures', async ({ page }) => {
   await page.goto('/expenses');
