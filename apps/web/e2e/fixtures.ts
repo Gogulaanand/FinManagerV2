@@ -25,7 +25,9 @@ export const test = base.extend<{}, WorkerFixtures>({
       );
       await fs.mkdir(path.dirname(fileName), { recursive: true });
 
-      const context = await browser.newContext();
+      const baseURL = workerInfo.project.use.baseURL;
+      if (!baseURL) throw new Error('Playwright baseURL is required for the E2E setup fixture');
+      const context = await browser.newContext({ baseURL });
       const page = await context.newPage();
       await signIn(page);
 
