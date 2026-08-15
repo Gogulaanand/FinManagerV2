@@ -4,11 +4,17 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '@/components/providers';
+import { PRIVATE_BETA_SIGNUP_MESSAGE } from '@/lib/beta-access';
 import { Button } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 type Mode = 'signin' | 'signup';
+
+function getSafeNextPath(): string {
+  const next = new URLSearchParams(window.location.search).get('next');
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,9 +33,9 @@ export default function LoginPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // A signed-in user has no business here; the auth listener redirects them home.
+  // A signed-in user has no business here; the auth listener redirects them to the product.
   useEffect(() => {
-    if (!loading && session) router.replace('/');
+    if (!loading && session) router.replace(getSafeNextPath());
   }, [loading, session, router]);
 
   async function onSubmit(event: React.FormEvent) {
@@ -44,7 +50,11 @@ export default function LoginPage() {
       );
       setBusy(false);
       if (signUpError) {
-        setError(signUpError);
+        setError(
+          /private beta|request access|after approval/i.test(signUpError)
+            ? PRIVATE_BETA_SIGNUP_MESSAGE
+            : signUpError,
+        );
         return;
       }
       // Only promise an email when one was actually sent. Otherwise the auth
@@ -59,7 +69,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-6 py-8">
+    <main className="mx-auto flex max-w-md flex-col gap-6 py-8">
       <div>
         <h1 className="font-display text-display-md text-foreground">
           {mode === 'signin' ? 'Welcome back' : 'Create your account'}
@@ -148,6 +158,6 @@ export default function LoginPage() {
           {mode === 'signin' ? 'Sign up' : 'Sign in'}
         </button>
       </p>
-    </div>
+    </main>
   );
 }

@@ -17,7 +17,7 @@ export interface NavItem {
 }
 
 export const navItems: readonly NavItem[] = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/tax', label: 'Tax', icon: Landmark },
   { href: '/expenses', label: 'Expenses', icon: Receipt },
   { href: '/portfolio', label: 'Portfolio', icon: TrendingUp },

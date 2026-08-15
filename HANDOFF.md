@@ -3,6 +3,54 @@
 Rewritten at the end of every working session.
 This file carries mid-phase state between sessions; completed phases live in phases/briefing/phase-N.md instead.
 
+## Latest Handoff: 2026-08-15 (private-beta hosted rollout verified; additional owner seeding open)
+
+### Where we are
+
+The approved lean private-beta flow is implemented in the isolated FinManagerV2 checkout and remains
+uncommitted by explicit instruction. Signed-out web visitors now receive the Calm Teal landing page;
+signed-in visitors retain the existing dashboard and product sidebar. Non-public product routes redirect
+signed-out visitors to /login. The landing form calls only the narrow anonymous request RPC and never
+reveals allowlist state.
+
+The new migration adds the RLS-protected public.beta_access table, the generic
+request_beta_access(text) RPC, the hook_before_user_created(jsonb) function for the Supabase
+Before User Created hook, and the post-create link extension. It is applied to the authenticated
+finmanager Supabase project. Five existing Auth users were seeded as approved + complimentary and
+linked; the Before User Created hook is enabled. Exact owner steps are in
+docs/PRIVATE_BETA_ROLLOUT.md. The referenced phases/plans/plan-commercialization.md was not present
+in this checkout; the approved delegation brief and the existing phases/plans/plan-monetization.md
+were used as the scope authority.
+
+### Verification state
+
+Source-level review is complete for the changed contracts. Database pgTAP coverage includes
+case-insensitive approval, requested/revoked/unlisted denial, generic non-enumeration, duplicate
+request idempotency, no anonymous table access/mutation, no downgrade of approved/complimentary
+rows, and post-create user linking. Web Playwright coverage includes signed-out landing vs signed-in
+dashboard, form validation/generic success, friendly signup rejection, product-route redirect,
+mobile-width overflow, accessibility labels, and reduced-motion behavior.
+
+The focused web helper tests pass 4/4, web typecheck and lint pass, the web production build passes,
+the unauthenticated browser subset passes 4/4 with synthetic non-secret environment values, and the
+repository Turbo build/test/lint/typecheck gate passes 21/21. Prettier and git diff --check pass.
+The local Supabase pgTAP run is blocked by LegacyDbConnectError because the local database runtime
+is unavailable. Hosted read-only verification passed for approved allow, unlisted denial, anon RPC
+privilege, anonymous table denial, anonymous hook denial, five approved complimentary rows, and
+five user links. No deployment, commit, push, or PR was performed.
+
+### Exact next action
+
+Review the exact diff. The owner must add any friends/family accounts that were not already Auth
+users, then manually handle future approval, revocation/ban, and 90-day retention according to the
+rollout document. Re-run the pgTAP matrix when local Supabase/Docker is available.
+
+### Files in flight
+
+Private-beta scope includes the new migration and database test, web app shell/landing/auth changes,
+web helper tests and Playwright coverage, and docs/PRIVATE_BETA_ROLLOUT.md plus status/handoff/
+decision records. No unrelated worktree files were changed.
+
 ## Latest Handoff: 2026-08-02 (R2.4 local recovery drill verified; R2.3 evidence open)
 
 ### Where we are

@@ -7,8 +7,7 @@ import { navItems } from '@/lib/nav';
 import { cn } from '@/lib/utils';
 
 function isActive(pathname: string, href: string): boolean {
-  // '/' is the dashboard and would otherwise prefix-match every route.
-  return href === '/' ? pathname === '/' : pathname.startsWith(href);
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 /** Desktop navigation. Hidden below md, where the tab bar takes over. */

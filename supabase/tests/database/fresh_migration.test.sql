@@ -8,7 +8,7 @@ select extensions.ok(
   (
     select string_agg(version::text, ',' order by version::text)
     from supabase_migrations.schema_migrations
-  ) = '20260717000001,20260717000002,20260718000001,20260718000002,20260718000003,20260719000004,20260721000001,20260721000002,20260723021348,20260725063750,20260726000001,20260801000001,20260802000001,20260802000002,20260808000001',
+  ) = '20260717000001,20260717000002,20260718000001,20260718000002,20260718000003,20260719000004,20260721000001,20260721000002,20260723021348,20260725063750,20260726000001,20260801000001,20260802000001,20260802000002,20260808000001,20260815000001',
   'all repository migrations are applied in order'
 );
 
@@ -36,7 +36,8 @@ select extensions.ok(
         ('escalation_events'),
         ('cron_runs'),
         ('sync_upload_transactions'),
-        ('restore_runs')
+        ('restore_runs'),
+        ('beta_access')
     ) as expected(table_name)
     where to_regclass('public.' || expected.table_name) is null
   ),
@@ -90,7 +91,9 @@ select extensions.ok(
         ('escalation_events_user_created_idx'),
         ('cron_runs_job_ran_at_idx'),
         ('sync_upload_transactions_pkey'),
-        ('restore_runs_pkey')
+        ('restore_runs_pkey'),
+        ('beta_access_user_id_uidx'),
+        ('beta_access_requested_at_idx')
     ) as expected(index_name)
     where to_regclass('public.' || expected.index_name) is null
   ),
@@ -121,7 +124,8 @@ select extensions.ok(
         ('escalation_events'),
         ('cron_runs'),
         ('sync_upload_transactions'),
-        ('restore_runs')
+        ('restore_runs'),
+        ('beta_access')
     ) as expected(table_name)
     where not exists (
       select 1
@@ -158,7 +162,8 @@ select extensions.ok(
         ('deadman_settings', 'deadman settings are private'),
         ('escalation_events', 'escalation events are readable by their owner'),
         ('sync_upload_transactions', 'sync upload transactions are private'),
-        ('restore_runs', 'restore runs are private')
+        ('restore_runs', 'restore runs are private'),
+        ('beta_access', 'beta_access is never public')
     ) as expected(table_name, policy_name)
     where not exists (
       select 1
