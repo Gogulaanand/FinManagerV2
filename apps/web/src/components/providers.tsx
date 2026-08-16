@@ -90,9 +90,20 @@ export function AppProviders({ children }: { children: ReactNode }) {
           });
           return message;
         }
-        await db.connect(getConnector());
         setAuthTransitionError(null);
+        // Auth readiness must not wait for the PowerSync handshake. On a fresh
+        // document load, the persisted Supabase session is valid even while
+        // the sync connection is still starting; publishing it first keeps
+        // protected routes from redirecting during that bounded startup gap.
         setSession(nextSession);
+        setLoading(false);
+        try {
+          await db.connect(getConnector());
+        } catch {
+          // Keep the authenticated session active. The product remains useful
+          // offline and the sync-health surface can report/retry the connection.
+          setAuthTransitionError('Sync is temporarily unavailable. Your local data remains safe.');
+        }
         return null;
       }).finally(() => setLoading(false));
       activeTransition.current = { accessToken: nextSession.access_token, promise };
