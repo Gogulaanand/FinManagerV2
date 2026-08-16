@@ -2,9 +2,13 @@ import { expect, test as unauthenticatedTest } from '@playwright/test';
 
 import { expect as authenticatedExpect, test as authenticatedTest } from './fixtures';
 
-unauthenticatedTest.use({ storageState: { cookies: [], origins: [] } });
+const signedOutTest = unauthenticatedTest.extend({
+  storageState: async (_fixtureArgs, provide) => {
+    await provide({ cookies: [], origins: [] });
+  },
+});
 
-unauthenticatedTest(
+signedOutTest(
   'signed-out visitors see the landing page without product navigation',
   async ({ page }) => {
     await page.goto('/');
@@ -27,7 +31,7 @@ unauthenticatedTest(
   },
 );
 
-unauthenticatedTest(
+signedOutTest(
   'beta request validation and generic success work at mobile width',
   async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -56,7 +60,7 @@ unauthenticatedTest(
   },
 );
 
-unauthenticatedTest('signed-out product routes redirect to login', async ({ page }) => {
+signedOutTest('signed-out product routes redirect to login', async ({ page }) => {
   await page.goto('/dashboard');
   await expect(page).toHaveURL(/\/login\?next=%2Fdashboard/);
   await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
@@ -66,7 +70,7 @@ unauthenticatedTest('signed-out product routes redirect to login', async ({ page
   await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
 });
 
-unauthenticatedTest('private-beta signup rejection is shown as friendly copy', async ({ page }) => {
+signedOutTest('private-beta signup rejection is shown as friendly copy', async ({ page }) => {
   await page.route('**/auth/v1/signup', async (route) => {
     await route.fulfill({
       status: 403,
