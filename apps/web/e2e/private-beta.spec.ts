@@ -3,7 +3,8 @@ import { expect, test as unauthenticatedTest } from '@playwright/test';
 import { expect as authenticatedExpect, test as authenticatedTest } from './fixtures';
 
 const signedOutTest = unauthenticatedTest.extend({
-  storageState: async (_fixtureArgs, provide) => {
+  storageState: async ({ ..._fixtureArgs }, provide) => {
+    void _fixtureArgs;
     await provide({ cookies: [], origins: [] });
   },
 });
