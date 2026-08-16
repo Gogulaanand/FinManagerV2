@@ -114,19 +114,32 @@ export function AppProviders({ children }: { children: ReactNode }) {
     });
   }, [db, enqueueTransition]);
 
-  // Track the current session. onAuthStateChange also fires an INITIAL_SESSION
-  // event, so it seeds `session` on load and follows every sign-in/out. Setting
-  // state from this async callback (not synchronously in the effect body) is
-  // allowed by the set-state-in-effect rule.
+  // Track the current session. The explicit getSession call closes the fresh
+  // document-load race where the app shell could render a protected route
+  // before the persisted Supabase session had been reflected in React state.
+  // onAuthStateChange still follows every sign-in/out and refresh event.
   useEffect(() => {
+    let disposed = false;
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (disposed) return;
       if (nextSession) {
         void activateSession(nextSession);
       } else {
         void handleSessionLoss();
       }
     });
+
+    void supabase.auth.getSession().then(({ data: sessionData, error }) => {
+      if (disposed) return;
+      if (error || !sessionData.session) {
+        void handleSessionLoss();
+      } else {
+        void activateSession(sessionData.session);
+      }
+    });
+
     return () => {
+      disposed = true;
       data.subscription.unsubscribe();
     };
   }, [activateSession, handleSessionLoss]);
