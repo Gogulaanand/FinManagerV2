@@ -331,6 +331,9 @@ export function LandingPage() {
           <Link href={dashboardLink} className="hover:text-foreground">
             {dashboardLabel}
           </Link>
+          <Link href="/privacy" className="hover:text-foreground">
+            Privacy &amp; data
+          </Link>
         </div>
       </footer>
     </main>

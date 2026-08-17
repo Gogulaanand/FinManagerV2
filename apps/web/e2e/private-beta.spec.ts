@@ -32,6 +32,26 @@ signedOutTest(
 );
 
 signedOutTest(
+  'signed-out visitors can read privacy and discover it from the landing page',
+  async ({ page }) => {
+    await page.goto('/privacy');
+
+    await expect(
+      page.getByRole('heading', { name: 'Privacy & data, in plain language.' }),
+    ).toBeVisible();
+    await expect(page.getByText(/wa-sqlite backed by IndexedDB/)).toBeVisible();
+    await expect(page.locator('aside')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'FinManager home page' })).toHaveAttribute(
+      'href',
+      '/',
+    );
+
+    await page.goto('/');
+    await expect(page.getByRole('link', { name: 'Privacy & data' })).toHaveCount(1);
+  },
+);
+
+signedOutTest(
   'beta request validation and generic success work at mobile width',
   async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -106,5 +126,24 @@ authenticatedTest(
     await authenticatedExpect(
       page.getByRole('heading', { name: "Your family's money, finally in one calm place." }),
     ).toHaveCount(0);
+  },
+);
+
+authenticatedTest(
+  'signed-in visitors can open public privacy and discover it in Settings',
+  async ({ page }) => {
+    await page.goto('/privacy');
+    await authenticatedExpect(
+      page.getByRole('heading', { name: 'Privacy & data, in plain language.' }),
+    ).toBeVisible();
+    await authenticatedExpect(page.locator('aside')).toHaveCount(0);
+
+    await page.goto('/settings');
+    await authenticatedExpect(
+      page.getByRole('heading', { name: 'Settings', exact: true }),
+    ).toBeVisible();
+    await authenticatedExpect(
+      page.getByRole('link', { name: 'Read the privacy & data guide' }),
+    ).toHaveAttribute('href', '/privacy');
   },
 );

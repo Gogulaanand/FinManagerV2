@@ -1,6 +1,8 @@
 'use client';
 
 import { Settings } from 'lucide-react';
+import Link from 'next/link';
+
 import { DeadmanSettingsPanel } from '@/components/settings/deadman-settings';
 import { Card, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/components/providers';
@@ -34,6 +36,21 @@ export default function SettingsPage() {
             Sign in to manage your account and dead-man switch.
           </p>
         )}
+      </Card>
+      <Card>
+        <CardTitle>Privacy &amp; data</CardTitle>
+        <p className="mt-2 max-w-2xl font-body text-body-md text-foreground-muted">
+          Learn how browser storage, sync, exports, AI Insights, and private-beta requests work.
+        </p>
+        <Link
+          href="/privacy"
+          className="mt-4 inline-flex font-body text-body-md font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+        >
+          Read the privacy &amp; data guide
+          <span aria-hidden="true" className="ml-1">
+            →
+          </span>
+        </Link>
       </Card>
       <SyncHealthPanel />
       <DataExportPanel />

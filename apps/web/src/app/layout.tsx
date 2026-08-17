@@ -26,6 +26,8 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'FinManager',
   description: 'A private, family-scale money OS.',
+  applicationName: 'FinManager',
+  manifest: '/manifest.webmanifest',
 };
 
 export const viewport: Viewport = {

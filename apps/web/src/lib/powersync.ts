@@ -1,5 +1,5 @@
 /**
- * The on-device PowerSync database for web (wa-sqlite over OPFS/IndexedDB).
+ * The on-device PowerSync database for web (wa-sqlite backed by IndexedDB).
  *
  * A lazy singleton: instantiated once, only in the browser. The worker paths
  * point at the pre-bundled assets copied into public/@powersync by the

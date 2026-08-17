@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">FinManager</title>
+  <rect width="512" height="512" rx="112" fill="#0F766E"/>
+  <path fill="#F4F7F7" d="M133 181c0-18.225 14.775-33 33-33h180c18.225 0 33 14.775 33 33v150c0 18.225-14.775 33-33 33H166c-18.225 0-33-14.775-33-33V181Z"/>
+  <path fill="#0F766E" d="M133 199h246v48H133z"/>
+  <path fill="#F4F7F7" d="M332 263h47v48h-47c-13.255 0-24-10.745-24-24s10.745-24 24-24Z"/>
+  <circle cx="332" cy="287" r="8" fill="#0F766E"/>
+</svg>
