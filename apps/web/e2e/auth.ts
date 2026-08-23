@@ -2,7 +2,7 @@ import { expect, type Page } from '@playwright/test';
 
 import { requiredEnv } from './env';
 
-async function establishVercelBypass(page: Page): Promise<void> {
+export async function establishVercelBypass(page: Page): Promise<void> {
   const secret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim();
   if (!secret) return;
 

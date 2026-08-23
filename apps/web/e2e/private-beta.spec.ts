@@ -1,10 +1,16 @@
 import { expect, test as unauthenticatedTest } from '@playwright/test';
 
+import { establishVercelBypass } from './auth';
 import { expect as authenticatedExpect, test as authenticatedTest } from './fixtures';
 
 const signedOutTest = unauthenticatedTest.extend({
   storageState: async ({ baseURL: _baseURL }, provide) => {
     await provide({ cookies: [], origins: [] });
+  },
+
+  page: async ({ page }, provide) => {
+    await establishVercelBypass(page);
+    await provide(page);
   },
 });
 
