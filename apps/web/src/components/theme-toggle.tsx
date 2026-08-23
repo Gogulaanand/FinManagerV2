@@ -39,11 +39,18 @@ function emit(): void {
 
 function subscribe(onChange: () => void): () => void {
   listeners.add(onChange);
-  // Keeps sibling tabs in step.
-  window.addEventListener('storage', onChange);
+  // A storage event fires only in sibling documents. Mirror the external value
+  // into this document before notifying React so visual theme and aria state
+  // cannot diverge across tabs.
+  function handleStorage(event: StorageEvent): void {
+    if (event.key !== STORAGE_KEY) return;
+    apply(getSnapshot());
+    onChange();
+  }
+  window.addEventListener('storage', handleStorage);
   return () => {
     listeners.delete(onChange);
-    window.removeEventListener('storage', onChange);
+    window.removeEventListener('storage', handleStorage);
   };
 }
 
@@ -67,7 +74,7 @@ export function ThemeToggle() {
 
   return (
     <div
-      className="inline-flex items-center gap-0.5 rounded-full border border-border bg-surface p-0.5"
+      className="inline-flex items-center gap-0.5 rounded-full border border-border/70 bg-surface-muted/70 p-0.5"
       role="group"
       aria-label="Color theme"
     >
@@ -81,7 +88,7 @@ export function ThemeToggle() {
           onClick={() => choose(value)}
           className={cn(
             'size-8 rounded-full',
-            choice === value && 'bg-primary text-primary-foreground hover:bg-primary',
+            choice === value && 'bg-accent text-accent-foreground hover:bg-accent',
           )}
         >
           <Icon />

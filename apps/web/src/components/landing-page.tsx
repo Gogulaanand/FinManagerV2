@@ -157,10 +157,10 @@ export function LandingPage() {
     <main className="overflow-hidden" data-reveal>
       <section className="mx-auto grid w-full max-w-6xl gap-12 px-4 py-16 md:grid-cols-[0.92fr_1.08fr] md:items-center md:px-8 md:py-24">
         <div className="max-w-xl">
-          <p className="mb-5 font-body text-label font-medium uppercase tracking-[0.14em] text-primary">
+          <p className="font-utility mb-5 text-label font-medium uppercase tracking-[0.14em] text-primary">
             FinManager · private beta
           </p>
-          <h1 className="max-w-2xl font-display text-[clamp(2.6rem,7vw,5.4rem)] leading-[0.98] font-extrabold tracking-[-0.045em] text-foreground">
+          <h1 className="max-w-2xl font-display text-[clamp(2.6rem,7vw,5.4rem)] leading-[0.98] font-semibold tracking-[-0.055em] text-foreground">
             Your family&apos;s money, finally in one calm place.
           </h1>
           <p className="mt-6 max-w-lg font-body text-body-lg leading-8 text-foreground-muted">
@@ -172,7 +172,7 @@ export function LandingPage() {
               <a href="#request-access">Request private beta access</a>
             </Button>
             <Link
-              className="font-body text-body-md font-medium text-primary hover:underline"
+              className="font-utility text-body-md font-medium text-primary hover:underline"
               href={dashboardLink}
             >
               {dashboardLabel}
@@ -183,12 +183,8 @@ export function LandingPage() {
           </p>
         </div>
 
-        <div className="relative">
-          <div
-            className="absolute -inset-8 rounded-full bg-primary/10 blur-3xl"
-            aria-hidden="true"
-          />
-          <div className="relative">
+        <div>
+          <div>
             <DashboardMockup />
           </div>
         </div>
@@ -197,11 +193,11 @@ export function LandingPage() {
       <section id="values" className="border-y border-border bg-surface-muted/50">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 md:grid-cols-3 md:px-8 md:py-20">
           {values.map((value) => (
-            <article key={value.number} className="max-w-sm">
-              <span className="font-body text-caption font-medium text-primary">
+            <article key={value.number} className="max-w-sm border-t border-border pt-5">
+              <span className="font-utility text-caption font-medium text-primary">
                 {value.number}
               </span>
-              <h2 className="mt-4 font-display text-headline-md text-foreground">{value.title}</h2>
+              <h2 className="mt-8 font-display text-headline-md text-foreground">{value.title}</h2>
               <p className="mt-3 font-body text-body-md leading-6 text-foreground-muted">
                 {value.body}
               </p>
@@ -253,17 +249,17 @@ export function LandingPage() {
 
       <section
         id="request-access"
-        className="border-t border-border bg-primary px-4 py-16 text-primary-foreground md:px-8 md:py-24"
+        className="border-t border-border bg-foreground px-4 py-16 text-background md:px-8 md:py-24"
       >
         <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1fr_0.8fr] md:items-end">
           <div>
-            <p className="font-body text-label font-medium uppercase tracking-[0.14em] text-primary-foreground/75">
+            <p className="font-utility text-label font-medium uppercase tracking-[0.14em] text-background/70">
               Private beta access
             </p>
             <h2 className="mt-4 max-w-2xl font-display text-display-md tracking-[-0.03em]">
               Bring a little more calm to the money conversation.
             </h2>
-            <p className="mt-4 max-w-xl font-body text-body-md leading-6 text-primary-foreground/80">
+            <p className="mt-4 max-w-xl font-body text-body-md leading-6 text-background/80">
               Leave an email-only request. We will review it manually while this beta stays small.
             </p>
           </div>

@@ -181,7 +181,7 @@ export function MobileSyncHealth() {
 
           {summaries.length > 0 ? (
             <View className="gap-2 rounded-md border border-warning/50 bg-warning/10 p-3">
-              <Text className="font-body text-label font-medium text-foreground">
+              <Text className="font-body-medium text-label text-foreground">
                 Review queued changes
               </Text>
               {summaries.map((summary) => (
@@ -200,7 +200,7 @@ export function MobileSyncHealth() {
               onPress={() => void retry()}
               disabled={busy}
               accessibilityRole="button"
-              className="h-11 flex-row items-center justify-center gap-2 rounded-md border border-border bg-surface px-4 disabled:opacity-50"
+              className="min-h-11 flex-row items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 disabled:opacity-50"
             >
               <Ionicons name="refresh" size={17} color={scheme.foreground} />
               <Text className="font-body text-body-md text-foreground">

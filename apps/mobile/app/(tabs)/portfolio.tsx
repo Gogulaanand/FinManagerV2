@@ -14,14 +14,14 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Amount } from '../../components/amount';
-import { Card, CardLabel, CardTitle } from '../../components/card';
+import { Card, CardLabel } from '../../components/card';
 import { CategoryIcon } from '../../components/category-icon';
-import { Fab } from '../../components/fab';
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
 import { MobilePortfolioImport } from '../../components/portfolio/portfolio-import';
 import { usePortfolio } from '../../lib/portfolio';
 import { setNotice, useNotice } from '../../lib/notice';
 import { useAuth } from '../../components/providers';
+import { ScreenHeader, SectionHeading } from '../../components/screen-header';
 
 function xirrText(status: string, rate: number | null): string {
   return status === 'ok' && rate !== null
@@ -57,29 +57,24 @@ function PortfolioScreenContent() {
   if (api.loading || initialSkeleton) return <MobileWorkspaceSkeleton label="Loading portfolio" />;
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView contentContainerClassName="gap-4 p-4 pb-28">
+      <ScrollView contentContainerClassName="gap-5 p-5 pb-32">
         <View className="flex-row items-center justify-between gap-3">
-          <View className="flex-1 flex-row items-start gap-3">
-            <View className="mt-1 size-10 items-center justify-center rounded-full bg-primary/10">
-              <Ionicons name="wallet" size={21} color={scheme.primary} />
-            </View>
-            <View className="flex-1">
-              <Text className="font-display text-headline-lg text-foreground">Portfolio</Text>
-              <Text className="font-body text-body-md text-foreground-muted">
-                Value and return across every asset.
-              </Text>
-            </View>
+          <View className="flex-1">
+            <ScreenHeader
+              eyebrow="Long-term view"
+              title="Portfolio"
+              subtitle="Value and return across every asset."
+              icon="wallet-outline"
+            />
           </View>
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Refresh portfolio prices"
             disabled={!api.canWrite}
             onPress={() => void refresh()}
-            className="rounded-md bg-surface-muted px-3 py-2 disabled:opacity-50"
+            className="min-h-11 min-w-11 items-center justify-center rounded-full border border-border bg-surface px-3 disabled:opacity-50"
           >
-            <View className="flex-row items-center gap-2">
-              <Ionicons name="refresh" size={16} color={scheme.foreground} />
-              <Text className="text-foreground">Refresh</Text>
-            </View>
+            <Ionicons name="refresh" size={18} color={scheme.foreground} />
           </Pressable>
         </View>
         {!api.canWrite ? (
@@ -90,27 +85,27 @@ function PortfolioScreenContent() {
           </Card>
         ) : null}
         {notice ? <Text className="text-caption text-foreground-muted">{notice}</Text> : null}
-        <View className="gap-2">
-          <View className="flex-row gap-2">
-            <Card className="flex-1">
-              <CardLabel>Net worth</CardLabel>
-              <Amount value={api.summary.netWorth} size="tile" />
-            </Card>
-            <Card className="flex-1">
+        <View className="gap-3">
+          <Card className="p-5">
+            <CardLabel>Current net worth</CardLabel>
+            <Amount value={api.summary.netWorth} size="section" />
+          </Card>
+          <View className="flex-row gap-3">
+            <Card className="min-w-0 flex-1 p-3.5">
               <CardLabel>Invested</CardLabel>
               <Amount value={api.summary.investedValue} size="tile" />
             </Card>
-            <Card className="flex-1">
+            <Card className="min-w-0 flex-1 p-3.5">
               <CardLabel>Current</CardLabel>
               <Amount value={api.summary.currentValue} size="tile" />
             </Card>
           </View>
           <View className="flex-row gap-2">
-            <Card className="flex-1">
+            <Card className="min-w-0 flex-1 p-3.5">
               <CardLabel>Gain/loss</CardLabel>
               <Amount value={api.summary.gainLoss} size="tile" />
             </Card>
-            <Card className="flex-1">
+            <Card className="min-w-0 flex-1 p-3.5">
               <CardLabel>XIRR</CardLabel>
               <Text
                 numberOfLines={1}
@@ -123,10 +118,7 @@ function PortfolioScreenContent() {
           </View>
         </View>
         <Card>
-          <View className="mb-3 flex-row items-center justify-between">
-            <CardTitle>Holdings</CardTitle>
-            <Text className="text-caption text-foreground-muted">{api.holdings.length} active</Text>
-          </View>
+          <SectionHeading title="Holdings" detail={`${api.holdings.length} active`} />
           {api.holdings.length === 0 ? (
             <Text className="text-foreground-muted">Add your first holding.</Text>
           ) : (
@@ -136,7 +128,7 @@ function PortfolioScreenContent() {
                   key={holding.id}
                   accessibilityRole="button"
                   onPress={() => router.push(`/holding/${holding.id}` as Href)}
-                  className="flex-row items-center gap-2 border-b border-border/60 pb-3"
+                  className="min-h-11 flex-row items-center gap-2 border-b border-border/60 pb-3"
                 >
                   <CategoryIcon
                     {...assetClassPresentation(assetClassForType(holding.type))}
@@ -163,7 +155,7 @@ function PortfolioScreenContent() {
           )}
         </Card>
         <Card>
-          <CardTitle>Allocation</CardTitle>
+          <SectionHeading title="Allocation" detail="current mix" />
           <View className="mt-3 gap-3">
             {api.summary.allocation.map((item) => (
               <View key={item.assetClass} className="flex-row items-center gap-3">
@@ -205,12 +197,6 @@ function PortfolioScreenContent() {
           />
         ) : null}
       </ScrollView>
-      <Fab
-        icon="trending-up"
-        label="Add holding"
-        onPress={() => router.push('/holding/new' as Href)}
-        disabled={!api.canWrite}
-      />
     </SafeAreaView>
   );
 }

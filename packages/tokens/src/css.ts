@@ -49,6 +49,8 @@ function fontVars(): string {
   return [
     `  --font-display: var(--font-display-loaded, '${fontFamily.display}'), ui-sans-serif, system-ui, sans-serif;`,
     `  --font-body: var(--font-body-loaded, '${fontFamily.body}'), ui-sans-serif, system-ui, sans-serif;`,
+    `  --font-utility: var(--font-utility-loaded, '${fontFamily.utility}'), ui-sans-serif, system-ui, sans-serif;`,
+    `  --font-data: var(--font-data-loaded, '${fontFamily.data}'), ui-sans-serif, system-ui, sans-serif;`,
   ].join('\n');
 }
 

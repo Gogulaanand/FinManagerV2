@@ -1,9 +1,11 @@
 /**
- * Semantic color tokens for the FinManager design system ("Calm Teal").
+ * Semantic color tokens for the FinManager design system ("Calm Intelligence").
  *
- * Derived from the Stitch design system `assets/10681403320511857968`
- * (seed #0F766E, TONAL_SPOT). Every value is semantic, not literal: consumers
- * ask for `gain` or `surface`, never for "teal" or "#059669". That indirection
+ * Derived from the approved Stitch direction `10250399384858475183`.
+ * Paper Mist and Porcelain keep the canvas warm and quiet; Deep Teal, Signal
+ * Lime, and Forecast Lavender provide the one matte aurora forecast lens.
+ * Every value is semantic, not literal: consumers ask for `gain` or `surface`,
+ * never for "teal" or "#059669". That indirection
  * is what lets light and dark stay independently designed rather than one
  * being a mechanical inversion of the other.
  *
@@ -28,6 +30,14 @@ export interface ColorScheme {
   primary: string;
   /** Text/icons placed on top of `primary`. */
   primaryForeground: string;
+  /** Signal Lime surface for a deliberate accent, never decorative gradients. */
+  accent: string;
+  /** Text/icons placed on top of `accent`. */
+  accentForeground: string;
+  /** Forecast Lavender surface for projections and planning guidance. */
+  forecast: string;
+  /** Text/icons placed on top of `forecast`. */
+  forecastForeground: string;
   /** Money moving in: credits, gains, positive deltas. */
   gain: string;
   /** Money moving out: debits, losses, negative deltas. */
@@ -39,18 +49,22 @@ export interface ColorScheme {
 /**
  * Light mode.
  *
- * `background` is a tinted off-white rather than #FFFFFF so that white cards
- * separate from the canvas without needing a border on every element.
+ * Paper Mist is a warm canvas rather than #FFFFFF so Porcelain cards separate
+ * without needing a border on every element.
  */
 export const light: ColorScheme = {
-  background: '#F4F7F7',
-  surface: '#FFFFFF',
-  surfaceMuted: '#EDF2F1',
-  border: '#DBE3E2',
-  foreground: '#0B1512',
-  foregroundMuted: '#5A6B68',
+  background: '#F4F3EE',
+  surface: '#FFFEFA',
+  surfaceMuted: '#ECEDE6',
+  border: '#D7DDD6',
+  foreground: '#17211D',
+  foregroundMuted: '#53615C',
   primary: '#0F766E',
-  primaryForeground: '#FFFFFF',
+  primaryForeground: '#FFFEFA',
+  accent: '#B8D84A',
+  accentForeground: '#17211D',
+  forecast: '#E7E2F6',
+  forecastForeground: '#332D50',
   // emerald-700, not the emerald-600 (#059669) the design system names: 600 is
   // only 3.77:1 on white and fails AA. Gain/loss carry meaning, so they are
   // held to text contrast. See D-015.
@@ -62,19 +76,23 @@ export const light: ColorScheme = {
 /**
  * Dark mode.
  *
- * `primary` lightens to teal-400 here: the #0F766E seed does not clear AA
- * against a dark canvas, so the brand hue is preserved while the lightness is
- * re-picked for contrast. Same reasoning for `gain`/`loss`.
+ * Dark values are designed independently. Deep Teal becomes a clearer teal
+ * signal, while Signal Lime and Forecast Lavender stay legible as surfaces
+ * against Ink without relying on a mechanical inversion of light mode.
  */
 export const dark: ColorScheme = {
-  background: '#0A1211',
-  surface: '#121C1A',
-  surfaceMuted: '#1A2624',
-  border: '#2A3937',
-  foreground: '#ECF2F1',
-  foregroundMuted: '#93A6A2',
+  background: '#101714',
+  surface: '#18211E',
+  surfaceMuted: '#22302B',
+  border: '#36453F',
+  foreground: '#F3F3EA',
+  foregroundMuted: '#B8C3BD',
   primary: '#2DD4BF',
-  primaryForeground: '#04211E',
+  primaryForeground: '#06221F',
+  accent: '#C5E85C',
+  accentForeground: '#17211D',
+  forecast: '#4D456C',
+  forecastForeground: '#F1EDFF',
   gain: '#34D399',
   loss: '#FB7185',
   focus: '#2DD4BF',

@@ -7,12 +7,13 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Card, CardTitle } from '../../components/card';
+import { Card, CardTitle, ForecastCard } from '../../components/card';
 import { CurrencyField, Segmented } from '../../components/field';
 import { RegimeCard } from '../../components/tax/regime-card';
 import { TaxAdvancedForm } from '../../components/tax/tax-advanced-form';
 import type { ScenarioInput } from '../../lib/tax-scenario';
 import { DEFAULT_SCENARIO_INPUT, toTaxInput, useScenarios } from '../../lib/tax-scenario';
+import { ScreenHeader } from '../../components/screen-header';
 
 const AGE_OPTIONS: readonly { value: AgeBand; label: string }[] = [
   { value: 'below60', label: '< 60' },
@@ -61,25 +62,20 @@ export default function TaxScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView
-        contentContainerClassName="gap-4 p-4 pb-12"
+        contentContainerClassName="gap-5 p-5 pb-32"
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-row items-start gap-3">
-          <View className="mt-1 size-10 items-center justify-center rounded-full bg-primary/10">
-            <Ionicons name="calculator" size={21} color={scheme.primary} />
-          </View>
-          <View className="flex-1">
-            <Text className="font-display text-headline-lg text-foreground">Tax</Text>
-            <Text className="font-body text-body-md text-foreground-muted">
-              Old vs new regime. Computed on your device.
-            </Text>
-          </View>
-        </View>
+        <ScreenHeader
+          eyebrow="Plan with confidence"
+          title="Tax"
+          subtitle="Compare both regimes on-device, then keep the scenario that helps you decide."
+          icon="calculator-outline"
+        />
 
         <Segmented label="Mode" value={mode} options={MODE_OPTIONS} onChange={setMode} />
 
-        <Card className="gap-4">
+        <Card className="gap-4 p-5">
           <CardTitle>Your salary</CardTitle>
           <CurrencyField
             label="Annual CTC"
@@ -120,13 +116,13 @@ export default function TaxScreen() {
 
         {mode === 'advanced' ? <TaxAdvancedForm input={input} caps={caps} onChange={set} /> : null}
 
-        <Card className="border border-primary">
+        <ForecastCard>
           <View className="flex-row items-start gap-2">
             <Ionicons name="cash" size={19} color={scheme.primary} />
             <Text className="flex-1 font-body text-body-md text-foreground">
-              <Text className="font-body text-body-md font-medium text-foreground">{better}</Text>{' '}
-              leaves you better off by{' '}
-              <Text className="font-body text-body-md font-medium text-foreground">
+              <Text className="font-body-medium text-body-md text-foreground">{better}</Text> leaves
+              you better off by{' '}
+              <Text className="font-body-medium text-body-md text-foreground">
                 {formatInr(result.savings)}
               </Text>{' '}
               a year.
@@ -135,7 +131,7 @@ export default function TaxScreen() {
           <Text className="mt-1 font-body text-caption text-foreground-muted">
             FY {result.fy} rules under the {result.statute}.
           </Text>
-        </Card>
+        </ForecastCard>
 
         <View className="flex-row gap-3">
           <RegimeCard
@@ -152,7 +148,7 @@ export default function TaxScreen() {
           />
         </View>
 
-        <Card className="gap-3">
+        <Card className="gap-3 p-5">
           <View className="flex-row items-center gap-2">
             <Ionicons name="bookmark" size={18} color={scheme.primary} />
             <CardTitle>Scenarios</CardTitle>
@@ -176,7 +172,7 @@ export default function TaxScreen() {
               onPress={addScenario}
               disabled={!name.trim() || !canSave}
               accessibilityRole="button"
-              className={`h-11 justify-center rounded-md px-4 ${name.trim() && canSave ? 'bg-primary' : 'bg-surface-muted'}`}
+              className={`min-h-11 justify-center rounded-lg px-4 ${name.trim() && canSave ? 'bg-primary' : 'bg-surface-muted'}`}
             >
               <Text
                 className={`font-body text-body-md ${name.trim() && canSave ? 'text-primary-foreground' : 'text-foreground-muted'}`}
@@ -207,7 +203,7 @@ export default function TaxScreen() {
                     setInput(s.input);
                   }}
                   accessibilityRole="button"
-                  className="rounded-md px-3 py-2"
+                  className="min-h-11 min-w-11 items-center justify-center rounded-lg px-3 py-2"
                 >
                   <Text className="font-body text-label text-primary">Load</Text>
                 </Pressable>
@@ -216,7 +212,7 @@ export default function TaxScreen() {
                     void deleteScenario(s.id);
                   }}
                   accessibilityRole="button"
-                  className="rounded-md px-3 py-2"
+                  className="min-h-11 min-w-11 items-center justify-center rounded-lg px-3 py-2"
                 >
                   <Text className="font-body text-label text-foreground-muted">Delete</Text>
                 </Pressable>

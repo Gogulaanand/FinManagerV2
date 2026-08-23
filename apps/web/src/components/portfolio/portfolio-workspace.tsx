@@ -76,20 +76,25 @@ function PortfolioWorkspaceContent() {
   if (api.loading || initialSkeleton) return <WorkspaceSkeleton label="Loading portfolio" />;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="page-stack">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-start gap-3">
-          <span className="mt-1 inline-flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <span className="mt-1 inline-flex size-10 items-center justify-center rounded-2xl bg-accent/10 text-primary">
             <WalletCards aria-hidden="true" size={21} />
           </span>
           <div>
-            <h1 className="font-display text-headline-lg text-foreground">Portfolio</h1>
+            <p className="font-utility text-label uppercase tracking-[0.14em] text-foreground-muted">
+              Assets &amp; returns
+            </p>
+            <h1 className="page-heading mt-1 font-display text-display-md text-foreground">
+              Portfolio
+            </h1>
             <p className="font-body text-body-md text-foreground-muted">
               Everything you own, valued locally and returned by true cash-flow history.
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex max-w-full flex-wrap gap-2">
           <Button
             variant="outline"
             type="button"

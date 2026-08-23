@@ -78,7 +78,7 @@ export function AppLock({ children }: { children: ReactNode }) {
         <Pressable
           onPress={() => void authenticate()}
           accessibilityRole="button"
-          className="rounded-md bg-primary px-5 py-3"
+          className="min-h-11 rounded-lg bg-primary px-5 py-3"
         >
           <Text className="font-body text-body-md text-primary-foreground">Unlock</Text>
         </Pressable>

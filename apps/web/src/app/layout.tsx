@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Manrope } from 'next/font/google';
+import { Manrope, Public_Sans, Sora } from 'next/font/google';
 import type { ReactNode } from 'react';
 
 import { AppShell } from '@/components/app-shell';
@@ -11,15 +11,21 @@ import './globals.css';
 // next/font self-hosts these, so there is no render-blocking request to Google
 // and no flash of fallback text. The variables are consumed by the @theme font
 // tokens in packages/tokens.
-const manrope = Manrope({
+const sora = Sora({
   subsets: ['latin'],
   variable: '--font-display-loaded',
   display: 'swap',
 });
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ['latin'],
   variable: '--font-body-loaded',
+  display: 'swap',
+});
+
+const publicSans = Public_Sans({
+  subsets: ['latin'],
+  variable: '--font-utility-loaded',
   display: 'swap',
 });
 
@@ -32,8 +38,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F4F7F7' },
-    { media: '(prefers-color-scheme: dark)', color: '#0A1211' },
+    { media: '(prefers-color-scheme: light)', color: '#F4F3EE' },
+    { media: '(prefers-color-scheme: dark)', color: '#101714' },
   ],
 };
 
@@ -47,7 +53,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${inter.variable}`}
+      className={`${sora.variable} ${manrope.variable} ${publicSans.variable}`}
       suppressHydrationWarning
     >
       <head>

@@ -100,7 +100,7 @@ export function MobileDataRestore() {
   }
 
   return (
-    <Card className="gap-3">
+    <Card className="gap-3 p-5">
       <CardTitle>Restore backup</CardTitle>
       <CardLabel>
         Choose a versioned JSON backup, preview conflicts, then apply it atomically.
@@ -109,7 +109,7 @@ export function MobileDataRestore() {
         onPress={() => void chooseBackup()}
         disabled={busy}
         accessibilityRole="button"
-        className="h-11 justify-center rounded-md bg-surface-muted px-4"
+        className="min-h-12 justify-center rounded-lg bg-surface-muted px-4"
       >
         <Text className="text-center font-body text-body-md text-foreground">
           Choose JSON backup
@@ -128,7 +128,7 @@ export function MobileDataRestore() {
               }}
               accessibilityRole="radio"
               accessibilityState={{ selected }}
-              className={`rounded-md px-3 py-2 ${selected ? 'bg-primary' : 'bg-surface-muted'}`}
+              className={`min-h-11 justify-center rounded-lg px-3 py-2 ${selected ? 'bg-primary' : 'bg-surface-muted'}`}
             >
               <Text className={selected ? 'text-primary-foreground' : 'text-foreground'}>
                 {option.label}
@@ -142,7 +142,7 @@ export function MobileDataRestore() {
           onPress={() => void preview()}
           disabled={!contents || !session || busy}
           accessibilityRole="button"
-          className="h-11 justify-center rounded-md bg-surface-muted px-4"
+          className="min-h-12 justify-center rounded-lg bg-surface-muted px-4"
         >
           <Text className="text-center font-body text-body-md text-foreground">
             Preview restore
@@ -152,9 +152,9 @@ export function MobileDataRestore() {
           onPress={() => void apply()}
           disabled={!report || report.conflicts.some((conflict) => conflict.blocking) || busy}
           accessibilityRole="button"
-          className="h-11 justify-center rounded-md bg-primary px-4"
+          className="min-h-12 justify-center rounded-lg bg-accent px-4"
         >
-          <Text className="text-center font-body text-body-md text-primary-foreground">
+          <Text className="text-center font-body text-body-md text-accent-foreground">
             Apply restore
           </Text>
         </Pressable>

@@ -69,9 +69,12 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-md flex-col gap-6 py-8">
+    <main className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-5xl gap-10 px-4 py-10 md:grid-cols-[1fr_0.82fr] md:items-center md:px-8">
       <div>
-        <h1 className="font-display text-display-md text-foreground">
+        <p className="font-utility mb-4 text-label uppercase tracking-[0.14em] text-primary">
+          Private money, clear decisions
+        </p>
+        <h1 className="page-heading max-w-xl font-display text-[clamp(2.5rem,6vw,4.75rem)] font-semibold text-foreground">
           {mode === 'signin' ? 'Welcome back' : 'Create your account'}
         </h1>
         <p className="font-body text-body-md text-foreground-muted">
@@ -79,7 +82,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <Card className="flex flex-col gap-5">
+      <Card className="flex flex-col gap-5 rounded-[1.75rem] p-6 md:p-8">
         <CardTitle>{mode === 'signin' ? 'Sign in' : 'Sign up'}</CardTitle>
 
         <form className="flex flex-col gap-4" onSubmit={onSubmit}>

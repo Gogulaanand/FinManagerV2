@@ -34,7 +34,7 @@ export function MonthPickerSheet({
         accessibilityRole="button"
         accessibilityLabel={`Choose month, ${monthLabel(month)}`}
         onPress={() => setOpen(true)}
-        className="rounded-md px-2 py-2 active:opacity-80"
+        className="min-h-11 min-w-11 items-center justify-center rounded-full border border-border px-2 active:opacity-80"
       >
         <Text className="font-body text-body-md text-foreground">{monthLabel(month)}</Text>
       </Pressable>
@@ -50,7 +50,7 @@ export function MonthPickerSheet({
                 accessibilityLabel="Previous year"
                 disabled={year <= 2015}
                 onPress={() => setYear((value) => Math.max(2015, value - 1))}
-                className="rounded-md bg-surface-muted px-4 py-2 disabled:opacity-40"
+                className="min-h-11 min-w-11 items-center justify-center rounded-full bg-surface-muted px-4 py-2 disabled:opacity-40"
               >
                 <Text className="text-foreground">‹</Text>
               </Pressable>
@@ -60,7 +60,7 @@ export function MonthPickerSheet({
                 accessibilityLabel="Next year"
                 disabled={year >= maxYear}
                 onPress={() => setYear((value) => Math.min(maxYear, value + 1))}
-                className="rounded-md bg-surface-muted px-4 py-2 disabled:opacity-40"
+                className="min-h-11 min-w-11 items-center justify-center rounded-full bg-surface-muted px-4 py-2 disabled:opacity-40"
               >
                 <Text className="text-foreground">›</Text>
               </Pressable>
@@ -75,7 +75,7 @@ export function MonthPickerSheet({
                     accessibilityState={{ selected: value === month, disabled }}
                     disabled={disabled}
                     onPress={() => choose(value)}
-                    className={`w-[30%] rounded-full px-2 py-3 ${value === month ? 'bg-primary' : 'bg-surface-muted'} disabled:opacity-35`}
+                    className={`min-h-11 w-[30%] rounded-full px-2 py-3 ${value === month ? 'bg-primary' : 'bg-surface-muted'} disabled:opacity-35`}
                   >
                     <Text
                       className={`text-center font-body text-label ${value === month ? 'text-primary-foreground' : 'text-foreground'}`}
@@ -89,7 +89,7 @@ export function MonthPickerSheet({
             <Pressable
               accessibilityRole="button"
               onPress={() => choose(currentMonth)}
-              className="mt-4 rounded-md border border-border px-4 py-3"
+              className="mt-4 min-h-12 rounded-lg border border-border px-4 py-3"
             >
               <Text className="text-center font-body text-label text-foreground">This month</Text>
             </Pressable>

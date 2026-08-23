@@ -29,7 +29,7 @@ function numberOrNull(value: string): number | null {
 }
 
 const inputClass =
-  'h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground';
+  'min-h-12 rounded-lg border border-border bg-background px-3 font-body text-body-md text-foreground';
 
 export function MobileGoalForm({
   initial = null,
@@ -165,7 +165,7 @@ export function MobileGoalForm({
             <Pressable
               accessibilityRole="button"
               onPress={onCancel}
-              className="flex-1 rounded-md bg-surface-muted px-4 py-3"
+              className="min-h-12 flex-1 rounded-lg bg-surface-muted px-4 py-3"
             >
               <Text className="text-center font-body text-label text-foreground">Cancel</Text>
             </Pressable>
@@ -173,9 +173,9 @@ export function MobileGoalForm({
           <Pressable
             accessibilityRole="button"
             onPress={() => void submit()}
-            className="flex-1 rounded-md bg-primary px-4 py-3 active:opacity-80"
+            className="min-h-12 flex-1 rounded-lg bg-accent px-4 py-3 active:opacity-80"
           >
-            <Text className="text-center font-body text-label text-primary-foreground">
+            <Text className="text-center font-body text-label text-accent-foreground">
               {initial ? 'Save changes' : 'Add goal'}
             </Text>
           </Pressable>

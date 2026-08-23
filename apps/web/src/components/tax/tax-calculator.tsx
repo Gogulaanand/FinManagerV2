@@ -74,7 +74,10 @@ export function TaxCalculator() {
             <Calculator aria-hidden="true" size={21} />
           </span>
           <div>
-            <h1 className="font-display text-display-md text-foreground">Tax</h1>
+            <p className="font-utility text-label uppercase tracking-[0.14em] text-foreground-muted">
+              Scenario workspace
+            </p>
+            <h1 className="page-heading mt-1 font-display text-display-md text-foreground">Tax</h1>
             <p className="font-body text-body-md text-foreground-muted">
               Old vs new regime for a salaried individual. Everything is computed on your device.
             </p>

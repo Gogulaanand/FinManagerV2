@@ -41,7 +41,7 @@ export function MobileHoldingDetail({ holdingId }: { readonly holdingId: string 
   if (!holding)
     return (
       <SafeAreaView className="flex-1 bg-background">
-        <Pressable onPress={() => router.back()} className="p-4">
+        <Pressable onPress={() => router.back()} className="min-h-11 justify-center p-4">
           <Text className="text-primary">← Back</Text>
         </Pressable>
         <Text className="p-4 text-foreground-muted">Holding not found.</Text>
@@ -51,8 +51,12 @@ export function MobileHoldingDetail({ holdingId }: { readonly holdingId: string 
   const value = effectiveHoldingValue(holding, latestValuation(holdingId, valuations)).value ?? 0;
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView contentContainerClassName="gap-4 p-4 pb-12">
-        <Pressable accessibilityRole="button" onPress={() => router.back()}>
+      <ScrollView contentContainerClassName="gap-5 p-5 pb-12">
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.back()}
+          className="min-h-11 justify-center"
+        >
           <Text className="font-body text-label text-primary">← Portfolio</Text>
         </Pressable>
         <View className="flex-row items-end justify-between">
@@ -65,7 +69,7 @@ export function MobileHoldingDetail({ holdingId }: { readonly holdingId: string 
           <Pressable
             accessibilityRole="button"
             onPress={() => setPanel(panel === 'edit' ? null : 'edit')}
-            className="rounded-md bg-surface-muted px-3 py-2"
+            className="min-h-11 min-w-11 items-center justify-center rounded-lg bg-surface-muted px-3 py-2"
           >
             <Text className="text-foreground">Edit</Text>
           </Pressable>
@@ -86,14 +90,14 @@ export function MobileHoldingDetail({ holdingId }: { readonly holdingId: string 
           <Pressable
             accessibilityRole="button"
             onPress={() => setPanel(panel === 'event' ? null : 'event')}
-            className="flex-1 rounded-md bg-primary px-4 py-3"
+            className="min-h-11 flex-1 items-center justify-center rounded-lg bg-primary px-4 py-3"
           >
             <Text className="text-center text-primary-foreground">Add event</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
             onPress={() => setPanel(panel === 'valuation' ? null : 'valuation')}
-            className="flex-1 rounded-md bg-surface-muted px-4 py-3"
+            className="min-h-11 flex-1 items-center justify-center rounded-lg bg-surface-muted px-4 py-3"
           >
             <Text className="text-center text-foreground">Update value</Text>
           </Pressable>
@@ -161,6 +165,7 @@ export function MobileHoldingDetail({ holdingId }: { readonly holdingId: string 
                           ? api.deleteEvent(entry.value.id!)
                           : api.deleteValuation(entry.value.id!))
                       }
+                      className="min-h-11 min-w-11 items-center justify-center"
                     >
                       <Text className="text-caption text-loss">Delete</Text>
                     </Pressable>

@@ -30,7 +30,7 @@ export function Choice<T extends string>({
           accessibilityRole="button"
           accessibilityState={{ expanded: open }}
           onPress={() => setOpen((current) => !current)}
-          className="h-11 flex-row items-center justify-between rounded-md border border-border bg-background px-3 active:opacity-80"
+          className="min-h-12 flex-row items-center justify-between rounded-lg border border-border bg-background px-3 active:opacity-80"
         >
           <Text className="font-body text-body-md text-foreground">
             {selected?.label ?? 'Select an option'}
@@ -38,7 +38,7 @@ export function Choice<T extends string>({
           <Text className="font-body text-body-md text-foreground-muted">⌄</Text>
         </Pressable>
         {open ? (
-          <View className="rounded-md border border-border bg-surface p-1">
+          <View className="rounded-xl border border-border bg-surface p-1">
             {options.map((option) => (
               <Pressable
                 key={option.value}
@@ -48,7 +48,7 @@ export function Choice<T extends string>({
                   onChange(option.value);
                   setOpen(false);
                 }}
-                className={`min-h-10 flex-row items-center justify-between rounded-sm px-2 ${option.value === value ? 'bg-surface-muted' : ''}`}
+                className={`min-h-11 flex-row items-center justify-between rounded-lg px-2 ${option.value === value ? 'bg-surface-muted' : ''}`}
               >
                 <Text className="font-body text-body-md text-foreground">{option.label}</Text>
                 {option.value === value ? (

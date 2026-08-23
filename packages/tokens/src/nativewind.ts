@@ -97,11 +97,15 @@ export function nativeWindTheme() {
     // Family names match what @expo-google-fonts registers, and each weight is
     // its own family for the reason given on fontSizeTheme.
     fontFamily: {
-      display: ['Manrope_700Bold'],
-      'display-hero': ['Manrope_800ExtraBold'],
-      'display-soft': ['Manrope_600SemiBold'],
-      body: ['Inter_400Regular'],
-      'body-medium': ['Inter_500Medium'],
+      display: ['Sora_700Bold'],
+      'display-hero': ['Sora_800ExtraBold'],
+      'display-soft': ['Sora_600SemiBold'],
+      body: ['Manrope_400Regular'],
+      'body-medium': ['Manrope_500Medium'],
+      utility: ['PublicSans_400Regular'],
+      'utility-medium': ['PublicSans_500Medium'],
+      data: ['PublicSans_400Regular'],
+      'data-medium': ['PublicSans_500Medium'],
     },
     fontSize: fontSizeTheme(),
     borderRadius: Object.fromEntries(

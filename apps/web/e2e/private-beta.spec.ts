@@ -57,6 +57,32 @@ signedOutTest(
   },
 );
 
+signedOutTest('theme choice stays visually in sync across open tabs', async ({ page }) => {
+  await page.goto('/');
+  const otherPage = await page.context().newPage();
+  await establishVercelBypass(otherPage);
+  await otherPage.goto('/privacy');
+  await expect(otherPage.getByRole('button', { name: 'System' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  await page.getByRole('button', { name: 'Dark' }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await expect(otherPage.locator('html')).toHaveClass(/dark/);
+  await expect(otherPage.getByRole('button', { name: 'Dark' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  await otherPage.getByRole('button', { name: 'Light' }).click();
+  await expect(otherPage.locator('html')).toHaveClass(/light/);
+  await expect(page.locator('html')).toHaveClass(/light/);
+  await expect(page.locator('html')).not.toHaveClass(/dark/);
+  await expect(page.getByRole('button', { name: 'Light' })).toHaveAttribute('aria-pressed', 'true');
+  await otherPage.close();
+});
+
 signedOutTest(
   'beta request validation and generic success work at mobile width',
   async ({ page }) => {

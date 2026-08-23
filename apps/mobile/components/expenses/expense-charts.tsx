@@ -1,4 +1,4 @@
-import { Inter_400Regular } from '@expo-google-fonts/inter';
+import { PublicSans_400Regular } from '@expo-google-fonts/public-sans';
 import { formatInr, formatPercent } from '@finmanager/core';
 import { dark, light } from '@finmanager/tokens';
 import { useFont } from '@shopify/react-native-skia';
@@ -61,7 +61,7 @@ export function MobileExpenseCharts({
 }: MobileExpenseChartsProps) {
   const scheme = useColorScheme();
   const colors = scheme === 'dark' ? dark : light;
-  const axisFont = useFont(Inter_400Regular, 10);
+  const axisFont = useFont(PublicSans_400Regular, 10);
   const container = useContainerWidth();
   // The width is measured on the stack around the cards. Each Card has a
   // 16px inset on both sides, so size Skia canvases to the actual inner width
@@ -193,7 +193,7 @@ export function MobileExpenseCharts({
                       selected: key === (selectedCategory?.categoryId ?? selectedCategory?.label),
                     }}
                     onPress={() => setSelectedCategoryKey(key)}
-                    className="flex-row items-center gap-2 rounded-md p-1"
+                    className="min-h-11 flex-row items-center gap-2 rounded-lg p-1"
                   >
                     <CategoryIcon
                       icon={item.icon}

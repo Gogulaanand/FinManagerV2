@@ -108,13 +108,18 @@ function GoalsWorkspaceContent() {
   const fire = api.fireProjection;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="page-stack">
       <div className="flex items-start gap-3">
-        <span className="mt-1 inline-flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <span className="mt-1 inline-flex size-10 items-center justify-center rounded-2xl bg-accent/10 text-primary">
           <Target aria-hidden="true" size={21} />
         </span>
         <div>
-          <h1 className="font-display text-headline-lg text-foreground">Goals &amp; FIRE</h1>
+          <p className="font-utility text-label uppercase tracking-[0.14em] text-foreground-muted">
+            Long-range planning
+          </p>
+          <h1 className="page-heading mt-1 font-display text-display-md text-foreground">
+            Goals &amp; FIRE
+          </h1>
           <p className="font-body text-body-md text-foreground-muted">
             Inflation-adjusted targets, the SIP to close each gap, and your path to financial
             independence.
@@ -133,7 +138,7 @@ function GoalsWorkspaceContent() {
 
       {/* FIRE summary */}
       <div className="grid gap-3 md:grid-cols-4">
-        <Card>
+        <Card className="forecast-lens ring-0">
           <CardLabel className="flex items-center gap-2">
             <Flag aria-hidden="true" size={15} />
             FIRE number

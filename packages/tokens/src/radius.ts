@@ -1,16 +1,17 @@
 /**
  * Corner radius tokens.
  *
- * 12px is the system default and covers cards, inputs, and buttons. `full` is
+ * Calm Intelligence uses a confident 18px principal radius. The 20px and 22px
+ * steps are reserved for larger cards and forecast panels, while `full` stays
  * reserved for pills, badges, and avatars - using it on a card makes a
  * data-dense screen read as a toy.
  */
 export const radius = {
   none: 0,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
+  sm: 12,
+  md: 18,
+  lg: 20,
+  xl: 22,
   full: 9999,
 } as const;
 

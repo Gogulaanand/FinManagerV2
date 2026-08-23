@@ -72,7 +72,7 @@ export function MotionProgress({ value, className = '' }: { value: number; class
 
 export function MobileWorkspaceSkeleton({ label }: { label: string }) {
   return (
-    <View className="flex-1 bg-background p-4">
+    <View className="flex-1 bg-background p-5">
       <View
         className="items-center gap-3 py-8"
         accessibilityLabel={label}
@@ -82,9 +82,9 @@ export function MobileWorkspaceSkeleton({ label }: { label: string }) {
         <Text className="font-body text-body-md text-foreground-muted">{label}</Text>
       </View>
       <View className="gap-4">
-        <View className="h-28 rounded-lg bg-surface-muted" />
-        <View className="h-28 rounded-lg bg-surface-muted" />
-        <View className="h-56 rounded-lg bg-surface-muted" />
+        <View className="h-28 rounded-xl border border-border/50 bg-surface-muted" />
+        <View className="h-28 rounded-xl border border-border/50 bg-surface-muted" />
+        <View className="h-56 rounded-xl border border-border/50 bg-surface-muted" />
       </View>
     </View>
   );

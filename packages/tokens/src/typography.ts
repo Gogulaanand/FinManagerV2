@@ -1,14 +1,17 @@
 /**
- * Typography tokens for the FinManager design system.
+ * Typography tokens for the FinManager Calm Intelligence design system.
  *
- * Manrope carries headlines and every currency figure; Inter carries body,
- * labels, and table content. Currency always renders in Manrope with tabular
- * numerals so that digits align down a column of transactions.
+ * Sora carries display headlines, Manrope carries reading-length body copy,
+ * and Public Sans carries utility labels and financial data. Currency always
+ * renders with tabular numerals so that digits align down a column of
+ * transactions.
  */
 
 export const fontFamily = {
-  display: 'Manrope',
-  body: 'Inter',
+  display: 'Sora',
+  body: 'Manrope',
+  utility: 'Public Sans',
+  data: 'Public Sans',
 } as const;
 
 export type FontFamilyToken = keyof typeof fontFamily;
@@ -56,9 +59,17 @@ export const typography = {
     weight: 700,
     letterSpacing: -0.01,
   },
+  /** Compact headings used by settings, insights, and supporting surfaces. */
+  'headline-sm': {
+    family: fontFamily.display,
+    size: 16,
+    lineHeight: 24,
+    weight: 600,
+    letterSpacing: 0,
+  },
   /** Amounts inside list rows and table cells. */
   'title-md': {
-    family: fontFamily.display,
+    family: fontFamily.data,
     size: 16,
     lineHeight: 24,
     weight: 600,
@@ -80,7 +91,7 @@ export const typography = {
   },
   /** Field labels, tab bar text, button text. */
   label: {
-    family: fontFamily.body,
+    family: fontFamily.utility,
     size: 13,
     lineHeight: 16,
     weight: 500,
@@ -88,7 +99,7 @@ export const typography = {
   },
   /** Timestamps and secondary metadata. */
   caption: {
-    family: fontFamily.body,
+    family: fontFamily.utility,
     size: 12,
     lineHeight: 16,
     weight: 400,

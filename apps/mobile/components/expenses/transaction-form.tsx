@@ -45,7 +45,7 @@ function ChoiceRow({
             key={option.value}
             onPress={() => onChange(option.value)}
             accessibilityRole="button"
-            className={`rounded-full px-3 py-2 font-body text-label ${option.value === value ? 'bg-primary text-primary-foreground' : 'bg-surface-muted text-foreground'}`}
+            className={`min-h-11 rounded-full px-3 py-2 font-body text-label ${option.value === value ? 'bg-primary text-primary-foreground' : 'bg-surface-muted text-foreground'}`}
           >
             {option.label}
           </Text>
@@ -120,7 +120,7 @@ export function MobileTransactionForm({
   return (
     <ScrollView
       className="flex-1"
-      contentContainerClassName="gap-4 p-4 pb-12"
+      contentContainerClassName="gap-5 p-5 pb-12"
       keyboardShouldPersistTaps="handled"
     >
       <View>
@@ -131,7 +131,7 @@ export function MobileTransactionForm({
           Amount first. Details second.
         </Text>
       </View>
-      <Card className="gap-4">
+      <Card className="gap-4 p-5">
         <CardTitle>₹{amount || '0'}</CardTitle>
         <Segmented
           label="Type"
@@ -147,7 +147,7 @@ export function MobileTransactionForm({
         />
         <AmountKeypad value={amount} onChange={setAmount} onSubmit={() => void submit()} />
       </Card>
-      <Card className="gap-4">
+      <Card className="gap-4 p-5">
         <CardTitle>Details</CardTitle>
         <ChoiceRow
           label="Category"
@@ -166,7 +166,7 @@ export function MobileTransactionForm({
             value={occurredOn}
             onChangeText={setOccurredOn}
             placeholder="YYYY-MM-DD"
-            className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
+            className="min-h-12 rounded-lg border border-border bg-background px-3 font-body text-body-md text-foreground"
           />
         </Field>
         <Field label="Merchant">
@@ -174,7 +174,7 @@ export function MobileTransactionForm({
             value={merchant}
             onChangeText={setMerchant}
             placeholder="e.g. Swiggy"
-            className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
+            className="min-h-12 rounded-lg border border-border bg-background px-3 font-body text-body-md text-foreground"
           />
         </Field>
         <Field label="Note">
@@ -182,7 +182,7 @@ export function MobileTransactionForm({
             value={note}
             onChangeText={setNote}
             placeholder="Optional note"
-            className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
+            className="min-h-12 rounded-lg border border-border bg-background px-3 font-body text-body-md text-foreground"
           />
         </Field>
         <CheckField
@@ -206,7 +206,7 @@ export function MobileTransactionForm({
                 value={String(interval)}
                 onChangeText={(value) => setInterval(Number.parseInt(value, 10) || 1)}
                 keyboardType="number-pad"
-                className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
+                className="min-h-12 rounded-lg border border-border bg-background px-3 font-body text-body-md text-foreground"
               />
             </Field>
             <Field label="Ends on">
@@ -214,7 +214,7 @@ export function MobileTransactionForm({
                 value={endOn}
                 onChangeText={setEndOn}
                 placeholder="Optional YYYY-MM-DD"
-                className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
+                className="min-h-12 rounded-lg border border-border bg-background px-3 font-body text-body-md text-foreground"
               />
             </Field>
           </View>
@@ -224,14 +224,14 @@ export function MobileTransactionForm({
           <Text
             onPress={onCancel}
             accessibilityRole="button"
-            className="flex-1 rounded-md bg-surface-muted py-3 text-center font-body text-body-md text-foreground"
+            className="min-h-12 flex-1 rounded-lg bg-surface-muted py-3 text-center font-body text-body-md text-foreground"
           >
             Cancel
           </Text>
           <Text
             onPress={() => void submit()}
             accessibilityRole="button"
-            className="flex-1 rounded-md bg-primary py-3 text-center font-body text-body-md text-primary-foreground"
+            className="min-h-12 flex-1 rounded-lg bg-accent py-3 text-center font-body text-body-md text-accent-foreground"
           >
             Save
           </Text>

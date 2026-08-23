@@ -50,15 +50,20 @@ function ExpensesWorkspaceContent() {
   if (api.loading || initialSkeleton) return <WorkspaceSkeleton label="Loading expenses" />;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="page-stack">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-headline-lg text-foreground">Expenses</h1>
+          <p className="font-utility text-label uppercase tracking-[0.14em] text-foreground-muted">
+            Monthly cash flow
+          </p>
+          <h1 className="page-heading mt-1 font-display text-display-md text-foreground">
+            Expenses
+          </h1>
           <p className="font-body text-body-md text-foreground-muted">
             Track spending, income, and the month ahead.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex max-w-full flex-wrap items-center gap-2">
           <Button
             type="button"
             variant="outline"

@@ -20,7 +20,7 @@ export default function EditGoalRoute() {
   if (api.loading || !initial) return <MobileWorkspaceSkeleton label="Loading goal" />;
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView contentContainerClassName="gap-4 p-4 pb-12">
+      <ScrollView contentContainerClassName="gap-5 p-5 pb-12">
         <MobileGoalForm
           key={initial.id}
           initial={initial}

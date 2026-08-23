@@ -5,7 +5,7 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 import { Card, CardTitle } from '../card';
 
 const inputClass =
-  'h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground';
+  'min-h-12 rounded-lg border border-border bg-background px-3 font-body text-body-md text-foreground';
 
 export function TrustedContactForm({
   initial,
@@ -45,7 +45,7 @@ export function TrustedContactForm({
           onChangeText={setPriority}
         />
         <Pressable
-          className="flex-row items-center gap-2"
+          className="min-h-11 flex-row items-center gap-2"
           onPress={() => setIsActive((value) => !value)}
         >
           <View className={`size-5 rounded border ${isActive ? 'bg-primary' : 'bg-background'}`} />
@@ -59,13 +59,13 @@ export function TrustedContactForm({
         />
         <View className="flex-row gap-2">
           <Pressable
-            className={`flex-1 rounded-md px-3 py-3 ${scope === 'existence' ? 'bg-primary' : 'bg-surface-muted'}`}
+            className={`min-h-12 flex-1 rounded-lg px-3 py-3 ${scope === 'existence' ? 'bg-primary' : 'bg-surface-muted'}`}
             onPress={() => setScope('existence')}
           >
             <Text className="text-center font-body text-label text-foreground">Existence only</Text>
           </Pressable>
           <Pressable
-            className={`flex-1 rounded-md px-3 py-3 ${scope === 'summary' ? 'bg-primary' : 'bg-surface-muted'}`}
+            className={`min-h-12 flex-1 rounded-lg px-3 py-3 ${scope === 'summary' ? 'bg-primary' : 'bg-surface-muted'}`}
             onPress={() => setScope('summary')}
           >
             <Text className="text-center font-body text-label text-foreground">Coarse summary</Text>
@@ -73,7 +73,7 @@ export function TrustedContactForm({
         </View>
         <View className="flex-row gap-2">
           <Pressable
-            className="flex-1 rounded-md bg-primary px-4 py-3"
+            className="min-h-12 flex-1 rounded-lg bg-accent px-4 py-3"
             onPress={() =>
               void onSave({
                 ...initial,
@@ -88,9 +88,12 @@ export function TrustedContactForm({
               })
             }
           >
-            <Text className="text-center font-body text-body-md text-primary-foreground">Save</Text>
+            <Text className="text-center font-body text-body-md text-accent-foreground">Save</Text>
           </Pressable>
-          <Pressable className="flex-1 rounded-md bg-surface-muted px-4 py-3" onPress={onCancel}>
+          <Pressable
+            className="min-h-12 flex-1 rounded-lg bg-surface-muted px-4 py-3"
+            onPress={onCancel}
+          >
             <Text className="text-center font-body text-body-md text-foreground">Cancel</Text>
           </Pressable>
         </View>

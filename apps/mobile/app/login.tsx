@@ -62,22 +62,29 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView contentContainerClassName="gap-6 p-4" keyboardShouldPersistTaps="handled">
-        <View className="gap-1">
-          <Text className="font-display text-headline-lg text-foreground">
-            {mode === 'signin' ? 'Welcome back' : 'Create your account'}
-          </Text>
-          <Text className="font-body text-body-md text-foreground-muted">
-            Sign in to sync your finances across web and mobile.
-          </Text>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
+      <ScrollView contentContainerClassName="gap-8 p-5 pb-10" keyboardShouldPersistTaps="handled">
+        <View className="gap-4 pt-6">
+          <View className="size-12 items-center justify-center rounded-2xl bg-accent">
+            <Text className="font-display text-headline-md text-accent-foreground">f</Text>
+          </View>
+          <View className="gap-2">
+            <Text className="font-display text-display-md tracking-tight text-foreground">
+              {mode === 'signin' ? 'Welcome back' : 'Create your account'}
+            </Text>
+            <Text className="max-w-sm font-body text-body-lg text-foreground-muted">
+              One calm place for the money decisions you make every day.
+            </Text>
+          </View>
         </View>
 
-        <Card className="gap-4">
+        <Card className="gap-5 p-5">
           <CardTitle>{mode === 'signin' ? 'Sign in' : 'Sign up'}</CardTitle>
 
           <View className="gap-1.5">
-            <Text className="font-body text-label font-medium text-foreground">Email</Text>
+            <Text className="font-data text-label uppercase tracking-wider text-foreground-muted">
+              Email
+            </Text>
             <TextInput
               value={email}
               onChangeText={setEmail}
@@ -85,19 +92,21 @@ export default function LoginScreen() {
               keyboardType="email-address"
               autoComplete="email"
               placeholder="you@example.com"
-              className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
+              className="h-12 rounded-lg border border-border bg-background px-3 font-body text-body-md text-foreground"
             />
           </View>
 
           <View className="gap-1.5">
-            <Text className="font-body text-label font-medium text-foreground">Password</Text>
+            <Text className="font-data text-label uppercase tracking-wider text-foreground-muted">
+              Password
+            </Text>
             <TextInput
               value={password}
               onChangeText={setPassword}
               secureTextEntry
               autoCapitalize="none"
               placeholder="At least 6 characters"
-              className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
+              className="h-12 rounded-lg border border-border bg-background px-3 font-body text-body-md text-foreground"
               onSubmitEditing={submit}
             />
           </View>
@@ -113,10 +122,10 @@ export default function LoginScreen() {
             onPress={submit}
             disabled={!canSubmit}
             accessibilityRole="button"
-            className={`h-11 justify-center rounded-md px-4 ${canSubmit ? 'bg-primary' : 'bg-surface-muted'}`}
+            className={`min-h-12 justify-center rounded-lg px-4 ${canSubmit ? 'bg-accent' : 'bg-surface-muted'}`}
           >
             <Text
-              className={`text-center font-body text-body-md ${canSubmit ? 'text-primary-foreground' : 'text-foreground-muted'}`}
+              className={`text-center font-body-medium text-body-md ${canSubmit ? 'text-accent-foreground' : 'text-foreground-muted'}`}
             >
               {busy ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'}
             </Text>
@@ -127,7 +136,7 @@ export default function LoginScreen() {
               onPress={() => void submitGoogle()}
               disabled={busy}
               accessibilityRole="button"
-              className="h-11 justify-center rounded-md border border-border px-4"
+              className="min-h-12 justify-center rounded-lg border border-border px-4"
             >
               <Text className="text-center font-body text-body-md text-foreground">
                 Continue with Google
@@ -143,10 +152,11 @@ export default function LoginScreen() {
             setNotice(null);
           }}
           accessibilityRole="button"
+          className="min-h-11 justify-center"
         >
-          <Text className="text-center font-body text-caption text-foreground-muted">
+          <Text className="text-center font-body text-body-md text-foreground-muted">
             {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
-            <Text className="font-medium text-primary">
+            <Text className="font-body-medium text-primary">
               {mode === 'signin' ? 'Sign up' : 'Sign in'}
             </Text>
           </Text>

@@ -37,7 +37,7 @@ export function MobilePortfolioImport({
           <Pressable
             accessibilityRole="button"
             onPress={() => setPreview(parsePortfolioCsv(source, text, null))}
-            className="rounded-md border border-border px-3 py-2"
+            className="min-h-11 min-w-11 items-center justify-center rounded-lg border border-border px-3 py-2"
           >
             <Text className="font-body text-label text-foreground">Preview</Text>
           </Pressable>
@@ -45,7 +45,7 @@ export function MobilePortfolioImport({
             <Pressable
               accessibilityRole="button"
               onPress={() => void onImport(preview)}
-              className="rounded-md bg-primary px-3 py-2"
+              className="min-h-11 min-w-11 items-center justify-center rounded-lg bg-primary px-3 py-2"
             >
               <Text className="font-body text-label text-primary-foreground">
                 Import {preview.rows.length}
