@@ -21,6 +21,35 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes calm-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-reveal] {
+  animation: calm-fade-up 650ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  [data-reveal] {
+    animation: none;
+  }
+}
+
 /* Currency figures must align down a column of transactions. */
 .tabular {
   font-variant-numeric: tabular-nums lining-nums;

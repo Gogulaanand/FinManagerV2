@@ -2,7 +2,7 @@ import { expect, type Page } from '@playwright/test';
 
 import { requiredEnv } from './env';
 
-async function establishVercelBypass(page: Page): Promise<void> {
+export async function establishVercelBypass(page: Page): Promise<void> {
   const secret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim();
   if (!secret) return;
 
@@ -23,5 +23,5 @@ export async function signIn(page: Page): Promise<void> {
   await page.getByLabel('Email').fill(requiredEnv('E2E_USER_EMAIL'));
   await page.getByLabel('Password').fill(requiredEnv('E2E_USER_PASSWORD'));
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page).toHaveURL('/');
+  await expect(page).toHaveURL('/dashboard');
 }

@@ -1,6 +1,7 @@
 # Project Status
 
-Last updated: 2026-08-02 (R1.1 sync durability, R1.2 safe auth transitions, R1.3 sync-health
+Last updated: 2026-08-15 (private-beta migration, existing-account seed/link, and Auth Hook rollout
+verified in hosted Supabase; additional friends/family seeding remains owner-controlled). Previous state: 2026-08-02 (R1.1 sync durability, R1.2 safe auth transitions, R1.3 sync-health
 surfaces, R2.1 recovery-export hardening, and R2.2 transactional restore are merged and protected
 CI/Preview verified; the local R2.4 recovery drill is verified, while R2.3 operational evidence,
 remote clean-account restore, production-auth, and device gates remain open).
@@ -8,6 +9,11 @@ remote clean-account restore, production-auth, and device gates remain open).
 ## Current State
 
 The canonical release gate and risk register is [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md).
+The approved private-beta commercialization implementation and hosted rollout record are in
+[docs/PRIVATE_BETA_ROLLOUT.md](docs/PRIVATE_BETA_ROLLOUT.md). The migration is applied, the five
+existing Auth users are approved + complimentary and linked, and the Before User Created hook is
+enabled. Additional friends/family approvals, revocation bans, and retention cleanup remain manual
+owner actions.
 R0 is complete: this file, the Phase 9 handoff/briefing/checklist/plan, and the risk register now
 separate implemented work, automated evidence, external/manual evidence, and explicit deferrals.
 R1.1 is complete on `codex/r1-production-readiness`: the sync-durability architecture is recorded in
@@ -136,7 +142,7 @@ does not substitute for remote Supabase evidence; production/auth, Sentry, dead-
 Android-device gates remain external work. Do not mark Phase 9 Done before its required evidence
 exists.
 
-Plan index: [improvements](phases/plans/plan-improvements.md) · [mobile navigation/month picker](phases/plans/plan-mobile-nav-and-month-picker.md) · [Phase 8](phases/plans/plan-phase8-deadman-switch.md) · [Phase 9](phases/plans/plan-phase9-hardening-release.md) · [monetization](phases/plans/plan-monetization.md).
+Plan index: [improvements](phases/plans/plan-improvements.md) · [mobile navigation/month picker](phases/plans/plan-mobile-nav-and-month-picker.md) · [Phase 8](phases/plans/plan-phase8-deadman-switch.md) · [Phase 9](phases/plans/plan-phase9-hardening-release.md) · [monetization](phases/plans/plan-monetization.md) · [private beta rollout](docs/PRIVATE_BETA_ROLLOUT.md).
 
 ## Phase Tracker
 

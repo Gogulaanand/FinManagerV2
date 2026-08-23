@@ -733,3 +733,24 @@ its operational gate can be closed.
 Rejected: treating source inspection, migration application, a local unit test, or a clean cron row
 as proof of a retained production backup; using real financial data in the drill; or dispatching the
 backup/rehearsal workflows while the three required repository secrets are absent.
+
+## D-083: Private beta access is a manual allowlist, not an entitlement system (2026-08-15)
+
+The lean commercialization path uses one private beta_access table managed in the Supabase
+dashboard. Anonymous visitors may submit a normalized email through a constant-result request RPC,
+but only manually approved rows can create Auth users once the owner enables the Supabase Before
+User Created hook. Friends and family are manually marked approved + complimentary; all approved
+beta users receive the full current product because there is no paywall or current entitlement check.
+
+The migration is deployable before the hook is enabled. Existing Auth users must be seeded and
+linked by the owner first. Revocation is manual (revoked plus Auth-user ban) and preserves data;
+unapproved requests are manually removed after 90 days. If paid access is added later, the future
+invariant is complimentary OR active paid entitlement.
+
+Why: a small private beta needs a narrow, auditable admin surface and a fail-closed signup boundary
+without billing, invitation automation, CRM, analytics, or premature entitlement liability.
+
+Hosted verification: on 2026-08-15 the migration was applied to the authenticated finmanager
+Supabase project, five existing Auth users were seeded as approved + complimentary and linked, and
+the Before User Created hook was enabled. The hosted contract check confirmed approved allow,
+unlisted denial, narrow anon RPC access, anonymous table denial, and anonymous hook denial.

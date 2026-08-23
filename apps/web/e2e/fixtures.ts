@@ -17,9 +17,9 @@ export const test = base.extend<{}, WorkerFixtures>({
   storageState: ({ workerStorageState }, provide) => provide(workerStorageState),
 
   page: async ({ page }, provide) => {
-    // Preserve the authenticated starting route that signIn previously left
-    // behind, without signing in or performing a full sync for every test.
-    await page.goto('/');
+    // Preserve the authenticated dashboard starting route that signIn previously
+    // left behind, without signing in or performing a full sync for every test.
+    await page.goto('/dashboard');
     await provide(page);
   },
 

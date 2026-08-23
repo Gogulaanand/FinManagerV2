@@ -90,9 +90,19 @@ export function AppProviders({ children }: { children: ReactNode }) {
           });
           return message;
         }
-        await db.connect(getConnector());
         setAuthTransitionError(null);
+        // Auth readiness must not wait for the PowerSync handshake. On a fresh
+        // document load, the persisted Supabase session is valid even while
+        // the sync connection is still starting; publishing it first keeps
+        // protected routes from redirecting during that bounded startup gap.
         setSession(nextSession);
+        try {
+          await db.connect(getConnector());
+        } catch {
+          // Keep the authenticated session active. The product remains useful
+          // offline and the sync-health surface can report/retry the connection.
+          setAuthTransitionError('Sync is temporarily unavailable. Your local data remains safe.');
+        }
         return null;
       }).finally(() => setLoading(false));
       activeTransition.current = { accessToken: nextSession.access_token, promise };
@@ -114,19 +124,32 @@ export function AppProviders({ children }: { children: ReactNode }) {
     });
   }, [db, enqueueTransition]);
 
-  // Track the current session. onAuthStateChange also fires an INITIAL_SESSION
-  // event, so it seeds `session` on load and follows every sign-in/out. Setting
-  // state from this async callback (not synchronously in the effect body) is
-  // allowed by the set-state-in-effect rule.
+  // Track the current session. The explicit getSession call closes the fresh
+  // document-load race where the app shell could render a protected route
+  // before the persisted Supabase session had been reflected in React state.
+  // onAuthStateChange still follows every sign-in/out and refresh event.
   useEffect(() => {
+    let disposed = false;
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (disposed) return;
       if (nextSession) {
         void activateSession(nextSession);
       } else {
         void handleSessionLoss();
       }
     });
+
+    void supabase.auth.getSession().then(({ data: sessionData, error }) => {
+      if (disposed) return;
+      if (error || !sessionData.session) {
+        void handleSessionLoss();
+      } else {
+        void activateSession(sessionData.session);
+      }
+    });
+
     return () => {
+      disposed = true;
       data.subscription.unsubscribe();
     };
   }, [activateSession, handleSessionLoss]);
@@ -191,7 +214,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const signInWithGoogle = useCallback(async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
     return error?.message ?? null;
   }, []);
