@@ -59,6 +59,7 @@ function geometryMatches(first: LayoutBox[], second: LayoutBox[]): boolean {
     first.length === second.length &&
     first.every((box, index) => {
       const other = second[index];
+      if (!other) return false;
       return (
         Math.abs(box.x - other.x) < 0.01 &&
         Math.abs(box.y - other.y) < 0.01 &&
