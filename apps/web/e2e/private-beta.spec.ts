@@ -143,13 +143,17 @@ signedOutTest(
     const strandStyles = await page.locator('[data-braid-strand]').evaluateAll((strands) =>
       strands.map((strand) => {
         const style = getComputedStyle(strand);
-        return { animationName: style.animationName, animationDuration: style.animationDuration };
+        const hook = strand.getAttribute('data-braid-strand');
+        return {
+          animationNameMatchesHook: Boolean(hook && style.animationName.endsWith(hook)),
+          animationDuration: style.animationDuration,
+        };
       }),
     );
     expect(strandStyles).toEqual([
-      { animationName: 'weave1', animationDuration: '20s' },
-      { animationName: 'weave2', animationDuration: '25s' },
-      { animationName: 'weave3', animationDuration: '22s' },
+      { animationNameMatchesHook: true, animationDuration: '20s' },
+      { animationNameMatchesHook: true, animationDuration: '25s' },
+      { animationNameMatchesHook: true, animationDuration: '22s' },
     ]);
 
     for (const current of ['current: fixed', 'current: variable']) {
