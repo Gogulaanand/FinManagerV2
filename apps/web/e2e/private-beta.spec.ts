@@ -24,50 +24,26 @@ async function expectNoOverlap(first: Locator, second: Locator, description: str
 
 function flowLayoutTargets(page: Page): ReadonlyArray<readonly [string, Locator]> {
   return [
-    ['spend', page.getByText('current · spend', { exact: true }).locator('..')],
-    ['protect', page.getByText('current · protect', { exact: true }).locator('..')],
+    ['fixed current', page.getByText('current: fixed', { exact: true }).locator('..')],
+    ['variable current', page.getByText('current: variable', { exact: true }).locator('..')],
     ['cash flow', page.getByText('cash flow', { exact: true }).locator('..')],
     ['tax context', page.getByText('tax context', { exact: true }).locator('..')],
     ['reconciliation', page.getByText('reconciliation node', { exact: true }).locator('..')],
   ];
 }
 
-async function expectGrowCardClear(page: Page, viewport: string) {
-  const growCard = page.getByText('current · grow', { exact: true }).locator('..');
+async function expectFlowCardsClear(page: Page, viewport: string) {
+  const currentCards = [
+    ['fixed current', page.getByText('current: fixed', { exact: true }).locator('..')],
+    ['variable current', page.getByText('current: variable', { exact: true }).locator('..')],
+  ] as const;
   for (const [name, obstacle] of flowLayoutTargets(page)) {
-    await expectNoOverlap(growCard, obstacle, `${viewport} grow card and ${name}`);
+    for (const [cardName, card] of currentCards) {
+      if (cardName !== name) {
+        await expectNoOverlap(card, obstacle, `${viewport} ${cardName} and ${name}`);
+      }
+    }
   }
-}
-
-async function flowLayoutGeometry(page: Page): Promise<LayoutBox[]> {
-  const targets: ReadonlyArray<readonly [string, Locator]> = [
-    ['grow', page.getByText('current · grow', { exact: true }).locator('..')],
-    ...flowLayoutTargets(page),
-  ];
-  return Promise.all(
-    targets.map(async ([name, locator]) => {
-      const box = await locator.boundingBox();
-      expect(box, `${name} box is measurable`).not.toBeNull();
-      if (!box) throw new Error(`${name} box is not measurable`);
-      return box;
-    }),
-  );
-}
-
-function geometryMatches(first: LayoutBox[], second: LayoutBox[]): boolean {
-  return (
-    first.length === second.length &&
-    first.every((box, index) => {
-      const other = second[index];
-      if (!other) return false;
-      return (
-        Math.abs(box.x - other.x) < 0.01 &&
-        Math.abs(box.y - other.y) < 0.01 &&
-        Math.abs(box.width - other.width) < 0.01 &&
-        Math.abs(box.height - other.height) < 0.01
-      );
-    })
-  );
 }
 
 const signedOutTest = unauthenticatedTest.extend({
@@ -96,37 +72,60 @@ signedOutTest(
     await page.goto('/');
 
     const hero = page.getByRole('heading', { level: 1 });
-    await expect(hero).toHaveAccessibleName("Your family's money, finally in one calm place.");
+    await expect(hero).toHaveAccessibleName('Braided Horizons');
     await expect(hero).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: 'Make it yours in three steps.' }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: 'Bring a little more calm to the money conversation.' }),
-    ).toBeVisible();
-    const signInLinks = page.getByRole('link', { name: 'Sign in' });
-    await expect(signInLinks).toHaveCount(3);
-    for (const index of [0, 1, 2]) {
-      await expect(signInLinks.nth(index)).toHaveAttribute('href', '/login');
-    }
-    await expect(page.getByRole('link', { name: 'The three currents' })).toHaveAttribute(
-      'href',
-      '#values',
-    );
-    await expect(page.getByRole('link', { name: 'How it works' }).first()).toHaveAttribute(
-      'href',
-      '#how-it-works',
-    );
-    await expect(page.getByRole('link', { name: 'Request private beta access' })).toHaveAttribute(
-      'href',
-      '#request-access',
-    );
-    await expect(page.getByRole('link', { name: 'Privacy & data' })).toHaveAttribute(
+    await expect(page.getByRole('heading', { name: 'Join the private flow' })).toBeVisible();
+    await expect(page.getByText('Three currents. One calmer read.')).toHaveCount(0);
+    await expect(page.getByText('Make it yours in three steps.')).toHaveCount(0);
+    const signInLinks = page.getByRole('link', { name: 'Sign In / Request' });
+    await expect(signInLinks).toHaveCount(1);
+    await expect(signInLinks).toHaveAttribute('href', '/login');
+    await expect(page.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute(
       'href',
       '/privacy',
     );
+    await expect(page.getByRole('group', { name: 'Color theme' })).toHaveCount(0);
 
-    for (const current of ['01 / Spend', '02 / Protect', '03 / Grow']) {
+    for (const copy of [
+      'Watch the currents of your household wealth weave together into a single destination.',
+      'flow.inception.01',
+      'distribution.zone',
+      'velocity.metrics',
+      'LAT 40.7128° N',
+      'LON 74.0060° W',
+      '⌁ OFFLINE-FIRST ARCHITECTURE VERIFIED',
+      'Salary & Consulting',
+      'Rental Yield',
+      'Housing & Utilities',
+      'Living & Lifestyle',
+      'retained value',
+      'deep current · investments',
+      'Compounding beneath the surface, untouched by daily weather.',
+      'horizon target',
+      'ELEVATION_TOTAL (ELV: 18.42L)',
+      'Manual review flow. We onboard families slowly to ensure absolute privacy.',
+      'FinManager © 2024',
+    ]) {
+      await expect(page.getByText(copy, { exact: true }).first()).toBeVisible();
+    }
+    await expect(page.getByRole('link', { name: 'Data terms' })).toHaveAttribute(
+      'href',
+      '/privacy#at-a-glance',
+    );
+
+    const strandStyles = await page.locator('[data-braid-strand]').evaluateAll((strands) =>
+      strands.map((strand) => {
+        const style = getComputedStyle(strand);
+        return { animationName: style.animationName, animationDuration: style.animationDuration };
+      }),
+    );
+    expect(strandStyles).toEqual([
+      { animationName: 'weave1', animationDuration: '20s' },
+      { animationName: 'weave2', animationDuration: '25s' },
+      { animationName: 'weave3', animationDuration: '22s' },
+    ]);
+
+    for (const current of ['current: fixed', 'current: variable']) {
       await expect(page.getByText(current, { exact: true })).toBeVisible();
     }
     for (const metric of [
@@ -149,14 +148,17 @@ signedOutTest(
       page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).resolves.toBe(true);
     await expect(page.locator('main[data-reveal]')).toHaveCSS('opacity', '1');
-    await expectGrowCardClear(page, 'desktop');
-    await page.getByRole('button', { name: 'Light' }).click();
+    await expectFlowCardsClear(page, 'desktop');
+    await page.evaluate(() => document.documentElement.classList.add('light'));
     await expect(page.locator('html')).toHaveClass(/light/);
     await expect(page.locator('main[data-reveal]')).toHaveCSS('opacity', '1');
     const lightGeometry = await flowLayoutGeometry(page);
     await page.screenshot({ path: '/tmp/braided-horizons-desktop-light.png', fullPage: true });
 
-    await page.getByRole('button', { name: 'Dark' }).click();
+    await page.evaluate(() => {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+    });
     await expect(page.locator('html')).toHaveClass(/dark/);
     await expect(page.locator('main[data-reveal]')).toHaveCSS('opacity', '1');
     const darkGeometry = await flowLayoutGeometry(page);
@@ -187,7 +189,7 @@ signedOutTest(
     );
 
     await page.goto('/');
-    await expect(page.getByRole('link', { name: 'Privacy & data' })).toHaveCount(1);
+    await expect(page.getByRole('link', { name: 'Privacy policy' })).toHaveCount(1);
   },
 );
 
@@ -205,12 +207,20 @@ signedOutTest(
     });
     await page.goto('/');
 
+    await expect
+      .poll(() =>
+        page.locator('[data-braid-strand]').evaluateAll((strands) =>
+          strands.map((strand) => getComputedStyle(strand).animationName),
+        ),
+      )
+      .toEqual(['none', 'none', 'none']);
+
     const totalInflowBox = await page.getByText('₹3,42,000', { exact: true }).boundingBox();
     const primarySourceLabelBox = await page
-      .getByText('source · primary', { exact: true })
+      .getByText('source: primary', { exact: true })
       .boundingBox();
     const secondarySourceLabelBox = await page
-      .getByText('source · secondary', { exact: true })
+      .getByText('source: secondary', { exact: true })
       .boundingBox();
     expect(totalInflowBox).not.toBeNull();
     expect(primarySourceLabelBox).not.toBeNull();
@@ -220,14 +230,17 @@ signedOutTest(
     }
     expect(boxesOverlap(totalInflowBox, primarySourceLabelBox)).toBe(false);
     expect(boxesOverlap(totalInflowBox, secondarySourceLabelBox)).toBe(false);
-    await expectGrowCardClear(page, 'mobile');
+    await expectFlowCardsClear(page, 'mobile');
     await expect(page.locator('main[data-reveal]')).toHaveCSS('opacity', '1');
-    await page.getByRole('button', { name: 'Light' }).click();
+    await page.evaluate(() => document.documentElement.classList.add('light'));
     await expect(page.locator('html')).toHaveClass(/light/);
     await expect(page.locator('main[data-reveal]')).toHaveCSS('opacity', '1');
     const lightGeometry = await flowLayoutGeometry(page);
     await page.screenshot({ path: '/tmp/braided-horizons-mobile-light.png', fullPage: true });
-    await page.getByRole('button', { name: 'Dark' }).click();
+    await page.evaluate(() => {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+    });
     await expect(page.locator('html')).toHaveClass(/dark/);
     await expect(page.locator('main[data-reveal]')).toHaveCSS('opacity', '1');
     const darkGeometry = await flowLayoutGeometry(page);
@@ -291,14 +304,11 @@ authenticatedTest(
   async ({ page }) => {
     await page.goto('/');
     await authenticatedExpect(
-      page.getByRole('heading', { name: "Your family's money, finally in one calm place." }),
+      page.getByRole('heading', { name: 'Braided Horizons' }),
     ).toBeVisible();
-    await authenticatedExpect(page.getByRole('link', { name: 'Open dashboard' })).toHaveCount(2);
+    await authenticatedExpect(page.getByRole('link', { name: 'Open dashboard' })).toHaveCount(1);
     await authenticatedExpect(
       page.getByRole('link', { name: 'Open dashboard' }).first(),
-    ).toHaveAttribute('href', '/dashboard');
-    await authenticatedExpect(
-      page.getByRole('link', { name: 'Open dashboard' }).last(),
     ).toHaveAttribute('href', '/dashboard');
     await authenticatedExpect(page.locator('aside')).toHaveCount(0);
 
@@ -306,7 +316,7 @@ authenticatedTest(
     await authenticatedExpect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
     await authenticatedExpect(page.locator('aside')).toBeVisible();
     await authenticatedExpect(
-      page.getByRole('heading', { name: "Your family's money, finally in one calm place." }),
+      page.getByRole('heading', { name: 'Braided Horizons' }),
     ).toHaveCount(0);
   },
 );
