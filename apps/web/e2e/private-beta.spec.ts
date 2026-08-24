@@ -46,6 +46,33 @@ async function expectFlowCardsClear(page: Page, viewport: string) {
   }
 }
 
+async function flowLayoutGeometry(page: Page): Promise<LayoutBox[]> {
+  return Promise.all(
+    flowLayoutTargets(page).map(async ([name, locator]) => {
+      const box = await locator.boundingBox();
+      expect(box, `${name} box is measurable`).not.toBeNull();
+      if (!box) throw new Error(`${name} box is not measurable`);
+      return box;
+    }),
+  );
+}
+
+function geometryMatches(first: LayoutBox[], second: LayoutBox[]): boolean {
+  return (
+    first.length === second.length &&
+    first.every((box, index) => {
+      const other = second[index];
+      if (!other) return false;
+      return (
+        Math.abs(box.x - other.x) < 0.01 &&
+        Math.abs(box.y - other.y) < 0.01 &&
+        Math.abs(box.width - other.width) < 0.01 &&
+        Math.abs(box.height - other.height) < 0.01
+      );
+    })
+  );
+}
+
 const signedOutTest = unauthenticatedTest.extend({
   storageState: async ({ baseURL: _baseURL }, provide) => {
     await provide({ cookies: [], origins: [] });
