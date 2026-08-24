@@ -236,9 +236,11 @@ signedOutTest(
 
     await expect
       .poll(() =>
-        page.locator('[data-braid-strand]').evaluateAll((strands) =>
-          strands.map((strand) => getComputedStyle(strand).animationName),
-        ),
+        page
+          .locator('[data-braid-strand]')
+          .evaluateAll((strands) =>
+            strands.map((strand) => getComputedStyle(strand).animationName),
+          ),
       )
       .toEqual(['none', 'none', 'none']);
 
@@ -342,9 +344,9 @@ authenticatedTest(
     await page.goto('/dashboard');
     await authenticatedExpect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
     await authenticatedExpect(page.locator('aside')).toBeVisible();
-    await authenticatedExpect(
-      page.getByRole('heading', { name: 'Braided Horizons' }),
-    ).toHaveCount(0);
+    await authenticatedExpect(page.getByRole('heading', { name: 'Braided Horizons' })).toHaveCount(
+      0,
+    );
   },
 );
 

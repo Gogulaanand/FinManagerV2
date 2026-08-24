@@ -70,7 +70,10 @@ export function LandingPage() {
         <span className={`${styles.editorialMark} ${styles.editorialMarkRight}`} aria-hidden="true">
           distribution.zone
         </span>
-        <span className={`${styles.editorialMark} ${styles.editorialMarkMetrics}`} aria-hidden="true">
+        <span
+          className={`${styles.editorialMark} ${styles.editorialMarkMetrics}`}
+          aria-hidden="true"
+        >
           velocity.metrics
         </span>
         <div className={styles.flowInner}>
