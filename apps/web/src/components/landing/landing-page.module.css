@@ -1,0 +1,962 @@
+.page {
+  --braid-paper: #f6f7f4;
+  --braid-paper-deep: #eef0ec;
+  --braid-ink: #2c302e;
+  --braid-muted: #727975;
+  --braid-hairline: rgba(44, 48, 46, 0.14);
+  --braid-navy: #080f28;
+  --braid-navy-soft: #121a36;
+  --braid-navy-ink: #f3f2eb;
+  --braid-navy-muted: #a0a8bf;
+  --braid-navy-line: rgba(211, 219, 251, 0.09);
+  --line-fixed: #63c8b4;
+  --line-variable: #f39c9d;
+  --line-violet: #7168f2;
+  --line-fixed-text: #087465;
+  --line-variable-text: #d85268;
+  --line-violet-text: #5147d6;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--braid-navy);
+  color: var(--braid-ink);
+  font-family: var(--font-body-loaded), ui-sans-serif, sans-serif;
+}
+
+.landingNav {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 10;
+  width: 100%;
+  border-bottom: 1px solid var(--braid-hairline);
+  background: var(--braid-paper);
+  color: var(--braid-ink);
+}
+
+.navInner {
+  display: flex;
+  width: min(100% - 2rem, 1180px);
+  min-height: 4rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 auto;
+}
+
+.navIdentity,
+.navActions {
+  display: flex;
+  align-items: center;
+}
+
+.navIdentity {
+  gap: 1.8rem;
+}
+
+.navActions {
+  gap: clamp(0.6rem, 2vw, 1.6rem);
+}
+
+.navBrand,
+.navDashboard {
+  color: inherit;
+  font-family: var(--font-body-loaded), ui-sans-serif, sans-serif;
+  text-decoration: none;
+}
+
+.navBrand {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.navCoordinates,
+.navDashboard {
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.navCoordinates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  color: var(--braid-muted);
+  font-size: 0.52rem;
+  letter-spacing: 0.1em;
+}
+
+.navDashboard {
+  transition: color 160ms ease;
+}
+
+.navDashboard:hover,
+.navBrand:hover {
+  color: var(--line-violet-text);
+}
+
+.navBrand:focus-visible,
+.navDashboard:focus-visible,
+.footer a:focus-visible,
+.requestInput:focus-visible,
+.requestButton:focus-visible {
+  outline: 2px solid var(--line-violet);
+  outline-offset: 3px;
+}
+
+.flowSection {
+  position: relative;
+  min-height: 2000px;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--braid-paper);
+  background-image:
+    linear-gradient(var(--braid-hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--braid-hairline) 1px, transparent 1px);
+  background-position: center;
+  background-size:
+    100% 28rem,
+    33.333% 100%;
+}
+
+.flowSection::before,
+.flowSection::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--braid-hairline);
+  content: '';
+  pointer-events: none;
+}
+
+.flowSection::before {
+  left: clamp(1rem, 8vw, 8rem);
+}
+
+.flowSection::after {
+  right: clamp(1rem, 8vw, 8rem);
+}
+
+.flowInner {
+  position: relative;
+  z-index: 1;
+  width: min(100% - 2rem, 1180px);
+  height: 100%;
+  min-height: 2000px;
+  margin: 0 auto;
+}
+
+.editorialMark {
+  position: absolute;
+  z-index: 2;
+  color: var(--braid-muted);
+  font-family: var(--font-body-loaded), ui-sans-serif, sans-serif;
+  font-size: 0.5rem;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+}
+
+.editorialMarkLeft {
+  top: 5rem;
+  left: 0;
+}
+
+.editorialMarkRight {
+  top: 14rem;
+  right: 0;
+}
+
+.editorialMarkMetrics {
+  top: 52%;
+  left: 0;
+}
+
+.flowHeader {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+  margin: 0 auto;
+  padding-top: 7.75rem;
+  text-align: center;
+}
+
+.heroTitle {
+  margin: 0;
+  color: var(--braid-ink);
+  font-family: var(--font-display-loaded), ui-sans-serif, sans-serif;
+  font-size: clamp(2.8rem, 6vw, 5.7rem);
+  font-weight: 400;
+  letter-spacing: -0.075em;
+  line-height: 0.98;
+}
+
+.heroSubtitle {
+  max-width: 30rem;
+  margin: 1.2rem auto 0;
+  color: var(--braid-muted);
+  font-size: clamp(0.86rem, 1.35vw, 1rem);
+  line-height: 1.5;
+}
+
+.flowCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.braid {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  z-index: 0;
+  width: 300px;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.braidStrand {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 999px;
+  filter: blur(1px);
+  opacity: 0.85;
+  transform-origin: center;
+}
+
+.braidStrandOne {
+  left: 20%;
+  background: linear-gradient(
+    180deg,
+    transparent 5%,
+    #f97386 15%,
+    #9cf3de 30%,
+    #f97386 50%,
+    #9cf3de 70%,
+    #f97386 90%,
+    transparent 100%
+  );
+  animation: weave1 20s ease-in-out infinite;
+}
+
+.braidStrandTwo {
+  left: 50%;
+  background: linear-gradient(
+    180deg,
+    transparent 10%,
+    #787c72 25%,
+    #7166fd 40%,
+    #787c72 60%,
+    #7166fd 75%,
+    #787c72 85%,
+    transparent 100%
+  );
+  animation: weave2 25s ease-in-out infinite;
+}
+
+.braidStrandThree {
+  left: 80%;
+  background: linear-gradient(
+    180deg,
+    transparent 15%,
+    #4637d2 35%,
+    #5346de 55%,
+    #4637d2 75%,
+    #5346de 95%,
+    transparent 100%
+  );
+  animation: weave3 22s ease-in-out infinite;
+}
+
+@keyframes weave1 {
+  0%,
+  100% {
+    transform: translateX(0) scaleX(1);
+  }
+
+  25% {
+    transform: translateX(60px) scaleX(1.5);
+  }
+
+  50% {
+    transform: translateX(120px) scaleX(0.8);
+  }
+
+  75% {
+    transform: translateX(60px) scaleX(1.2);
+  }
+}
+
+@keyframes weave2 {
+  0%,
+  100% {
+    transform: translateX(0) scaleX(1);
+  }
+
+  33% {
+    transform: translateX(-60px) scaleX(0.8);
+  }
+
+  66% {
+    transform: translateX(60px) scaleX(1.5);
+  }
+}
+
+@keyframes weave3 {
+  0%,
+  100% {
+    transform: translateX(0) scaleX(1);
+  }
+
+  25% {
+    transform: translateX(-120px) scaleX(1.2);
+  }
+
+  50% {
+    transform: translateX(-60px) scaleX(0.7);
+  }
+
+  75% {
+    transform: translateX(0) scaleX(1.4);
+  }
+}
+
+.flowStat,
+.currentCard,
+.flowReconciliation {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.flowStat {
+  gap: 0.22rem;
+  color: var(--braid-ink);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.flowStat strong {
+  font-family: var(--font-display-loaded), ui-sans-serif, sans-serif;
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-weight: 450;
+}
+
+.flowStatEyebrow,
+.currentEyebrow,
+.convergenceEyebrow,
+.flowRetainedEyebrow {
+  color: var(--braid-muted);
+  font-family: var(--font-body-loaded), ui-sans-serif, sans-serif;
+  font-size: 0.53rem;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.flowStatValue {
+  font-family: var(--font-display-loaded), ui-sans-serif, sans-serif;
+  font-size: 1.25rem;
+  letter-spacing: -0.04em;
+}
+
+.flowStatSalary {
+  top: 28.8%;
+  left: calc(50% - 390px);
+  align-items: center;
+}
+
+.flowStatTotal {
+  top: 29.5%;
+  left: 50%;
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+.flowStatTotal strong {
+  font-size: clamp(2.25rem, 4vw, 3.8rem);
+  letter-spacing: -0.08em;
+  line-height: 0.98;
+}
+
+.flowStatRental {
+  top: 28.8%;
+  right: calc(50% - 390px);
+  align-items: center;
+}
+
+.currentCard {
+  gap: 0.28rem;
+  width: 15rem;
+}
+
+.currentCard strong {
+  color: var(--braid-ink);
+  font-family: var(--font-display-loaded), ui-sans-serif, sans-serif;
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+.currentValue {
+  font-family: var(--font-display-loaded), ui-sans-serif, sans-serif;
+  font-size: clamp(1.35rem, 2.4vw, 1.9rem);
+  letter-spacing: -0.06em;
+}
+
+.currentNote {
+  color: var(--braid-muted);
+  font-size: 0.65rem;
+  line-height: 1.35;
+}
+
+.currentCardFixed {
+  top: 48.5%;
+  left: calc(50% - 395px);
+  align-items: flex-end;
+  text-align: right;
+}
+
+.currentCardFixed .currentEyebrow,
+.currentCardFixed .currentValue {
+  color: var(--line-fixed-text);
+}
+
+.currentCardVariable {
+  top: 53%;
+  right: calc(50% - 395px);
+  align-items: flex-start;
+  text-align: left;
+}
+
+.currentCardVariable .currentEyebrow,
+.currentCardVariable .currentValue {
+  color: var(--line-variable-text);
+}
+
+.flowStatCash {
+  top: 71.5%;
+  left: calc(50% - 320px);
+  align-items: flex-end;
+  text-align: right;
+}
+
+.flowStatTax {
+  top: 71.5%;
+  right: calc(50% - 320px);
+  align-items: flex-start;
+  text-align: left;
+}
+
+.flowReconciliation {
+  top: 69.5%;
+  left: 50%;
+  align-items: center;
+  gap: 0.28rem;
+  color: var(--line-violet-text);
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.flowRetainedEyebrow {
+  color: var(--line-violet-text);
+}
+
+.flowReconciliation strong {
+  font-family: var(--font-display-loaded), ui-sans-serif, sans-serif;
+  font-size: clamp(2.2rem, 4.4vw, 3.8rem);
+  font-weight: 450;
+  letter-spacing: -0.08em;
+  line-height: 0.95;
+}
+
+.flowVerification {
+  position: absolute;
+  top: 80.5%;
+  left: 50%;
+  z-index: 2;
+  margin: 0;
+  color: var(--braid-muted);
+  font-family: var(--font-body-loaded), ui-sans-serif, sans-serif;
+  font-size: 0.52rem;
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.convergenceSection {
+  position: relative;
+  min-height: 1400px;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--braid-navy);
+  background-image:
+    linear-gradient(var(--braid-navy-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--braid-navy-line) 1px, transparent 1px);
+  background-position: center;
+  background-size:
+    100% 6.5rem,
+    6.5rem 100%;
+  color: var(--braid-navy-ink);
+}
+
+.convergenceSection::before {
+  position: absolute;
+  top: -3rem;
+  bottom: -3rem;
+  left: 50%;
+  z-index: 0;
+  width: 12px;
+  background: var(--line-violet);
+  box-shadow:
+    0 0 1rem var(--line-violet),
+    0 0 3.5rem color-mix(in srgb, var(--line-violet) 60%, transparent);
+  content: '';
+  opacity: 0.72;
+  transform: translateX(-50%);
+}
+
+.convergenceInner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 1400px;
+  flex-direction: column;
+  width: min(100% - 2rem, 1180px);
+  margin: 0 auto;
+  padding: 9rem 0 2rem;
+}
+
+.convergenceHero {
+  max-width: 52rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.convergenceEyebrow {
+  color: var(--line-violet);
+}
+
+.convergenceValue {
+  margin: 1.1rem 0 0;
+  color: var(--braid-navy-ink);
+  font-family: var(--font-display-loaded), ui-sans-serif, sans-serif;
+  font-size: clamp(3.25rem, 9vw, 7.2rem);
+  font-weight: 350;
+  letter-spacing: -0.09em;
+  line-height: 0.94;
+}
+
+.convergenceDescription {
+  max-width: 22rem;
+  margin: 1.2rem auto 0;
+  color: var(--braid-navy-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.convergenceGrid {
+  display: grid;
+  gap: clamp(2rem, 8vw, 8rem);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  max-width: 860px;
+  margin: 10rem auto 0;
+}
+
+.horizonValue {
+  color: var(--braid-navy-ink);
+  font-family: var(--font-display-loaded), ui-sans-serif, sans-serif;
+  font-size: clamp(1.8rem, 3.8vw, 3.1rem);
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  line-height: 1.05;
+}
+
+.horizonValue + .horizonValue {
+  margin-top: 2.5rem;
+}
+
+.horizonValue span {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--braid-navy-muted);
+  font-family: var(--font-body-loaded), ui-sans-serif, sans-serif;
+  font-size: 0.53rem;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.requestCard {
+  padding: clamp(1.4rem, 3vw, 2.25rem);
+  border: 1px solid rgba(229, 234, 255, 0.2);
+  background: color-mix(in srgb, var(--braid-navy-soft) 88%, transparent);
+  box-shadow: 0 1rem 4rem rgba(0, 0, 0, 0.2);
+}
+
+.requestCard h2 {
+  margin: 0.8rem 0 0;
+  color: var(--braid-navy-ink);
+  font-family: var(--font-display-loaded), ui-sans-serif, sans-serif;
+  font-size: clamp(1.65rem, 3vw, 2.5rem);
+  font-weight: 450;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.requestCard > p:not(.convergenceEyebrow) {
+  max-width: 23rem;
+  margin: 0.9rem 0 0;
+  color: var(--braid-navy-muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.requestForm {
+  margin-top: 1.5rem;
+}
+
+.requestControls {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.requestInput {
+  min-width: 0;
+  width: 100%;
+  height: 2.85rem;
+  border: 1px solid rgba(229, 234, 255, 0.24);
+  border-radius: 0.15rem;
+  background: rgba(4, 8, 25, 0.25);
+  padding: 0 0.8rem;
+  color: var(--braid-navy-ink);
+  font: inherit;
+  font-size: 0.82rem;
+  outline: none;
+}
+
+.requestInput::placeholder {
+  color: color-mix(in srgb, var(--braid-navy-muted) 70%, transparent);
+}
+
+.requestInput[aria-invalid='true'] {
+  border-color: var(--line-variable);
+}
+
+.requestButton {
+  min-height: 2.85rem;
+  border: 1px solid rgba(229, 234, 255, 0.2);
+  border-radius: 0.15rem;
+  background: rgba(213, 218, 242, 0.15);
+  padding: 0 1rem;
+  color: var(--braid-navy-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.64rem;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+  white-space: nowrap;
+}
+
+.requestButton:hover:not(:disabled) {
+  border-color: var(--line-violet);
+  background: color-mix(in srgb, var(--line-violet) 34%, transparent);
+}
+
+.requestButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.formHint,
+.formMessage {
+  display: block;
+  margin: 0.65rem 0 0;
+  color: var(--braid-navy-muted);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.formError {
+  color: var(--line-variable);
+}
+
+.formSuccess {
+  color: var(--line-fixed);
+}
+
+.convergenceFootnote {
+  margin: 8rem 0 0;
+  color: var(--braid-navy-muted);
+  font-family: var(--font-body-loaded), ui-sans-serif, sans-serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  width: min(100% - 2rem, 1180px);
+  margin: auto auto 0;
+  padding: 1.5rem 0 2rem;
+  border-top: 1px solid var(--braid-navy-line);
+  color: var(--braid-navy-muted);
+  font-family: var(--font-body-loaded), ui-sans-serif, sans-serif;
+  font-size: 0.59rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem 1.5rem;
+}
+
+.footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: var(--braid-navy-ink);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .navInner {
+    width: min(100% - 1.5rem, 1180px);
+    flex-wrap: wrap;
+    padding: 0.7rem 0;
+  }
+
+  .navIdentity {
+    gap: 0.8rem;
+  }
+
+  .navActions {
+    width: 100%;
+    gap: 0.55rem;
+    justify-content: flex-end;
+  }
+
+  .navCoordinates {
+    gap: 0.35rem 0.65rem;
+    font-size: 0.45rem;
+    letter-spacing: 0.06em;
+  }
+
+  .navDashboard {
+    font-size: 0.52rem;
+    letter-spacing: 0.08em;
+  }
+
+  .flowSection {
+    min-height: 1640px;
+    background-size:
+      100% 22rem,
+      50% 100%;
+  }
+
+  .flowInner {
+    width: min(100% - 1.5rem, 1180px);
+    min-height: 1640px;
+  }
+
+  .flowSection::before,
+  .flowSection::after,
+  .editorialMark {
+    display: none;
+  }
+
+  .flowHeader {
+    padding-top: 5.5rem;
+  }
+
+  .heroTitle {
+    font-size: clamp(2.6rem, 12vw, 4rem);
+  }
+
+  .heroSubtitle {
+    max-width: 19rem;
+    font-size: 0.82rem;
+  }
+
+  .braid {
+    width: 300px;
+  }
+
+  .flowStat {
+    font-size: 0.7rem;
+  }
+
+  .flowStatSalary {
+    top: 29%;
+    left: 2%;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .flowStatTotal {
+    top: 29.5%;
+  }
+
+  .flowStatTotal strong {
+    font-size: 2rem;
+  }
+
+  .flowStatRental {
+    top: 29%;
+    right: 2%;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .flowStatSalary strong,
+  .flowStatRental strong {
+    font-size: 0.8rem;
+  }
+
+  .flowStatValue {
+    font-size: 1rem;
+  }
+
+  .currentCard {
+    width: 43%;
+  }
+
+  .currentCard strong {
+    font-size: 0.9rem;
+  }
+
+  .currentValue {
+    font-size: 1.25rem;
+  }
+
+  .currentCardFixed {
+    top: 48%;
+    left: 2%;
+  }
+
+  .currentCardVariable {
+    top: 53%;
+    right: 2%;
+  }
+
+  .flowStatCash {
+    top: 70.5%;
+    left: 2%;
+  }
+
+  .flowStatTax {
+    top: 70.5%;
+    right: 2%;
+  }
+
+  .flowReconciliation {
+    top: 68.5%;
+  }
+
+  .flowReconciliation strong {
+    font-size: 2.3rem;
+  }
+
+  .flowVerification {
+    top: 80%;
+    max-width: 16rem;
+    font-size: 0.44rem;
+    line-height: 1.4;
+    white-space: normal;
+  }
+
+  .convergenceSection,
+  .convergenceInner {
+    min-height: 1250px;
+  }
+
+  .convergenceInner {
+    width: min(100% - 1.5rem, 1180px);
+    padding-top: 6.5rem;
+  }
+
+  .convergenceValue {
+    font-size: clamp(2.8rem, 14vw, 4.5rem);
+  }
+
+  .convergenceGrid {
+    grid-template-columns: 1fr;
+    gap: 3.5rem;
+    margin-top: 7rem;
+  }
+
+  .horizonValues {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .horizonValue {
+    font-size: 1.6rem;
+  }
+
+  .horizonValue + .horizonValue {
+    margin-top: 0;
+  }
+
+  .requestCard {
+    padding: 1.25rem;
+  }
+
+  .convergenceFootnote {
+    margin-top: 5rem;
+  }
+
+  .footer {
+    display: block;
+    width: 100%;
+  }
+
+  .footer nav {
+    justify-content: flex-start;
+    margin-top: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .braidStrand {
+    animation: none;
+  }
+
+  .navDashboard,
+  .requestButton {
+    transition: none;
+  }
+}
