@@ -79,6 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [isPublicRoute, loading, pathname, router, session]);
 
   if (!isPublicRoute && !session) return <RedirectingShell />;
-  if (isLandingRoute || pathname === '/privacy') return <PublicShell>{children}</PublicShell>;
+  if (isLandingRoute) return <>{children}</>;
+  if (pathname === '/privacy') return <PublicShell>{children}</PublicShell>;
   return session ? <ProductShell>{children}</ProductShell> : <PublicShell>{children}</PublicShell>;
 }

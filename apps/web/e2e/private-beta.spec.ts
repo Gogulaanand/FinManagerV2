@@ -1,7 +1,77 @@
-import { expect, test as unauthenticatedTest } from '@playwright/test';
+import { expect, test as unauthenticatedTest, type Locator, type Page } from '@playwright/test';
 
 import { establishVercelBypass } from './auth';
 import { expect as authenticatedExpect, test as authenticatedTest } from './fixtures';
+
+type LayoutBox = { x: number; y: number; width: number; height: number };
+
+function boxesOverlap(first: LayoutBox, second: LayoutBox): boolean {
+  return (
+    first.x < second.x + second.width &&
+    first.x + first.width > second.x &&
+    first.y < second.y + second.height &&
+    first.y + first.height > second.y
+  );
+}
+
+async function expectNoOverlap(first: Locator, second: Locator, description: string) {
+  const [firstBox, secondBox] = await Promise.all([first.boundingBox(), second.boundingBox()]);
+  expect(firstBox, `${description}: first box is measurable`).not.toBeNull();
+  expect(secondBox, `${description}: second box is measurable`).not.toBeNull();
+  if (!firstBox || !secondBox) throw new Error(`${description}: expected measurable boxes`);
+  expect(boxesOverlap(firstBox, secondBox), description).toBe(false);
+}
+
+function flowLayoutTargets(page: Page): ReadonlyArray<readonly [string, Locator]> {
+  return [
+    ['fixed current', page.getByText('current: fixed', { exact: true }).locator('..')],
+    ['variable current', page.getByText('current: variable', { exact: true }).locator('..')],
+    ['cash flow', page.getByText('cash flow', { exact: true }).locator('..')],
+    ['tax context', page.getByText('tax context', { exact: true }).locator('..')],
+    ['reconciliation', page.getByText('reconciliation node', { exact: true }).locator('..')],
+  ];
+}
+
+async function expectFlowCardsClear(page: Page, viewport: string) {
+  const currentCards = [
+    ['fixed current', page.getByText('current: fixed', { exact: true }).locator('..')],
+    ['variable current', page.getByText('current: variable', { exact: true }).locator('..')],
+  ] as const;
+  for (const [name, obstacle] of flowLayoutTargets(page)) {
+    for (const [cardName, card] of currentCards) {
+      if (cardName !== name) {
+        await expectNoOverlap(card, obstacle, `${viewport} ${cardName} and ${name}`);
+      }
+    }
+  }
+}
+
+async function flowLayoutGeometry(page: Page): Promise<LayoutBox[]> {
+  return Promise.all(
+    flowLayoutTargets(page).map(async ([name, locator]) => {
+      const box = await locator.boundingBox();
+      expect(box, `${name} box is measurable`).not.toBeNull();
+      if (!box) throw new Error(`${name} box is not measurable`);
+      return box;
+    }),
+  );
+}
+
+function geometryMatches(first: LayoutBox[], second: LayoutBox[]): boolean {
+  return (
+    first.length === second.length &&
+    first.every((box, index) => {
+      const other = second[index];
+      if (!other) return false;
+      return (
+        Math.abs(box.x - other.x) < 0.01 &&
+        Math.abs(box.y - other.y) < 0.01 &&
+        Math.abs(box.width - other.width) < 0.01 &&
+        Math.abs(box.height - other.height) < 0.01
+      );
+    })
+  );
+}
 
 const signedOutTest = unauthenticatedTest.extend({
   storageState: async ({ baseURL: _baseURL }, provide) => {
@@ -17,21 +87,118 @@ const signedOutTest = unauthenticatedTest.extend({
 signedOutTest(
   'signed-out visitors see the landing page without product navigation',
   async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+
+    const consoleErrors: string[] = [];
+    const pageErrors: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'error') consoleErrors.push(message.text());
+    });
+    page.on('pageerror', (error) => pageErrors.push(error.message));
+
     await page.goto('/');
 
-    await expect(
-      page.getByRole('heading', { name: "Your family's money, finally in one calm place." }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: 'Make it yours in three steps.' }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: 'Bring a little more calm to the money conversation.' }),
-    ).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Sign in' }).first()).toHaveAttribute(
+    const hero = page.getByRole('heading', { level: 1 });
+    await expect(hero).toHaveAccessibleName('Braided Horizons');
+    await expect(hero).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Join the private flow' })).toBeVisible();
+    await expect(page.getByText('Three currents. One calmer read.')).toHaveCount(0);
+    await expect(page.getByText('Make it yours in three steps.')).toHaveCount(0);
+    const signInLinks = page.getByRole('link', { name: 'Sign In / Request' });
+    await expect(signInLinks).toHaveCount(1);
+    await expect(signInLinks).toHaveAttribute('href', '/login');
+    await expect(page.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute(
       'href',
-      '/login',
+      '/privacy',
     );
+    await expect(page.getByRole('group', { name: 'Color theme' })).toHaveCount(0);
+
+    for (const copy of [
+      'Watch the currents of your household wealth weave together into a single destination.',
+      'flow.inception.01',
+      'distribution.zone',
+      'velocity.metrics',
+      'LAT 40.7128° N',
+      'LON 74.0060° W',
+      '⌁ OFFLINE-FIRST ARCHITECTURE VERIFIED',
+      'Salary & Consulting',
+      'Rental Yield',
+      'Housing & Utilities',
+      'Living & Lifestyle',
+      'retained value',
+      'deep current · investments',
+      'Compounding beneath the surface, untouched by daily weather.',
+      'horizon target',
+      'ELEVATION_TOTAL (ELV: 18.42L)',
+      'Manual review flow. We onboard families slowly to ensure absolute privacy.',
+      'FinManager © 2024',
+    ]) {
+      await expect(page.getByText(copy, { exact: true }).first()).toBeVisible();
+    }
+    await expect(page.getByRole('link', { name: 'Data terms' })).toHaveAttribute(
+      'href',
+      '/privacy#at-a-glance',
+    );
+
+    const strandStyles = await page.locator('[data-braid-strand]').evaluateAll((strands) =>
+      strands.map((strand) => {
+        const style = getComputedStyle(strand);
+        const hook = strand.getAttribute('data-braid-strand');
+        return {
+          animationNameMatchesHook: Boolean(hook && style.animationName.endsWith(hook)),
+          animationDuration: style.animationDuration,
+        };
+      }),
+    );
+    expect(strandStyles).toEqual([
+      { animationNameMatchesHook: true, animationDuration: '20s' },
+      { animationNameMatchesHook: true, animationDuration: '25s' },
+      { animationNameMatchesHook: true, animationDuration: '22s' },
+    ]);
+
+    for (const current of ['current: fixed', 'current: variable']) {
+      await expect(page.getByText(current, { exact: true })).toBeVisible();
+    }
+    for (const metric of [
+      '₹3,42,000',
+      '₹2,80,000',
+      '₹62,000',
+      '₹1,12,000',
+      '₹85,000',
+      '₹11,08,200',
+      '₹1,45,000',
+      '−₹82,600',
+      '₹62,400',
+    ]) {
+      await expect(page.getByText(metric, { exact: true }).first()).toBeVisible();
+    }
+    await expect(page.getByText(/FIRE 2035/).first()).toBeVisible();
+    await expect(page.getByText(/₹18,42,600/).first()).toBeVisible();
+
+    await expect(
+      page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).resolves.toBe(true);
+    await expect(page.locator('main[data-reveal]')).toHaveCSS('opacity', '1');
+    await expectFlowCardsClear(page, 'desktop');
+    await page.evaluate(() => document.documentElement.classList.add('light'));
+    await expect(page.locator('html')).toHaveClass(/light/);
+    await expect(page.locator('main[data-reveal]')).toHaveCSS('opacity', '1');
+    const lightGeometry = await flowLayoutGeometry(page);
+    await page.screenshot({ path: '/tmp/braided-horizons-desktop-light.png', fullPage: true });
+
+    await page.evaluate(() => {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+    });
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    await expect(page.locator('main[data-reveal]')).toHaveCSS('opacity', '1');
+    const darkGeometry = await flowLayoutGeometry(page);
+    if (!geometryMatches(lightGeometry, darkGeometry)) {
+      await page.screenshot({ path: '/tmp/braided-horizons-desktop-dark.png', fullPage: true });
+    }
+
+    expect(consoleErrors, `console errors: ${consoleErrors.join('; ')}`).toEqual([]);
+    expect(pageErrors, `page errors: ${pageErrors.join('; ')}`).toEqual([]);
     await expect(page.locator('aside')).toHaveCount(0);
     await expect(page.getByLabel('Email address')).toBeVisible();
   },
@@ -53,12 +220,12 @@ signedOutTest(
     );
 
     await page.goto('/');
-    await expect(page.getByRole('link', { name: 'Privacy & data' })).toHaveCount(1);
+    await expect(page.getByRole('link', { name: 'Privacy policy' })).toHaveCount(1);
   },
 );
 
 signedOutTest('theme choice stays visually in sync across open tabs', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/login');
   const otherPage = await page.context().newPage();
   await establishVercelBypass(otherPage);
   await otherPage.goto('/privacy');
@@ -97,14 +264,62 @@ signedOutTest(
     });
     await page.goto('/');
 
+    await expect
+      .poll(() =>
+        page
+          .locator('[data-braid-strand]')
+          .evaluateAll((strands) =>
+            strands.map((strand) => getComputedStyle(strand).animationName),
+          ),
+      )
+      .toEqual(['none', 'none', 'none']);
+
+    const totalInflowBox = await page.getByText('₹3,42,000', { exact: true }).boundingBox();
+    const primarySourceLabelBox = await page
+      .getByText('source: primary', { exact: true })
+      .boundingBox();
+    const secondarySourceLabelBox = await page
+      .getByText('source: secondary', { exact: true })
+      .boundingBox();
+    expect(totalInflowBox).not.toBeNull();
+    expect(primarySourceLabelBox).not.toBeNull();
+    expect(secondarySourceLabelBox).not.toBeNull();
+    if (!totalInflowBox || !primarySourceLabelBox || !secondarySourceLabelBox) {
+      throw new Error('Expected mobile flow metric boxes to be measurable');
+    }
+    expect(boxesOverlap(totalInflowBox, primarySourceLabelBox)).toBe(false);
+    expect(boxesOverlap(totalInflowBox, secondarySourceLabelBox)).toBe(false);
+    await expectFlowCardsClear(page, 'mobile');
+    await expect(page.locator('main[data-reveal]')).toHaveCSS('opacity', '1');
+    await page.evaluate(() => document.documentElement.classList.add('light'));
+    await expect(page.locator('html')).toHaveClass(/light/);
+    await expect(page.locator('main[data-reveal]')).toHaveCSS('opacity', '1');
+    const lightGeometry = await flowLayoutGeometry(page);
+    await page.screenshot({ path: '/tmp/braided-horizons-mobile-light.png', fullPage: true });
+    await page.evaluate(() => {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+    });
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    await expect(page.locator('main[data-reveal]')).toHaveCSS('opacity', '1');
+    const darkGeometry = await flowLayoutGeometry(page);
+    if (!geometryMatches(lightGeometry, darkGeometry)) {
+      await page.screenshot({ path: '/tmp/braided-horizons-mobile-dark.png', fullPage: true });
+    }
+
     const form = page.locator('form');
     await page.getByLabel('Email address').fill('not-an-email');
     await form.getByRole('button', { name: 'Request access' }).click();
-    await expect(page.locator('p[role="alert"]')).toHaveText('Enter a valid email address.');
+    const invalidMessage = page.getByText('Enter a valid email address.', { exact: true });
+    await expect(invalidMessage).toHaveAttribute('role', 'alert');
+    await expect(invalidMessage).toBeVisible();
+    await expect(page.getByLabel('Email address')).toHaveAttribute('aria-invalid', 'true');
 
     await page.getByLabel('Email address').fill('  beta@example.invalid ');
     await form.getByRole('button', { name: 'Request access' }).click();
     await expect(page.getByRole('status')).toHaveText(/your request is on file/i);
+    await expect(page.getByText('Enter a valid email address.', { exact: true })).toHaveCount(0);
+    await expect(page.getByLabel('Email address')).toHaveValue('');
     await expect(page.locator('main[data-reveal]')).toHaveCSS('animation-name', 'none');
     await expect(
       page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
@@ -148,16 +363,20 @@ authenticatedTest(
   async ({ page }) => {
     await page.goto('/');
     await authenticatedExpect(
-      page.getByRole('heading', { name: "Your family's money, finally in one calm place." }),
+      page.getByRole('heading', { name: 'Braided Horizons' }),
     ).toBeVisible();
+    await authenticatedExpect(page.getByRole('link', { name: 'Open dashboard' })).toHaveCount(1);
+    await authenticatedExpect(
+      page.getByRole('link', { name: 'Open dashboard' }).first(),
+    ).toHaveAttribute('href', '/dashboard');
     await authenticatedExpect(page.locator('aside')).toHaveCount(0);
 
     await page.goto('/dashboard');
     await authenticatedExpect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
     await authenticatedExpect(page.locator('aside')).toBeVisible();
-    await authenticatedExpect(
-      page.getByRole('heading', { name: "Your family's money, finally in one calm place." }),
-    ).toHaveCount(0);
+    await authenticatedExpect(page.getByRole('heading', { name: 'Braided Horizons' })).toHaveCount(
+      0,
+    );
   },
 );
 
