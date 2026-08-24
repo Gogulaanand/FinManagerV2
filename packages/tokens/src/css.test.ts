@@ -52,4 +52,23 @@ describe('toTailwindCss', () => {
   it('sets the spacing base so Tailwind derives the 4px grid', () => {
     expect(code).toContain('--spacing: 4px;');
   });
+
+  it('emits the complete type-family contract for web consumers', () => {
+    expect(code).toContain("--font-display: var(--font-display-loaded, 'Sora')");
+    expect(code).toContain("--font-body: var(--font-body-loaded, 'Manrope')");
+    expect(code).toContain("--font-utility: var(--font-utility-loaded, 'Public Sans')");
+    expect(code).toContain("--font-data: var(--font-data-loaded, 'Public Sans')");
+  });
+
+  it('emits the principal 18–22px radius steps', () => {
+    expect(code).toContain('--radius-md: 18px;');
+    expect(code).toContain('--radius-lg: 20px;');
+    expect(code).toContain('--radius-xl: 22px;');
+  });
+
+  it('emits the compact Sora heading used by existing surfaces', () => {
+    expect(code).toContain('--text-headline-sm: 16px;');
+    expect(code).toContain('--text-headline-sm--line-height: 24px;');
+    expect(code).toContain('--text-headline-sm--font-weight: 600;');
+  });
 });

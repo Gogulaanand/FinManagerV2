@@ -106,7 +106,7 @@ function FinancialHealthCardContent() {
             accessibilityRole="checkbox"
             accessibilityState={{ checked: dontAskAgain }}
             onPress={() => setDontAskAgain((current) => !current)}
-            className="mt-3 flex-row items-center gap-2"
+            className="mt-3 min-h-11 flex-row items-center gap-2"
           >
             <View
               className={`h-5 w-5 items-center justify-center rounded border ${
@@ -125,14 +125,14 @@ function FinancialHealthCardContent() {
             <Pressable
               accessibilityRole="button"
               onPress={confirmGenerate}
-              className="rounded-md bg-primary px-3 py-2"
+              className="min-h-11 justify-center rounded-lg bg-primary px-3 py-2"
             >
               <Text className="text-primary-foreground">Refresh anyway</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
               onPress={() => setConfirming(false)}
-              className="rounded-md bg-surface-muted px-3 py-2"
+              className="min-h-11 justify-center rounded-lg bg-surface-muted px-3 py-2"
             >
               <Text className="text-foreground">Cancel</Text>
             </Pressable>

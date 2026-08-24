@@ -14,13 +14,13 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Amount } from '../../components/amount';
-import { Card, CardLabel, CardTitle } from '../../components/card';
-import { Fab } from '../../components/fab';
+import { Card, CardLabel, CardTitle, ForecastCard } from '../../components/card';
 import { MobileFireSettingsForm } from '../../components/goals/fire-settings-form';
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
 import { useAuth } from '../../components/providers';
 import { useGoals } from '../../lib/goals';
 import { setNotice, useNotice } from '../../lib/notice';
+import { ScreenHeader, SectionHeading } from '../../components/screen-header';
 
 const STATUS_LABEL: Record<GoalProjection['status'], string> = {
   achieved: 'Achieved',
@@ -107,18 +107,13 @@ function GoalsContent() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView className="flex-1" contentContainerClassName="gap-4 p-4 pb-28">
-        <View className="flex-row items-start gap-3">
-          <View className="mt-1 size-10 items-center justify-center rounded-full bg-primary/10">
-            <Ionicons name="flag" size={21} color={scheme.primary} />
-          </View>
-          <View className="flex-1">
-            <Text className="font-display text-headline-lg text-foreground">Goals &amp; FIRE</Text>
-            <Text className="font-body text-body-md text-foreground-muted">
-              Targets, the SIP to close each gap, and your path to independence.
-            </Text>
-          </View>
-        </View>
+      <ScrollView className="flex-1" contentContainerClassName="gap-5 p-5 pb-32">
+        <ScreenHeader
+          eyebrow="The long view"
+          title="Goals & FIRE"
+          subtitle="Targets, the SIP to close each gap, and your path to independence."
+          icon="flag-outline"
+        />
 
         {!api.canWrite ? (
           <Card>
@@ -133,12 +128,12 @@ function GoalsContent() {
 
         {/* FIRE summary */}
         <View className="gap-2">
-          <View className="flex-row gap-2">
-            <Card className="min-w-0 flex-1">
+          <View className="flex-row gap-3">
+            <Card className="min-w-0 flex-1 p-3.5">
               <CardLabel>FIRE number</CardLabel>
               <Amount value={fire.fireNumber} size="tile" />
             </Card>
-            <Card className="min-w-0 flex-1">
+            <Card className="min-w-0 flex-1 p-3.5">
               <CardLabel>Current corpus</CardLabel>
               <Amount value={fire.currentCorpus} size="tile" />
               <Text className="font-body text-caption text-foreground-muted">
@@ -146,8 +141,8 @@ function GoalsContent() {
               </Text>
             </Card>
           </View>
-          <View className="flex-row gap-2">
-            <Card className="min-w-0 flex-1">
+          <View className="flex-row gap-3">
+            <Card className="min-w-0 flex-1 p-3.5">
               <CardLabel>Monthly savings</CardLabel>
               <Amount value={api.monthlyContribution} size="tile" />
               <Text className="font-body text-caption text-foreground-muted">
@@ -158,7 +153,7 @@ function GoalsContent() {
                     : 'Set it below'}
               </Text>
             </Card>
-            <Card className="min-w-0 flex-1">
+            <Card className="min-w-0 flex-1 p-3.5">
               <CardLabel>Coast FIRE</CardLabel>
               <Amount value={fire.coastNumber} size="tile" />
               <Text className="font-body text-caption text-foreground-muted">
@@ -167,7 +162,7 @@ function GoalsContent() {
             </Card>
           </View>
         </View>
-        <Card>
+        <ForecastCard>
           <View className="flex-row items-center gap-2">
             <Ionicons name="navigate" size={18} color={scheme.primary} />
             <CardTitle>Path to FIRE</CardTitle>
@@ -193,19 +188,11 @@ function GoalsContent() {
               </View>
             ))}
           </View>
-        </Card>
+        </ForecastCard>
 
         {/* Goals */}
         <Card>
-          <View className="mb-1 flex-row items-center justify-between">
-            <View className="flex-row items-center gap-2">
-              <Ionicons name="flag-outline" size={18} color={scheme.primary} />
-              <CardTitle>Goals</CardTitle>
-            </View>
-            <Text className="font-body text-caption text-foreground-muted">
-              {api.goals.length} tracked
-            </Text>
-          </View>
+          <SectionHeading title="Goals" detail={`${api.goals.length} tracked`} />
           {api.projections.length === 0 ? (
             <Text className="font-body text-body-md text-foreground-muted">
               Add a goal to see its inflation-adjusted target and monthly SIP.
@@ -247,7 +234,7 @@ function GoalsContent() {
                     <Pressable
                       accessibilityRole="button"
                       onPress={() => router.push(`/goal/${projection.goalId}` as Href)}
-                      className="rounded-md bg-surface-muted px-3 py-2"
+                      className="min-h-11 min-w-11 justify-center rounded-lg bg-surface-muted px-3 py-2"
                     >
                       <Text className="font-body text-caption text-foreground">Edit</Text>
                     </Pressable>
@@ -260,7 +247,7 @@ function GoalsContent() {
                           .then(() => setNotice('Goal deleted.'))
                           .catch(() => setNotice('Could not delete the goal. Please try again.'))
                       }
-                      className="rounded-md bg-surface-muted px-3 py-2"
+                      className="min-h-11 min-w-11 justify-center rounded-lg bg-surface-muted px-3 py-2"
                     >
                       <Text className="font-body text-caption text-loss">Delete</Text>
                     </Pressable>
@@ -304,12 +291,6 @@ function GoalsContent() {
           />
         ) : null}
       </ScrollView>
-      <Fab
-        icon="flag"
-        label="Add goal"
-        onPress={() => router.push('/goal/new' as Href)}
-        disabled={!api.canWrite}
-      />
     </SafeAreaView>
   );
 }

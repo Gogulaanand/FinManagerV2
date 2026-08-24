@@ -1,6 +1,6 @@
 'use client';
 
-import { Settings } from 'lucide-react';
+import { Landmark, Settings, Target } from 'lucide-react';
 import Link from 'next/link';
 
 import { DeadmanSettingsPanel } from '@/components/settings/deadman-settings';
@@ -10,20 +10,56 @@ import { DataExportPanel } from '@/components/settings/data-export';
 import { DataRestorePanel } from '@/components/settings/data-restore';
 import { SafeSignOut } from '@/components/safe-sign-out';
 import { SyncHealthPanel } from '@/components/sync-health';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function SettingsPage() {
   const { session } = useAuth();
   return (
-    <div className="space-y-6">
+    <div className="page-stack">
       <div>
         <div className="flex items-center gap-2">
           <Settings className="size-5" />
-          <h1 className="font-display text-display-sm text-foreground">Settings</h1>
+          <div>
+            <p className="font-utility text-label uppercase tracking-[0.14em] text-foreground-muted">
+              Account &amp; controls
+            </p>
+            <h1 className="page-heading mt-1 font-display text-display-md text-foreground">
+              Settings
+            </h1>
+          </div>
         </div>
         <p className="mt-1 font-body text-body-md text-foreground-muted">
           Account, appearance, sync, and inactivity protection.
         </p>
       </div>
+      <Card>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <CardTitle>Appearance</CardTitle>
+            <p className="mt-1 font-body text-body-md text-foreground-muted">
+              Use a light, dark, or device-matched workspace.
+            </p>
+          </div>
+          <ThemeToggle />
+        </div>
+      </Card>
+      <Card>
+        <CardTitle>Planning</CardTitle>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Link
+            href="/goals"
+            className="font-utility flex items-center gap-3 rounded-xl border border-border p-3 text-foreground hover:bg-surface-muted"
+          >
+            <Target className="size-4 text-primary" aria-hidden="true" /> Goals &amp; FIRE
+          </Link>
+          <Link
+            href="/tax"
+            className="font-utility flex items-center gap-3 rounded-xl border border-border p-3 text-foreground hover:bg-surface-muted"
+          >
+            <Landmark className="size-4 text-primary" aria-hidden="true" /> Tax scenarios
+          </Link>
+        </div>
+      </Card>
       <Card>
         <CardTitle>Account</CardTitle>
         {session ? (

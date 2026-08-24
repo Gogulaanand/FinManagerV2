@@ -12,12 +12,12 @@ import { CategoryIcon } from '../../components/category-icon';
 import { MobileExpenseCharts } from '../../components/expenses/expense-charts';
 import { TransactionRow } from '../../components/expenses/transaction-row';
 import { MonthPickerSheet } from '../../components/expenses/month-picker-sheet';
-import { Fab } from '../../components/fab';
 import { ExpenseSetupSections } from '../../components/expenses/expense-setup-sections';
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
 import { useExpenses } from '../../lib/expenses';
 import { useNotice } from '../../lib/notice';
 import { useAuth } from '../../components/providers';
+import { ScreenHeader, SectionHeading } from '../../components/screen-header';
 
 export default function ExpensesScreen() {
   const status = useStatus();
@@ -80,15 +80,13 @@ function ExpensesScreenContent() {
 
   if (api.loading || initialSkeleton) return <MobileWorkspaceSkeleton label="Loading expenses" />;
   const header = (
-    <View className="gap-4 p-4 pb-0">
-      <View className="flex-row items-end justify-between gap-3">
-        <View className="flex-1">
-          <Text className="font-display text-headline-lg text-foreground">Expenses</Text>
-          <Text className="font-body text-body-md text-foreground-muted">
-            Track spending, income, and the month ahead.
-          </Text>
-        </View>
-      </View>
+    <View className="gap-5 p-5 pb-0">
+      <ScreenHeader
+        eyebrow="Cash flow"
+        title="Expenses"
+        subtitle="Track spending, income, and the month ahead."
+        icon="receipt-outline"
+      />
       {!api.canWrite ? (
         <Card>
           <Text className="font-body text-body-md text-foreground-muted">
@@ -104,7 +102,7 @@ function ExpensesScreenContent() {
           accessibilityRole="button"
           accessibilityLabel="Previous month"
           onPress={api.previousMonth}
-          className="rounded-md bg-surface-muted px-4 py-2"
+          className="min-h-11 min-w-11 items-center justify-center rounded-full border border-border bg-surface px-3"
         >
           <Text className="text-foreground">←</Text>
         </Pressable>
@@ -113,21 +111,21 @@ function ExpensesScreenContent() {
           accessibilityRole="button"
           accessibilityLabel="Next month"
           onPress={api.nextMonth}
-          className="rounded-md bg-surface-muted px-4 py-2"
+          className="min-h-11 min-w-11 items-center justify-center rounded-full border border-border bg-surface px-3"
         >
           <Text className="text-foreground">→</Text>
         </Pressable>
       </View>
-      <View className="flex-row gap-2">
-        <Card className="min-w-0 flex-1">
+      <View className="flex-row gap-3">
+        <Card className="min-w-0 flex-1 p-3.5">
           <CardLabel>Spent</CardLabel>
           <Amount value={api.summary.debit} size="tile" />
         </Card>
-        <Card className="min-w-0 flex-1">
+        <Card className="min-w-0 flex-1 p-3.5">
           <CardLabel>Income</CardLabel>
           <Amount value={api.summary.credit} size="tile" />
         </Card>
-        <Card className="min-w-0 flex-1">
+        <Card className="min-w-0 flex-1 p-3.5">
           <CardLabel>Net</CardLabel>
           <Amount value={api.summary.net} size="tile" signed />
         </Card>
@@ -137,8 +135,8 @@ function ExpensesScreenContent() {
         categoryBreakdown={api.categoryBreakdown}
         budgetChart={api.budgetChart}
       />
-      <View className="flex-row items-center justify-between rounded-t-lg bg-surface px-4 pt-4">
-        <CardTitle>Transactions</CardTitle>
+      <View className="flex-row items-center justify-between border-t border-border/70 bg-surface px-0 pt-5">
+        <SectionHeading title="Transactions" detail={`${api.monthTransactions.length} shown`} />
         <Text className="font-body text-caption text-foreground-muted">
           {api.monthTransactions.length} of {api.monthTransactionCount}
         </Text>
@@ -147,7 +145,7 @@ function ExpensesScreenContent() {
   );
 
   const footer = (
-    <View className="gap-4 p-4">
+    <View className="gap-5 p-5">
       <Card>
         <View className="flex-row items-center justify-between">
           <CardTitle>Budgets</CardTitle>
@@ -155,7 +153,7 @@ function ExpensesScreenContent() {
             accessibilityRole="button"
             onPress={() => router.push('/budget' as Href)}
             disabled={!api.canWrite}
-            className="rounded-md bg-primary px-3 py-2 disabled:opacity-50"
+            className="min-h-11 justify-center rounded-lg bg-primary px-3 py-2 disabled:opacity-50"
           >
             <Text className="text-primary-foreground">Set budget</Text>
           </Pressable>
@@ -214,6 +212,7 @@ function ExpensesScreenContent() {
                         },
                       ])
                     }
+                    className="min-h-11 min-w-11 justify-center"
                   >
                     <Text className="text-caption text-loss">Clear</Text>
                   </Pressable>
@@ -258,7 +257,7 @@ function ExpensesScreenContent() {
         )}
         ListHeaderComponent={header}
         ListEmptyComponent={
-          <View className="mx-4 bg-surface p-4">
+          <View className="mx-5 rounded-xl border border-border/70 bg-surface p-5">
             <Text className="text-foreground-muted">
               Add your first expense to start the month.
             </Text>
@@ -269,13 +268,7 @@ function ExpensesScreenContent() {
           if (api.hasMoreTransactions) api.loadMoreTransactions();
         }}
         onEndReachedThreshold={0.4}
-        contentContainerClassName="pb-28"
-      />
-      <Fab
-        icon="receipt"
-        label="Add transaction"
-        onPress={() => router.push('/transaction/new' as Href)}
-        disabled={!api.canWrite}
+        contentContainerClassName="pb-32"
       />
     </SafeAreaView>
   );

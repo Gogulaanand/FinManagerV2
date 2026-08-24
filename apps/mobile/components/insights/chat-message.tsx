@@ -38,7 +38,7 @@ export function PromptChip({
       accessibilityRole="button"
       disabled={disabled}
       onPress={onPress}
-      className="rounded-full border border-border bg-surface px-3 py-2 disabled:opacity-50"
+      className="min-h-11 rounded-full border border-border bg-surface px-3 py-2 disabled:opacity-50"
     >
       <Text className="font-body text-label text-foreground">{label}</Text>
     </Pressable>
@@ -59,9 +59,9 @@ export function InsightAction({
       accessibilityRole="button"
       disabled={disabled}
       onPress={onPress}
-      className="min-h-11 items-center justify-center rounded-md bg-primary px-4 disabled:opacity-50"
+      className="min-h-11 items-center justify-center rounded-lg bg-accent px-4 disabled:opacity-50"
     >
-      <Text className="font-body text-label text-primary-foreground">{label}</Text>
+      <Text className="font-body text-label text-accent-foreground">{label}</Text>
     </Pressable>
   );
 }

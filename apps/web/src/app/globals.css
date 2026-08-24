@@ -21,6 +21,64 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 28%, transparent);
+}
+
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+/* Public Sans is reserved for compact controls and data labels. */
+.font-utility {
+  font-family: var(--font-utility-loaded), ui-sans-serif, system-ui, sans-serif;
+}
+
+.page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.page-heading {
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+/* One quiet, matte forecast surface; reserve it for progress and projections. */
+.forecast-lens {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--color-forecast);
+  color: var(--color-forecast-foreground);
+}
+
+.forecast-lens::after {
+  position: absolute;
+  inset: -45% -20% auto 35%;
+  z-index: -1;
+  height: 18rem;
+  content: '';
+  border-radius: 999px;
+  background: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--color-accent) 34%, transparent),
+    color-mix(in srgb, var(--color-primary) 22%, transparent)
+  );
+  filter: blur(36px);
+  opacity: 0.72;
+}
+
+.forecast-lens :where(.text-foreground, .text-foreground-muted) {
+  color: var(--color-forecast-foreground);
+}
+
+.forecast-lens .text-foreground-muted {
+  opacity: 0.72;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -47,6 +105,15 @@ html {
 
   [data-reveal] {
     animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 

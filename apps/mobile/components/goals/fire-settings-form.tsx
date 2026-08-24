@@ -17,7 +17,7 @@ function intOrNull(value: string): number | null {
 }
 
 const inputClass =
-  'h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground';
+  'min-h-12 rounded-lg border border-border bg-background px-3 font-body text-body-md text-foreground';
 
 export function MobileFireSettingsForm({
   initial,
@@ -142,9 +142,9 @@ export function MobileFireSettingsForm({
         <Pressable
           accessibilityRole="button"
           onPress={() => void submit()}
-          className="rounded-md bg-primary px-4 py-3 active:opacity-80"
+          className="min-h-12 rounded-lg bg-accent px-4 py-3 active:opacity-80"
         >
-          <Text className="text-center font-body text-label text-primary-foreground">
+          <Text className="text-center font-body text-label text-accent-foreground">
             Save FIRE settings
           </Text>
         </Pressable>

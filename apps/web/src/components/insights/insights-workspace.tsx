@@ -114,13 +114,18 @@ function InsightsWorkspaceContent() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="page-stack">
       <div className="flex items-start gap-3">
-        <span className="mt-1 inline-flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <span className="mt-1 inline-flex size-10 items-center justify-center rounded-2xl bg-accent/10 text-primary">
           <BrainCircuit aria-hidden="true" size={21} />
         </span>
         <div>
-          <h1 className="font-display text-headline-lg text-foreground">AI Insights</h1>
+          <p className="font-utility text-label uppercase tracking-[0.14em] text-foreground-muted">
+            Ask your own data
+          </p>
+          <h1 className="page-heading mt-1 font-display text-display-md text-foreground">
+            AI Insights
+          </h1>
           <p className="font-body text-body-md text-foreground-muted">
             A private financial assistant grounded in the data available on this device.
           </p>
@@ -174,9 +179,9 @@ function InsightsWorkspaceContent() {
                     type="button"
                     role="radio"
                     aria-checked={selected}
-                    className={`flex min-h-11 items-center gap-2 rounded-md border px-3 py-2 text-left font-body text-label transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                    className={`font-utility flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-left text-label transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                       selected
-                        ? 'border-primary bg-primary/10 text-primary'
+                        ? 'border-accent bg-accent/10 text-primary'
                         : 'border-border bg-background text-foreground hover:bg-surface-muted'
                     }`}
                     onClick={() => setScope(option.value)}

@@ -30,9 +30,9 @@ export function Fab({
       onPress={onPress}
       // elevation renders the Android shadow; shadow-* covers iOS.
       style={{ elevation: 6 }}
-      className="absolute bottom-6 right-5 size-14 items-center justify-center rounded-full bg-primary shadow-lg disabled:opacity-40"
+      className="absolute bottom-8 right-5 size-14 items-center justify-center rounded-full bg-accent shadow-lg disabled:opacity-40"
     >
-      <Ionicons name={icon} size={26} color={scheme.primaryForeground} />
+      <Ionicons name={icon} size={24} color={scheme.accentForeground} />
     </Pressable>
   );
 }

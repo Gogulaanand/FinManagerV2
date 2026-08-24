@@ -50,7 +50,7 @@ export function AmountKeypad({ value, onChange, onSubmit }: AmountKeypadProps) {
         onPress={onSubmit}
         className="h-14 items-center justify-center rounded-lg bg-primary active:opacity-80"
       >
-        <Text className="font-body text-body-lg font-medium text-primary-foreground">Continue</Text>
+        <Text className="font-body-medium text-body-lg text-primary-foreground">Continue</Text>
       </Pressable>
     </View>
   );

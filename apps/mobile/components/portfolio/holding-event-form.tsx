@@ -93,7 +93,7 @@ export function MobileHoldingEventForm({
               accessibilityRole="button"
               accessibilityState={{ expanded: moreOpen }}
               onPress={() => setMoreOpen((open) => !open)}
-              className="rounded-md bg-surface-muted px-3 py-3"
+              className="min-h-11 rounded-lg bg-surface-muted px-3 py-3"
             >
               <Text className="text-foreground">More options</Text>
             </Pressable>
@@ -129,7 +129,7 @@ export function MobileHoldingEventForm({
             <Pressable
               accessibilityRole="button"
               onPress={() => void submit()}
-              className="rounded-md bg-primary px-4 py-3"
+              className="min-h-11 rounded-lg bg-primary px-4 py-3"
             >
               <Text className="text-center text-primary-foreground">Save event</Text>
             </Pressable>

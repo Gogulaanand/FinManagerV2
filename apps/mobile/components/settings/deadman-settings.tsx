@@ -194,9 +194,7 @@ export function DeadmanSettings() {
             />
           </View>
           <View>
-            <Text className="font-body text-label font-semibold text-foreground">
-              Escalation timeline
-            </Text>
+            <Text className="font-data-medium text-label text-foreground">Escalation timeline</Text>
             <View className="mt-2 gap-2">
               {STAGE_OFFSETS.map((item, index) => (
                 <View
@@ -204,12 +202,10 @@ export function DeadmanSettings() {
                   className="flex-row items-center gap-3 rounded-md border border-border p-3"
                 >
                   <View className="size-7 items-center justify-center rounded-full bg-primary/10">
-                    <Text className="font-body text-caption font-semibold text-primary">
-                      {index + 1}
-                    </Text>
+                    <Text className="font-data-medium text-caption text-primary">{index + 1}</Text>
                   </View>
                   <View className="flex-1">
-                    <Text className="font-body text-label font-semibold text-foreground">
+                    <Text className="font-data-medium text-label text-foreground">
                       {item.stage === 'disclosure'
                         ? 'Trusted-contact notice'
                         : `Reminder ${index + 1}`}
@@ -237,21 +233,21 @@ export function DeadmanSettings() {
           </View>
           <View className="flex-row flex-wrap gap-2">
             <Pressable
-              className="flex-row items-center gap-2 rounded-md bg-primary px-4 py-3"
+              className="min-h-12 flex-row items-center gap-2 rounded-lg bg-accent px-4 py-3"
               onPress={() => void saveSettings()}
             >
-              <Ionicons name="checkmark-circle" size={17} color={scheme.primaryForeground} />
-              <Text className="font-body text-body-md text-primary-foreground">Save</Text>
+              <Ionicons name="checkmark-circle" size={17} color={scheme.accentForeground} />
+              <Text className="font-body text-body-md text-accent-foreground">Save</Text>
             </Pressable>
             <Pressable
-              className="flex-row items-center gap-2 rounded-md bg-surface-muted px-4 py-3"
+              className="min-h-12 flex-row items-center gap-2 rounded-lg bg-surface-muted px-4 py-3"
               onPress={showPreview}
             >
               <Ionicons name="eye" size={17} color={scheme.foreground} />
               <Text className="font-body text-body-md text-foreground">Preview</Text>
             </Pressable>
             <Pressable
-              className="flex-row items-center gap-2 rounded-md bg-surface-muted px-4 py-3"
+              className="min-h-12 flex-row items-center gap-2 rounded-lg bg-surface-muted px-4 py-3"
               onPress={() => void callFunction('test_send')}
             >
               <Ionicons name="send" size={17} color={scheme.foreground} />
@@ -268,7 +264,7 @@ export function DeadmanSettings() {
             <View className="rounded-md border border-border bg-surface-muted p-3">
               <View className="mb-2 flex-row items-center gap-2">
                 <Ionicons name="eye" size={17} color={scheme.primary} />
-                <Text className="font-body text-label font-semibold text-foreground">
+                <Text className="font-data-medium text-label text-foreground">
                   Local notice preview
                 </Text>
               </View>
@@ -290,13 +286,11 @@ export function DeadmanSettings() {
           </View>
         </View>
         <Pressable
-          className="mt-4 flex-row items-center justify-center gap-2 rounded-md bg-primary px-4 py-3"
+          className="mt-4 min-h-12 flex-row items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3"
           onPress={() => router.push('/trusted-contact/new' as never)}
         >
-          <Ionicons name="person-add" size={17} color={scheme.primaryForeground} />
-          <Text className="font-body text-body-md text-primary-foreground">
-            Add trusted contact
-          </Text>
+          <Ionicons name="person-add" size={17} color={scheme.accentForeground} />
+          <Text className="font-body text-body-md text-accent-foreground">Add trusted contact</Text>
         </Pressable>
         <View className="mt-3 gap-3">
           {contacts.length === 0 ? (
@@ -327,10 +321,16 @@ export function DeadmanSettings() {
                 </View>
               </View>
               <View className="mt-3 flex-row justify-end gap-4">
-                <Pressable onPress={() => router.push(`/trusted-contact/${item.id}` as never)}>
+                <Pressable
+                  onPress={() => router.push(`/trusted-contact/${item.id}` as never)}
+                  className="min-h-11 min-w-11 justify-center"
+                >
                   <Text className="font-body text-label text-primary">Edit</Text>
                 </Pressable>
-                <Pressable onPress={() => void deleteTrustedContact(db, session.user.id, item.id!)}>
+                <Pressable
+                  onPress={() => void deleteTrustedContact(db, session.user.id, item.id!)}
+                  className="min-h-11 min-w-11 justify-center"
+                >
                   <Text className="font-body text-label text-danger">Remove</Text>
                 </Pressable>
               </View>

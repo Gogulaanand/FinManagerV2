@@ -12,7 +12,7 @@ export default function NewHoldingRoute() {
   if (api.loading) return <MobileWorkspaceSkeleton label="Loading holding form" />;
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView contentContainerClassName="gap-4 p-4 pb-12">
+      <ScrollView contentContainerClassName="gap-5 p-5 pb-12">
         <MobileHoldingForm
           onSave={async (holding) => {
             await api.saveHolding(holding);

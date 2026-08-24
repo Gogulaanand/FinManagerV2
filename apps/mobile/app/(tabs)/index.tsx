@@ -3,12 +3,13 @@ import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Amount, Delta } from '../../components/amount';
-import { Card, CardLabel, CardTitle } from '../../components/card';
+import { Card, CardLabel, CardTitle, ForecastCard } from '../../components/card';
 import { CategoryIcon } from '../../components/category-icon';
 import { AssetAllocationCard } from '../../components/dashboard/asset-allocation-card';
 import { MotionProgress } from '../../components/motion';
 import { FinancialHealthCard } from '../../components/insights/financial-health-card';
 import { useDashboard } from '../../lib/dashboard';
+import { ScreenHeader, SectionHeading } from '../../components/screen-header';
 
 function StatTile({
   label,
@@ -20,7 +21,7 @@ function StatTile({
   delta?: number | null;
 }) {
   return (
-    <Card className="flex-1">
+    <Card className="min-w-0 flex-1 p-3.5">
       <CardLabel>{label}</CardLabel>
       <View className="mt-1">
         <Amount value={value} size="tile" />
@@ -56,11 +57,15 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView contentContainerClassName="gap-4 p-4" showsVerticalScrollIndicator={false}>
-        <Text className="font-display text-headline-lg text-foreground">Dashboard</Text>
+      <ScrollView contentContainerClassName="gap-5 p-5 pb-32" showsVerticalScrollIndicator={false}>
+        <ScreenHeader
+          eyebrow="Your money, at a glance"
+          title="Good morning."
+          subtitle="A clear view of where things stand, and what matters next."
+        />
 
-        <Card>
-          <CardLabel>Total net worth</CardLabel>
+        <Card className="gap-1 p-5">
+          <CardLabel>Current net worth</CardLabel>
           <View className="mt-1">
             <Amount value={netWorth} size="hero" />
           </View>
@@ -77,15 +82,18 @@ export default function DashboardScreen() {
 
         <FinancialHealthCard />
 
-        <View className="flex-row gap-4">
-          <StatTile label="This month spend" value={monthSpend} delta={monthSpendChange} />
-          <StatTile label="Invested" value={invested} />
+        <View className="gap-2">
+          <SectionHeading title="This month" detail="so far" />
+          <View className="flex-row gap-3">
+            <StatTile label="This month spend" value={monthSpend} delta={monthSpendChange} />
+            <StatTile label="Invested" value={invested} />
+          </View>
         </View>
 
         <AssetAllocationCard allocation={allocation} />
 
         {fire && (
-          <Card>
+          <ForecastCard>
             <View className="mb-4 flex-row items-center justify-between">
               <CardTitle>FIRE progress</CardTitle>
               <Text
@@ -118,13 +126,11 @@ export default function DashboardScreen() {
                 <Amount value={fire.target} />
               </View>
             </View>
-          </Card>
+          </ForecastCard>
         )}
 
         <Card>
-          <View className="mb-2">
-            <CardTitle>Recent transactions</CardTitle>
-          </View>
+          <SectionHeading title="Recent activity" detail={`${recentActivity.length} latest`} />
 
           {recentActivity.length === 0 ? (
             <CardLabel>

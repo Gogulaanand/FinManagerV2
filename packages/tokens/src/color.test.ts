@@ -31,6 +31,26 @@ describe('color tokens', () => {
     expect(Object.keys(light).sort()).toEqual(Object.keys(dark).sort());
   });
 
+  it('names the Calm Intelligence accent and forecast surfaces', () => {
+    expect(light).toMatchObject({
+      background: '#F4F3EE',
+      surface: '#FFFEFA',
+      foreground: '#17211D',
+      foregroundMuted: '#53615C',
+      primary: '#0F766E',
+      accent: '#B8D84A',
+      forecast: '#E7E2F6',
+    });
+    expect(dark).toMatchObject({
+      background: '#101714',
+      surface: '#18211E',
+      foreground: '#F3F3EA',
+      primary: '#2DD4BF',
+      accent: '#C5E85C',
+      forecast: '#4D456C',
+    });
+  });
+
   it('uses six-digit hex everywhere, so the RN and CSS consumers agree', () => {
     for (const [, scheme] of modes) {
       for (const value of Object.values(scheme)) {
@@ -60,6 +80,11 @@ describe('color tokens', () => {
 
     it('clears AA for text on a primary fill', () => {
       expect(contrast(scheme.primaryForeground, scheme.primary)).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('clears AA for text on accent and forecast surfaces', () => {
+      expect(contrast(scheme.accentForeground, scheme.accent)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(scheme.forecastForeground, scheme.forecast)).toBeGreaterThanOrEqual(4.5);
     });
 
     /**

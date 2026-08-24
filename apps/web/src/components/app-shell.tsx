@@ -12,8 +12,10 @@ import { ThemeToggle } from '@/components/theme-toggle';
 function PublicShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
-      <header className="flex h-16 items-center gap-4 border-b border-border bg-surface px-4 md:px-8">
-        <span className="font-display text-headline-md text-foreground">FinManager</span>
+      <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-border/70 bg-background/85 px-4 backdrop-blur-xl md:px-8">
+        <span className="font-display text-xl font-semibold tracking-[-0.04em] text-foreground">
+          FinManager
+        </span>
         <div className="ml-auto flex items-center gap-2">
           <AuthStatus />
           <ThemeToggle />
@@ -30,8 +32,8 @@ function ProductShell({ children }: { children: ReactNode }) {
       <Sidebar />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center gap-4 border-b border-border bg-surface px-4 md:px-6">
-          <span className="font-display text-headline-md text-foreground md:hidden">
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b border-border/70 bg-background/85 px-4 backdrop-blur-xl md:px-6">
+          <span className="font-display text-xl font-semibold tracking-[-0.04em] text-foreground md:hidden">
             FinManager
           </span>
           <div className="ml-auto flex items-center gap-2">
@@ -41,8 +43,8 @@ function ProductShell({ children }: { children: ReactNode }) {
         </header>
 
         {/* pb-20 clears the fixed tab bar, which only exists below md. */}
-        <main className="flex-1 px-4 py-6 pb-20 md:px-6 md:pb-6">
-          <div className="mx-auto w-full max-w-5xl">{children}</div>
+        <main className="flex-1 overflow-x-clip px-4 py-6 pb-24 sm:px-5 md:px-8 md:py-8 md:pb-8 xl:px-10">
+          <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
       </div>
 

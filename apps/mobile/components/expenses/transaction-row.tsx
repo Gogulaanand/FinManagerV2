@@ -35,7 +35,7 @@ export const TransactionRow = memo(function TransactionRow({
         accessibilityRole="button"
         accessibilityLabel="Edit transaction"
         onPress={() => onEdit(transaction)}
-        className="rounded-md bg-surface-muted px-2 py-2"
+        className="min-h-11 min-w-11 items-center justify-center rounded-lg bg-surface-muted px-2 py-2"
       >
         <Text className="font-body text-caption text-foreground">Edit</Text>
       </Pressable>
@@ -43,7 +43,7 @@ export const TransactionRow = memo(function TransactionRow({
         accessibilityRole="button"
         accessibilityLabel="Delete transaction"
         onPress={() => onDelete(transaction)}
-        className="rounded-md bg-surface-muted px-2 py-2"
+        className="min-h-11 min-w-11 items-center justify-center rounded-lg bg-surface-muted px-2 py-2"
       >
         <Text className="font-body text-caption text-loss">Delete</Text>
       </Pressable>

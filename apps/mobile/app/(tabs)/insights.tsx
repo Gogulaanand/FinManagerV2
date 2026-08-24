@@ -24,6 +24,7 @@ import {
 import { MobileWorkspaceSkeleton, useInitialSkeleton } from '../../components/motion';
 import { useAuth } from '../../components/providers';
 import { useInsights } from '../../lib/insights';
+import { ScreenHeader } from '../../components/screen-header';
 
 const scopes: readonly {
   value: InsightScope;
@@ -119,20 +120,15 @@ function InsightsContent() {
       >
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-4 p-4"
+          contentContainerClassName="gap-5 p-5 pb-8"
           keyboardShouldPersistTaps="handled"
         >
-          <View className="flex-row items-start gap-3">
-            <View className="mt-1 size-10 items-center justify-center rounded-full bg-primary/10">
-              <Ionicons name="sparkles" size={21} color={scheme.primary} />
-            </View>
-            <View className="flex-1">
-              <Text className="font-display text-headline-lg text-foreground">AI Insights</Text>
-              <Text className="font-body text-body-md text-foreground-muted">
-                A private assistant grounded in the financial data on this device.
-              </Text>
-            </View>
-          </View>
+          <ScreenHeader
+            eyebrow="A quieter way to understand"
+            title="Insights"
+            subtitle="Ask about your finances in plain language. Answers stay grounded in the data on this device."
+            icon="sparkles-outline"
+          />
 
           {api.latestSummary ? (
             <Card>
@@ -188,7 +184,7 @@ function InsightsContent() {
             </Card>
           ) : null}
 
-          <Card className="gap-3">
+          <Card className="gap-3 p-5">
             <CardLabel>Focus area</CardLabel>
             <ScrollView
               horizontal
@@ -204,7 +200,7 @@ function InsightsContent() {
                     accessibilityState={{ selected }}
                     accessibilityLabel={`${option.label} focus`}
                     onPress={() => setScope(option.value)}
-                    className={`min-w-24 items-center gap-1 rounded-md border px-3 py-3 ${
+                    className={`min-w-24 min-h-20 items-center gap-1 rounded-xl border px-3 py-3 ${
                       selected ? 'border-primary bg-primary/10' : 'border-border bg-background'
                     }`}
                   >
@@ -226,7 +222,7 @@ function InsightsContent() {
             </ScrollView>
           </Card>
 
-          <Card className="gap-3">
+          <Card className="gap-3 p-5">
             <View className="flex-row items-center gap-2">
               <Ionicons name="bulb" size={17} color={scheme.primary} />
               <CardLabel>Suggested questions</CardLabel>
@@ -243,7 +239,7 @@ function InsightsContent() {
             </View>
           </Card>
 
-          <Card className="gap-4">
+          <Card className="gap-4 p-5">
             <View className="flex-row items-center justify-between">
               <View>
                 <CardTitle>Conversation</CardTitle>
@@ -295,7 +291,7 @@ function InsightsContent() {
           </Card>
         </ScrollView>
 
-        <View className="flex-row gap-2 border-t border-border bg-surface p-4">
+        <View className="mx-5 mb-24 flex-row gap-2 rounded-2xl border border-border bg-surface px-3 py-3 shadow-sm">
           <TextInput
             value={question}
             onChangeText={setQuestion}
@@ -305,7 +301,7 @@ function InsightsContent() {
             onSubmitEditing={() => void ask(question)}
             returnKeyType="send"
             accessibilityLabel="Ask AI Insights"
-            className="min-h-11 flex-1 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
+            className="min-h-12 flex-1 rounded-xl border border-border bg-background px-3 font-body text-body-md text-foreground"
           />
           <InsightAction
             label={sending ? 'Answering…' : 'Send'}

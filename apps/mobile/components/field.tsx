@@ -13,8 +13,10 @@ export interface FieldProps {
 
 export function Field({ label, hint, children }: FieldProps) {
   return (
-    <View className="gap-1.5">
-      <Text className="font-body text-label text-foreground-muted">{label}</Text>
+    <View className="gap-2">
+      <Text className="font-data text-label uppercase tracking-wider text-foreground-muted">
+        {label}
+      </Text>
       {children}
       {hint ? <Text className="font-body text-caption text-foreground-muted">{hint}</Text> : null}
     </View>
@@ -38,7 +40,7 @@ export interface CurrencyFieldProps {
 export function CurrencyField({ label, value, onChange, hint }: CurrencyFieldProps) {
   return (
     <Field label={label} hint={hint}>
-      <View className="flex-row items-center rounded-md border border-border bg-background px-3">
+      <View className="min-h-12 flex-row items-center rounded-lg border border-border bg-background px-3">
         <Text className="font-body text-body-md text-foreground-muted">₹</Text>
         <TextInput
           value={value === 0 ? '' : String(value)}
@@ -49,7 +51,7 @@ export function CurrencyField({ label, value, onChange, hint }: CurrencyFieldPro
             const next = Number.parseFloat(text.replace(/[^0-9.]/g, ''));
             onChange(Number.isFinite(next) && next >= 0 ? next : 0);
           }}
-          className="h-11 flex-1 pl-1 font-body text-body-md text-foreground"
+          className="h-12 flex-1 pl-1 font-body text-body-md text-foreground"
           style={{ fontVariant: ['tabular-nums'] }}
         />
       </View>
@@ -68,7 +70,7 @@ export interface PercentFieldProps {
 export function PercentField({ label, value, onChange }: PercentFieldProps) {
   return (
     <Field label={label}>
-      <View className="flex-row items-center rounded-md border border-border bg-background px-3">
+      <View className="min-h-12 flex-row items-center rounded-lg border border-border bg-background px-3">
         <TextInput
           // Without the fixed precision, 0.0481 renders as 4.8100000000000005.
           value={String(ratioToPercent(value))}
@@ -78,7 +80,7 @@ export function PercentField({ label, value, onChange }: PercentFieldProps) {
             const next = Number.parseFloat(text.replace(/[^0-9.]/g, ''));
             onChange(percentToRatio(next));
           }}
-          className="h-11 flex-1 font-body text-body-md text-foreground"
+          className="h-12 flex-1 font-body text-body-md text-foreground"
           style={{ fontVariant: ['tabular-nums'] }}
         />
         <Text className="font-body text-body-md text-foreground-muted">%</Text>
@@ -111,7 +113,7 @@ export function Segmented<T extends string>({
 }: SegmentedProps<T>) {
   return (
     <Field label={label} hint={hint}>
-      <View className="flex-row gap-1 rounded-lg bg-surface-muted p-1">
+      <View className="flex-row gap-1 rounded-xl bg-surface-muted p-1">
         {options.map((o) => {
           const active = o.value === value;
           return (
@@ -122,7 +124,7 @@ export function Segmented<T extends string>({
               }}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
-              className={`flex-1 items-center rounded-md px-2 py-2 ${active ? 'bg-surface' : ''}`}
+              className={`min-h-11 flex-1 items-center justify-center rounded-lg px-2 py-2 ${active ? 'bg-surface' : ''}`}
             >
               <Text
                 className={`font-body text-label ${active ? 'text-foreground' : 'text-foreground-muted'}`}
@@ -158,7 +160,7 @@ export function CheckField({ label, checked, onChange }: CheckFieldProps) {
       }}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
-      className="flex-row items-center gap-2 py-1"
+      className="min-h-11 flex-row items-center gap-2 py-1"
     >
       <View
         className={`size-5 items-center justify-center rounded-sm border ${

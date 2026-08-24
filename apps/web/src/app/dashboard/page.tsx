@@ -47,8 +47,15 @@ export default function DashboardPage() {
   } = useDashboard();
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="font-display text-headline-lg text-foreground">Dashboard</h1>
+    <div className="page-stack">
+      <div>
+        <p className="font-utility text-label uppercase tracking-[0.14em] text-foreground-muted">
+          Today&apos;s position
+        </p>
+        <h1 className="page-heading mt-2 font-display text-display-md text-foreground">
+          Dashboard
+        </h1>
+      </div>
 
       <Card className="flex flex-col gap-2">
         <CardLabel>Total net worth</CardLabel>
@@ -72,10 +79,10 @@ export default function DashboardPage() {
       <AssetAllocationCard allocation={allocation} />
 
       {fire && (
-        <Card>
+        <Card className="forecast-lens ring-0">
           <CardHeader>
             <CardTitle>FIRE progress</CardTitle>
-            <span className="tabular font-display text-headline-md text-primary">
+            <span className="tabular font-display text-headline-md text-forecast-foreground">
               {formatPercent(fire.progress, 0)}
             </span>
           </CardHeader>
@@ -89,7 +96,7 @@ export default function DashboardPage() {
             aria-label="FIRE progress"
           >
             <div
-              className="h-full rounded-full bg-primary"
+              className="h-full rounded-full bg-accent"
               data-motion-progress
               data-progress={fire.progress}
               style={{

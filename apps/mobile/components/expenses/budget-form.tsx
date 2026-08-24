@@ -28,7 +28,7 @@ function ChoiceRow({
             key={option.value}
             onPress={() => onChange(option.value)}
             accessibilityRole="button"
-            className={`rounded-full px-3 py-2 font-body text-label ${option.value === value ? 'bg-primary text-primary-foreground' : 'bg-surface-muted text-foreground'}`}
+            className={`min-h-11 rounded-full px-3 py-2 font-body text-label ${option.value === value ? 'bg-primary text-primary-foreground' : 'bg-surface-muted text-foreground'}`}
           >
             {option.label}
           </Text>
@@ -71,12 +71,12 @@ export function MobileBudgetForm({
     await onSave(parsed.data);
   }
   return (
-    <ScrollView className="flex-1" contentContainerClassName="gap-4 p-4 pb-12">
+    <ScrollView className="flex-1" contentContainerClassName="gap-5 p-5 pb-12">
       <View>
         <Text className="font-display text-headline-lg text-foreground">Set monthly budget</Text>
         <Text className="font-body text-body-md text-foreground-muted">{month}</Text>
       </View>
-      <Card className="gap-4">
+      <Card className="gap-4 p-5">
         <ChoiceRow
           label="Category"
           value={categoryId}
@@ -92,7 +92,7 @@ export function MobileBudgetForm({
             onChangeText={setAmount}
             placeholder="₹ amount"
             keyboardType="decimal-pad"
-            className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
+            className="min-h-12 rounded-lg border border-border bg-background px-3 font-body text-body-md text-foreground"
           />
         </Field>
         {error ? <Text className="font-body text-caption text-loss">{error}</Text> : null}
@@ -100,16 +100,16 @@ export function MobileBudgetForm({
           <Pressable
             accessibilityRole="button"
             onPress={onCancel}
-            className="flex-1 rounded-md bg-surface-muted py-3"
+            className="min-h-12 flex-1 rounded-lg bg-surface-muted py-3"
           >
             <Text className="text-center text-foreground">Cancel</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
             onPress={() => void submit()}
-            className="flex-1 rounded-md bg-primary py-3"
+            className="min-h-12 flex-1 rounded-lg bg-accent py-3"
           >
-            <Text className="text-center text-primary-foreground">Save</Text>
+            <Text className="text-center text-accent-foreground">Save</Text>
           </Pressable>
         </View>
       </Card>

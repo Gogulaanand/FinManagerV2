@@ -88,7 +88,7 @@ export function MobileExpenseTemplateImport() {
       <Pressable
         onPress={() => void downloadSample()}
         accessibilityRole="button"
-        className="h-11 justify-center rounded-md bg-surface-muted px-4"
+        className="min-h-11 justify-center rounded-lg bg-surface-muted px-4"
       >
         <Text className="text-center font-body text-body-md text-foreground">Share sample CSV</Text>
       </Pressable>
@@ -96,7 +96,7 @@ export function MobileExpenseTemplateImport() {
         onPress={() => void pickAndImport()}
         disabled={busy}
         accessibilityRole="button"
-        className="h-11 justify-center rounded-md bg-primary px-4"
+        className="min-h-11 justify-center rounded-lg bg-primary px-4"
       >
         <Text className="text-center font-body text-body-md text-primary-foreground">
           {busy ? 'Importing…' : 'Choose template CSV'}

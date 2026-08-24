@@ -96,7 +96,7 @@ export function ExpenseSetupSections({
             accessibilityRole="button"
             onPress={() => void saveAccount()}
             disabled={!api.canWrite || !accountName.trim()}
-            className="rounded-md bg-primary py-3 disabled:opacity-50"
+            className="min-h-11 justify-center rounded-lg bg-primary py-3 disabled:opacity-50"
           >
             <Text className="text-center text-primary-foreground">Add account</Text>
           </Pressable>
@@ -124,6 +124,7 @@ export function ExpenseSetupSections({
                     },
                   ])
                 }
+                className="min-h-11 min-w-11 items-center justify-center"
               >
                 <Text className="text-loss">Delete</Text>
               </Pressable>
@@ -152,7 +153,7 @@ export function ExpenseSetupSections({
             accessibilityRole="button"
             onPress={() => void saveCategory()}
             disabled={!api.canWrite || !categoryName.trim()}
-            className="rounded-md bg-primary py-3 disabled:opacity-50"
+            className="min-h-11 justify-center rounded-lg bg-primary py-3 disabled:opacity-50"
           >
             <Text className="text-center text-primary-foreground">Add category</Text>
           </Pressable>
@@ -183,6 +184,7 @@ export function ExpenseSetupSections({
                       },
                     ])
                   }
+                  className="min-h-11 min-w-11 items-center justify-center"
                 >
                   <Text className="text-loss">Delete</Text>
                 </Pressable>

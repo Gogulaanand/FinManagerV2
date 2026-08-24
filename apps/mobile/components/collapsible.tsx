@@ -24,7 +24,7 @@ export function Collapsible({
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen((current) => !current)}
-        className="flex-row items-center justify-between gap-3 py-1"
+        className="min-h-11 flex-row items-center justify-between gap-3 py-1"
       >
         <View className="flex-row items-center gap-2">
           <Text className="font-display text-headline-sm text-foreground">{title}</Text>

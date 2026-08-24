@@ -7,10 +7,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card, CardLabel, CardTitle } from '../../components/card';
 import { DeadmanSettings } from '../../components/settings/deadman-settings';
+import { MobileDataExport } from '../../components/settings/data-export';
 import { MobileDataRestore } from '../../components/settings/data-restore';
 import { MobileSyncHealth } from '../../components/settings/sync-health';
 import { useAuth } from '../../components/providers';
 import { MobileSafeSignOut } from '../../components/safe-sign-out';
+import { ScreenHeader } from '../../components/screen-header';
+import { useThemePreference } from '../../components/theme-preference';
 
 type Choice = 'light' | 'system' | 'dark';
 
@@ -33,20 +36,21 @@ const choices: ReadonlyArray<{
  * the tab bar remains focused on day-to-day finance modules.
  */
 export default function SettingsScreen() {
-  const { colorScheme, setColorScheme } = useColorScheme();
+  const { colorScheme } = useColorScheme();
+  const { preference, setPreference } = useThemePreference();
   const scheme = color[colorScheme === 'dark' ? 'dark' : 'light'];
   const router = useRouter();
   const { session } = useAuth();
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView contentContainerClassName="gap-4 p-4 pb-12">
-        <View className="flex-row items-center gap-3">
-          <View className="size-10 items-center justify-center rounded-full bg-primary/10">
-            <Ionicons name="settings" size={21} color={scheme.primary} />
-          </View>
-          <Text className="font-display text-headline-lg text-foreground">Settings</Text>
-        </View>
+      <ScrollView contentContainerClassName="gap-5 p-5 pb-32">
+        <ScreenHeader
+          eyebrow="Your preferences"
+          title="Settings"
+          subtitle="Make FinManager feel like yours, while keeping your data portable and protected."
+          icon="settings-outline"
+        />
 
         <Card>
           <View className="mb-3 flex-row items-center gap-2">
@@ -56,19 +60,15 @@ export default function SettingsScreen() {
 
           <View className="flex-row gap-2">
             {choices.map(({ value, label, icon }) => {
-              // NativeWind reports the resolved scheme, not the stored choice,
-              // so 'system' cannot be shown as active without tracking it
-              // separately. Phase 3 persists this properly alongside the rest
-              // of the user's preferences.
-              const active = colorScheme === value;
+              const active = preference === value;
               return (
                 <Pressable
                   key={value}
-                  onPress={() => setColorScheme(value)}
+                  onPress={() => setPreference(value)}
                   accessibilityRole="button"
                   accessibilityLabel={label}
                   accessibilityState={{ selected: active }}
-                  className={`flex-1 items-center gap-1 rounded-md py-3 ${
+                  className={`min-h-16 flex-1 items-center justify-center gap-1 rounded-xl py-3 ${
                     active ? 'bg-primary' : 'bg-surface-muted'
                   }`}
                 >
@@ -109,9 +109,9 @@ export default function SettingsScreen() {
               <Pressable
                 onPress={() => router.push('/login')}
                 accessibilityRole="button"
-                className="h-11 justify-center rounded-md bg-primary px-4"
+                className="min-h-12 justify-center rounded-lg bg-accent px-4"
               >
-                <Text className="text-center font-body text-body-md text-primary-foreground">
+                <Text className="text-center font-body text-body-md text-accent-foreground">
                   Sign in
                 </Text>
               </Pressable>
@@ -119,6 +119,7 @@ export default function SettingsScreen() {
           )}
         </Card>
         <MobileSyncHealth />
+        <MobileDataExport />
         <MobileDataRestore />
         <DeadmanSettings />
       </ScrollView>

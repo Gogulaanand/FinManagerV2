@@ -86,7 +86,7 @@ export function MobileSafeSignOut() {
         onPress={() => void attemptSignOut()}
         disabled={busy}
         accessibilityRole="button"
-        className="h-11 justify-center rounded-md bg-surface-muted px-4"
+        className="min-h-12 justify-center rounded-lg bg-surface-muted px-4"
       >
         <Text className="text-center font-body text-body-md text-foreground">
           {busy ? 'Checking sync…' : 'Sign out'}
@@ -95,7 +95,7 @@ export function MobileSafeSignOut() {
 
       {result ? (
         <View accessibilityRole="alert" className="gap-3 rounded-md border border-warning p-3">
-          <Text className="font-body text-body-md font-medium text-foreground">
+          <Text className="font-body-medium text-body-md text-foreground">
             Unsynced work is still on this device
           </Text>
           <CardLabel>
@@ -108,9 +108,9 @@ export function MobileSafeSignOut() {
               onPress={() => void attemptSignOut()}
               disabled={busy}
               accessibilityRole="button"
-              className="h-11 justify-center rounded-md bg-primary px-4"
+              className="min-h-12 justify-center rounded-lg bg-accent px-4"
             >
-              <Text className="text-center font-body text-body-md text-primary-foreground">
+              <Text className="text-center font-body text-body-md text-accent-foreground">
                 Retry final sync
               </Text>
             </Pressable>
@@ -118,7 +118,7 @@ export function MobileSafeSignOut() {
               onPress={() => void exportRecovery()}
               disabled={busy}
               accessibilityRole="button"
-              className="h-11 justify-center rounded-md bg-surface-muted px-4"
+              className="min-h-12 justify-center rounded-lg bg-surface-muted px-4"
             >
               <Text className="text-center font-body text-body-md text-foreground">
                 {recoveryExported ? 'Recovery saved' : 'Save recovery file'}
@@ -128,7 +128,7 @@ export function MobileSafeSignOut() {
               onPress={closeWarning}
               disabled={busy}
               accessibilityRole="button"
-              className="h-11 justify-center rounded-md px-4"
+              className="min-h-12 justify-center rounded-lg px-4"
             >
               <Text className="text-center font-body text-body-md text-foreground-muted">
                 Stay signed in
@@ -139,7 +139,7 @@ export function MobileSafeSignOut() {
             onPress={() => setDiscardAcknowledged((value) => !value)}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: discardAcknowledged }}
-            className="flex-row items-start gap-2"
+            className="min-h-11 flex-row items-start gap-2"
           >
             <Text className="font-body text-body-md text-foreground">
               {discardAcknowledged ? '☑' : '☐'}
@@ -153,7 +153,7 @@ export function MobileSafeSignOut() {
             onPress={() => void discardAndSignOut()}
             disabled={busy || !recoveryExported || !discardAcknowledged}
             accessibilityRole="button"
-            className="h-11 justify-center rounded-md border border-loss px-4 disabled:opacity-50"
+            className="min-h-12 justify-center rounded-lg border border-loss px-4 disabled:opacity-50"
           >
             <Text className="text-center font-body text-body-md text-loss">
               Discard local-only changes and sign out

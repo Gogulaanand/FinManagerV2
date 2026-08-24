@@ -84,7 +84,7 @@ export function MobileDataExport() {
   }
 
   return (
-    <Card className="gap-3">
+    <Card className="gap-3 p-5">
       <CardTitle>Data export</CardTitle>
       <CardLabel>
         Create a versioned JSON backup or share CSV files for transactions and holdings.
@@ -94,9 +94,9 @@ export function MobileDataExport() {
           onPress={() => void run('json')}
           disabled={busy}
           accessibilityRole="button"
-          className="h-11 justify-center rounded-md bg-primary px-4"
+          className="min-h-12 justify-center rounded-lg bg-accent px-4"
         >
-          <Text className="text-center font-body text-body-md text-primary-foreground">
+          <Text className="text-center font-body text-body-md text-accent-foreground">
             Export full backup
           </Text>
         </Pressable>
@@ -104,7 +104,7 @@ export function MobileDataExport() {
           onPress={() => void run('csv')}
           disabled={busy}
           accessibilityRole="button"
-          className="h-11 justify-center rounded-md bg-surface-muted px-4"
+          className="min-h-12 justify-center rounded-lg bg-surface-muted px-4"
         >
           <Text className="text-center font-body text-body-md text-foreground">
             Share module CSVs

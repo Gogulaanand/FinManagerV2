@@ -20,7 +20,7 @@ export default function EditTransactionRoute() {
   if (api.loading || !initial) return <MobileWorkspaceSkeleton label="Loading transaction" />;
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView contentContainerClassName="gap-4 p-4 pb-12">
+      <ScrollView contentContainerClassName="gap-5 p-5 pb-12">
         <MobileTransactionForm
           key={initial.id}
           accounts={api.accounts}
