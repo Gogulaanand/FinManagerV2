@@ -96,6 +96,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         // the sync connection is still starting; publishing it first keeps
         // protected routes from redirecting during that bounded startup gap.
         setSession(nextSession);
+        setLoading(false);
         try {
           await db.connect(getConnector());
         } catch {

@@ -3,15 +3,14 @@
 import { type Transaction } from '@finmanager/schema';
 import { resolveCategoryPresentation } from '@finmanager/core';
 import { useState } from 'react';
-import { useStatus } from '@powersync/react';
 
 import { Amount } from '@/components/amount';
 import { CategoryIcon } from '@/components/category-icon';
-import { useInitialSkeleton, WorkspaceSkeleton } from '@/components/motion/skeleton';
+import { useInitialSkeleton } from '@/components/motion/skeleton';
+import { DataLoadingState, SyncDataBoundary } from '@/components/sync-data-boundary';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { useExpenses } from '@/lib/expenses';
-import { useAuth } from '@/components/providers';
 
 import { BudgetSection } from './budget-section';
 import { CsvImport } from './csv-import';
@@ -25,12 +24,11 @@ function displayAmount(transaction: Transaction): number {
 }
 
 export function ExpensesWorkspace() {
-  const status = useStatus();
-  const { session, loading } = useAuth();
-  if (loading || (session !== null && !status.hasSynced)) {
-    return <WorkspaceSkeleton label="Loading expenses" />;
-  }
-  return <ExpensesWorkspaceContent />;
+  return (
+    <SyncDataBoundary label="Loading expenses">
+      <ExpensesWorkspaceContent />
+    </SyncDataBoundary>
+  );
 }
 
 function ExpensesWorkspaceContent() {
@@ -47,7 +45,8 @@ function ExpensesWorkspaceContent() {
     );
   }
 
-  if (api.loading || initialSkeleton) return <WorkspaceSkeleton label="Loading expenses" />;
+  if (api.loading || initialSkeleton)
+    return <DataLoadingState label="Loading expenses" failed={api.dataError} />;
 
   return (
     <div className="flex flex-col gap-4">

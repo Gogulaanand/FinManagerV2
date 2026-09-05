@@ -1,6 +1,8 @@
 'use client';
 
 import { formatPercent, ratioToPercent } from '@finmanager/core';
+import Link from 'next/link';
+import { SyncDataBoundary } from '@/components/sync-data-boundary';
 import { Amount, Delta } from '@/components/amount';
 import { CategoryIcon } from '@/components/category-icon';
 import { AssetAllocationCard } from '@/components/dashboard/asset-allocation-card';
@@ -14,13 +16,17 @@ function StatTile({
   delta,
 }: {
   label: string;
-  value: number;
+  value: number | null;
   delta?: number | null;
 }) {
   return (
     <Card className="flex flex-col gap-1">
       <CardLabel>{label}</CardLabel>
-      <Amount value={value} size="section" />
+      {value === null ? (
+        <CardLabel>Unavailable</CardLabel>
+      ) : (
+        <Amount value={value} size="section" />
+      )}
       {delta !== null && delta !== undefined && <Delta ratio={delta} />}
     </Card>
   );
@@ -34,11 +40,22 @@ function formatDay(isoDate: string): string {
 }
 
 export default function DashboardPage() {
+  return (
+    <SyncDataBoundary label="Loading dashboard">
+      <DashboardContent />
+    </SyncDataBoundary>
+  );
+}
+
+function DashboardContent() {
   const {
     loading,
     hasData,
     netWorth,
     invested,
+    portfolioComplete,
+    missingValuations,
+    missingFx,
     monthSpend,
     monthSpendChange,
     fire,
@@ -52,24 +69,51 @@ export default function DashboardPage() {
 
       <Card className="flex flex-col gap-2">
         <CardLabel>Total net worth</CardLabel>
-        <Amount value={netWorth} size="hero" />
+        {netWorth === null ? (
+          <CardTitle>Unavailable</CardTitle>
+        ) : (
+          <Amount value={netWorth} size="hero" />
+        )}
         <span className="font-body text-label text-foreground-muted">
           {loading
-            ? 'Syncing your data…'
-            : hasData
-              ? 'Across your accounts and holdings'
-              : 'Add an account or holding to get started'}
+            ? 'Financial data is still loading.'
+            : !portfolioComplete
+              ? `Partial total: ${missingValuations} unvalued holdings · ${missingFx} missing FX rates`
+              : hasData
+                ? 'Across your accounts and holdings'
+                : 'Add an account or holding to get started'}
         </span>
       </Card>
 
-      <FinancialHealthCard />
+      {!loading && !hasData ? (
+        <div className="flex flex-wrap gap-4 font-body text-body-md text-primary">
+          <Link href="/expenses" className="underline">
+            Add first account or log expense
+          </Link>
+          <Link href="/portfolio" className="underline">
+            Add a holding or import statement
+          </Link>
+        </div>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <StatTile label="This month spend" value={monthSpend} delta={monthSpendChange} />
         <StatTile label="Invested" value={invested} />
       </div>
 
-      <AssetAllocationCard allocation={allocation} />
+      {!loading ? (
+        <AssetAllocationCard allocation={allocation} />
+      ) : (
+        <Card>
+          <CardLabel>Allocation unavailable while data loads.</CardLabel>
+        </Card>
+      )}
+      {!portfolioComplete ? (
+        <CardLabel>
+          Investment and allocation figures include only valued holdings. Review missing valuations
+          and FX in Portfolio.
+        </CardLabel>
+      ) : null}
 
       {fire && (
         <Card>
@@ -120,7 +164,7 @@ export default function DashboardPage() {
 
         {recentActivity.length === 0 ? (
           <CardLabel className="block">
-            {loading ? 'Loading your transactions…' : 'No transactions this month.'}
+            {loading ? 'Transactions unavailable while data loads.' : 'No transactions this month.'}
           </CardLabel>
         ) : (
           <ul className="flex flex-col">
@@ -150,6 +194,7 @@ export default function DashboardPage() {
           </ul>
         )}
       </Card>
+      {!loading && hasData ? <FinancialHealthCard /> : null}
     </div>
   );
 }

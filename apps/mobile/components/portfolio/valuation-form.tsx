@@ -1,4 +1,4 @@
-import { fxRateToInrForCurrency } from '@finmanager/core';
+import { fxRateToInrForCurrency, localDateIso } from '@finmanager/core';
 import type { Holding, Valuation } from '@finmanager/schema';
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
@@ -17,10 +17,9 @@ export function MobileValuationForm({
   const [value, setValue] = useState('');
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [asOf, setAsOf] = useState(new Date().toISOString().slice(0, 10));
-  const [fxRate, setFxRate] = useState(
-    String(holding.manualFxRateToInr ?? holding.automaticPriceFxRateToInr ?? 1),
-  );
+  const [asOf, setAsOf] = useState(localDateIso());
+  // A new dated record needs its own rate; blank keeps its INR value incomplete.
+  const [fxRate, setFxRate] = useState('');
   const [error, setError] = useState<string | null>(null);
   async function submit() {
     try {
@@ -55,7 +54,10 @@ export function MobileValuationForm({
               Value: {holding.currency} {value || '0'}
             </Text>
             {holding.currency !== 'INR' ? (
-              <Field label="FX rate to INR">
+              <Field
+                label={`INR per 1 ${holding.currency}`}
+                hint={`Rate for ${asOf}. Leave blank if unknown; INR totals remain incomplete.`}
+              >
                 <TextInput
                   value={fxRate}
                   onChangeText={setFxRate}

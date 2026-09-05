@@ -4,6 +4,7 @@ import {
   EVENT_KIND_LABELS,
   allowedEventKinds,
   fxRateToInrForCurrency,
+  localDateIso,
   showsQuantityPrice,
 } from '@finmanager/core';
 import type { Holding, HoldingEvent, HoldingEventKind } from '@finmanager/schema';
@@ -22,13 +23,12 @@ export function HoldingEventForm({
 }) {
   const kinds = allowedEventKinds(holding.type);
   const [kind, setKind] = useState<HoldingEventKind>(kinds[0]!);
-  const [occurredOn, setOccurredOn] = useState(new Date().toISOString().slice(0, 10));
+  const [occurredOn, setOccurredOn] = useState(localDateIso());
   const [amount, setAmount] = useState(0);
   const [quantity, setQuantity] = useState('');
   const [price, setPrice] = useState('');
-  const [fxRate, setFxRate] = useState(
-    String(holding.manualFxRateToInr ?? holding.automaticPriceFxRateToInr ?? 1),
-  );
+  // A new dated record needs its own rate; blank keeps its INR value incomplete.
+  const [fxRate, setFxRate] = useState('');
   const [moreOpen, setMoreOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const quantityFields = (
@@ -45,7 +45,7 @@ export function HoldingEventForm({
           />
         )}
       </Field>
-      <Field label="Price (optional)">
+      <Field label={`Price (${holding.currency}, optional)`}>
         {(id) => (
           <Input
             id={id}
@@ -110,7 +110,8 @@ export function HoldingEventForm({
           )}
         </Field>
         <CurrencyField
-          label="Amount"
+          label={`Amount (${holding.currency})`}
+          currency={holding.currency}
           value={amount}
           onChange={setAmount}
           hint={kind === 'vest' ? 'Shares vested is a non-cash event' : undefined}
@@ -121,7 +122,10 @@ export function HoldingEventForm({
             <Field label="Currency">
               {(id) => <Input id={id} value={holding.currency} disabled />}
             </Field>
-            <Field label="FX rate to INR">
+            <Field
+              label={`INR per 1 ${holding.currency}`}
+              hint={`Rate for ${occurredOn}. Leave blank if unknown; INR totals remain incomplete.`}
+            >
               {(id) => (
                 <Input
                   id={id}

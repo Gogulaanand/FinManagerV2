@@ -53,6 +53,7 @@ function rowRecords<T>(rows: readonly T[]): readonly Record<string, unknown>[] {
 
 export interface GoalsApi {
   readonly loading: boolean;
+  readonly dataError: boolean;
   readonly canWrite: boolean;
   readonly goals: readonly Goal[];
   readonly holdings: readonly Holding[];
@@ -83,15 +84,17 @@ export function useGoals(): GoalsApi {
   const accountsResult = useQuery<Account>(ACCOUNTS_QUERY);
   const transactionsResult = useQuery<Transaction>(TRANSACTIONS_QUERY);
 
-  const loading = [
-    goalsResult.data,
-    fireResult.data,
-    holdingsResult.data,
-    eventsResult.data,
-    valuationsResult.data,
-    accountsResult.data,
-    transactionsResult.data,
-  ].some((data) => data === undefined);
+  const queries = [
+    goalsResult,
+    fireResult,
+    holdingsResult,
+    eventsResult,
+    valuationsResult,
+    accountsResult,
+    transactionsResult,
+  ];
+  const dataError = queries.some((query) => Boolean(query.error));
+  const loading = dataError || queries.some((query) => query.isLoading);
 
   const goals = useMemo(() => mapGoalRows(rowRecords(goalsResult.data ?? [])), [goalsResult.data]);
   const holdings = useMemo(
@@ -186,6 +189,7 @@ export function useGoals(): GoalsApi {
 
   return {
     loading,
+    dataError,
     canWrite: userId !== null,
     goals,
     holdings,

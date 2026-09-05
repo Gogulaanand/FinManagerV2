@@ -30,11 +30,13 @@ describe('decomposeSalary', () => {
     }
   });
 
-  it('excludes employer contributions from gross', () => {
+  it('separates cash gross from salary including employer NPS', () => {
     // Employer PF, NPS and gratuity never reach the payslip.
     const s = decomposeSalary({ ctc: 2_400_000, employerNpsRate: 0.1 });
     expect(s.gross).toBe(s.basic + s.hra + s.specialAllowance);
-    expect(s.gross).toBeLessThan(s.ctc);
+    expect(s.gross).toBe(2_142_624);
+    expect(s.employerNps).toBe(96_000);
+    expect(s.taxableGross).toBe(2_238_624);
   });
 
   it('drops HRA to a 40% ceiling outside metros', () => {

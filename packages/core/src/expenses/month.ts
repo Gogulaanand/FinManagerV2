@@ -1,5 +1,7 @@
+import { localDateIso } from '../calendar.js';
+
 export function monthNow(): string {
-  return new Date().toISOString().slice(0, 7);
+  return localDateIso().slice(0, 7);
 }
 
 export function shiftMonth(month: string, offset: number): string {

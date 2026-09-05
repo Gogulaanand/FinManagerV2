@@ -323,21 +323,81 @@ describe('computeTax end to end', () => {
 });
 
 describe('employer NPS under 80CCD(2)', () => {
-  it('survives in the new regime, capped at 14% of basic', () => {
+  // Salary inclusion followed by the permitted deduction:
+  // https://www.incometaxindia.gov.in/en/income-from-salary
+  // Reference CTC 24L: basic 960,000, employer PF 115,200, gratuity 46,176.
+  // Salary including NPS = 2,400,000 - 115,200 - 46,176 = 2,238,624.
+  it.each([
+    // Below both caps: 48,000 is deductible in both regimes.
+    // New taxable = 2,238,624 - 75,000 - 48,000 = 2,115,624.
+    // New tax = (200,000 + 115,624 * 25%) * 1.04 = 238,062.24.
+    // Old taxable = 2,238,624 - 50,000 - 2,500 - 115,200 - 48,000.
+    // Old tax = (112,500 + 1,022,924 * 30%) * 1.04 = 436,152.29.
+    {
+      rate: 0.05,
+      contribution: 48_000,
+      cash: 2_190_624,
+      newDeduction: 48_000,
+      oldDeduction: 48_000,
+      newIncome: 2_115_624,
+      oldIncome: 2_022_924,
+      newTax: 238_062.24,
+      oldTax: 436_152.29,
+      newInHand: 1_834_861.76,
+      oldInHand: 1_636_771.71,
+    },
+    // The adoption-review case: new deduction is 134,400; old caps at 96,000.
+    // New taxable = 2,238,624 - 75,000 - 134,400 = 2,029,224.
+    // New tax = (200,000 + 29,224 * 25%) * 1.04 = 215,598.24.
+    // Old taxable = 2,238,624 - 50,000 - 2,500 - 115,200 - 96,000.
+    // Old tax = (112,500 + 974,924 * 30%) * 1.04 = 421,176.29.
+    {
+      rate: 0.14,
+      contribution: 134_400,
+      cash: 2_104_224,
+      newDeduction: 134_400,
+      oldDeduction: 96_000,
+      newIncome: 2_029_224,
+      oldIncome: 1_974_924,
+      newTax: 215_598.24,
+      oldTax: 421_176.29,
+      newInHand: 1_770_925.76,
+      oldInHand: 1_565_347.71,
+    },
+    // Above both caps: all 192,000 is included; only 134,400 / 96,000
+    // is deducted. Tax matches the capped case; cash take-home falls 57,600.
+    {
+      rate: 0.2,
+      contribution: 192_000,
+      cash: 2_046_624,
+      newDeduction: 134_400,
+      oldDeduction: 96_000,
+      newIncome: 2_029_224,
+      oldIncome: 1_974_924,
+      newTax: 215_598.24,
+      oldTax: 421_176.29,
+      newInHand: 1_713_325.76,
+      oldInHand: 1_507_747.71,
+    },
+  ])('includes the full contribution exactly once at rate $rate', (reference) => {
     const r = computeTax({
       fy: FY,
-      salary: { ctc: 2_400_000, employerNpsRate: 0.2 },
+      salary: { ctc: 2_400_000, employerNpsRate: reference.rate },
     });
-    // Employer contributed 20% of basic but only 14% is deductible.
-    expect(r.new.chapterViA.employerNps).toBe(960_000 * 0.14);
-    expect(r.new.chapterViA.total).toBe(960_000 * 0.14);
-  });
-
-  it('is capped at 10% of basic in the old regime for non-government employers', () => {
-    const r = computeTax({
-      fy: FY,
-      salary: { ctc: 2_400_000, employerNpsRate: 0.2 },
-    });
-    expect(r.old.chapterViA.employerNps).toBe(960_000 * 0.1);
+    expect(r.salary.employerNps).toBe(reference.contribution);
+    expect(r.salary.gross).toBe(reference.cash);
+    expect(r.salary.taxableGross).toBe(2_238_624);
+    expect(r.new.taxableGross).toBe(2_238_624);
+    expect(r.old.taxableGross).toBe(2_238_624);
+    expect(r.new.chapterViA.employerNps).toBe(reference.newDeduction);
+    expect(r.new.chapterViA.total).toBe(reference.newDeduction);
+    expect(r.old.chapterViA.employerNps).toBe(reference.oldDeduction);
+    expect(r.new.taxableIncome).toBe(reference.newIncome);
+    expect(r.old.taxableIncome).toBe(reference.oldIncome);
+    expect(r.new.totalTax).toBe(reference.newTax);
+    expect(r.old.totalTax).toBe(reference.oldTax);
+    // Take-home uses cash salary, less employee PF 115,200, PT 2,500 and tax.
+    expect(r.new.annualInHand).toBe(reference.newInHand);
+    expect(r.old.annualInHand).toBe(reference.oldInHand);
   });
 });

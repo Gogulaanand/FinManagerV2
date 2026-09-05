@@ -19,18 +19,17 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useStatus } from '@powersync/react';
 
 import { Amount } from '@/components/amount';
 import { CategoryIcon } from '@/components/category-icon';
-import { useInitialSkeleton, WorkspaceSkeleton } from '@/components/motion/skeleton';
+import { useInitialSkeleton } from '@/components/motion/skeleton';
+import { DataLoadingState, SyncDataBoundary } from '@/components/sync-data-boundary';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 import { HoldingForm } from './holding-form';
 import { PortfolioImport } from './portfolio-import';
 import { usePortfolio } from '@/lib/portfolio';
-import { useAuth } from '@/components/providers';
 
 function xirrLabel(status: string, rate: number | null): string {
   if (status === 'ok' && rate !== null) return formatPercent(rate, 2);
@@ -43,12 +42,11 @@ function xirrLabel(status: string, rate: number | null): string {
 }
 
 export function PortfolioWorkspace() {
-  const status = useStatus();
-  const { session, loading } = useAuth();
-  if (loading || (session !== null && !status.hasSynced)) {
-    return <WorkspaceSkeleton label="Loading portfolio" />;
-  }
-  return <PortfolioWorkspaceContent />;
+  return (
+    <SyncDataBoundary label="Loading portfolio">
+      <PortfolioWorkspaceContent />
+    </SyncDataBoundary>
+  );
 }
 
 function PortfolioWorkspaceContent() {
@@ -73,7 +71,8 @@ function PortfolioWorkspaceContent() {
     setRefreshing(false);
   }
 
-  if (api.loading || initialSkeleton) return <WorkspaceSkeleton label="Loading portfolio" />;
+  if (api.loading || initialSkeleton)
+    return <DataLoadingState label="Loading portfolio" failed={api.dataError} />;
 
   return (
     <div className="flex flex-col gap-5">
@@ -133,8 +132,8 @@ function PortfolioWorkspaceContent() {
           <Amount value={api.summary.netWorth} size="section" />
           <p className="mt-1 font-body text-caption text-foreground-muted">
             {api.summary.isComplete
-              ? 'Complete tracked view'
-              : `${api.summary.unvaluedHoldingCount} unvalued · ${api.summary.missingFxCount} missing FX`}
+              ? 'Complete tracked view of locally saved records'
+              : `Partial total: ${api.summary.unvaluedHoldingCount} unvalued · ${api.summary.missingFxCount} missing FX`}
           </p>
         </Card>
         <Card>
@@ -180,6 +179,10 @@ function PortfolioWorkspaceContent() {
           ) : (
             <div className="flex flex-col gap-3">
               {api.holdings.map((holding) => {
+                const value = effectiveHoldingValue(
+                  holding,
+                  latestValuation(holding.id!, api.valuations),
+                ).value;
                 return (
                   <Link
                     key={holding.id}
@@ -203,14 +206,13 @@ function PortfolioWorkspaceContent() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <Amount
-                        value={
-                          effectiveHoldingValue(
-                            holding,
-                            latestValuation(holding.id!, api.valuations),
-                          ).value ?? 0
-                        }
-                      />
+                      {value === null ? (
+                        <span className="font-body text-body-md text-foreground-muted">
+                          Valuation unavailable
+                        </span>
+                      ) : (
+                        <Amount value={value} />
+                      )}
                       <p className="font-body text-caption text-foreground-muted">
                         {assetClassForType(holding.type).replace('_', ' ')} · View details
                       </p>

@@ -1,9 +1,11 @@
+import { localDateIso } from '../calendar.js';
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const DAYS_PER_YEAR = 365.25;
 
 /** Today as an ISO date (YYYY-MM-DD), used as the default projection anchor. */
 export function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localDateIso();
 }
 
 /**

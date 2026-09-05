@@ -1,4 +1,9 @@
-import { buildFinancialDigest, computeTax, createAnthropicSseParser } from '@finmanager/core';
+import {
+  buildFinancialDigest,
+  computeTax,
+  createAnthropicSseParser,
+  monthNow,
+} from '@finmanager/core';
 import type {
   Account,
   AiSummary,
@@ -52,7 +57,7 @@ function rows<T>(value: readonly T[] | undefined): readonly Record<string, unkno
 }
 
 function currentMonth(): string {
-  return new Date().toISOString().slice(0, 7);
+  return monthNow();
 }
 
 const STREAM_IDLE_TIMEOUT_MS = 60_000;

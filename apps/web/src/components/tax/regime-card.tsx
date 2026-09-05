@@ -85,7 +85,11 @@ export function RegimeCard({ result, best, shortfall }: RegimeCardProps) {
 
       <div className="divide-y divide-border/50 border-t border-border/50 pt-1">
         <Row label="Annual in-hand" value={formatInr(result.annualInHand)} />
-        <Row label="Gross salary" value={formatInr(result.gross)} />
+        <Row label="Cash gross salary" value={formatInr(result.gross)} />
+        <Row
+          label="Taxable gross (including employer NPS)"
+          value={formatInr(result.taxableGross)}
+        />
         <Row label="Taxable income" value={formatInr(result.taxableIncome)} />
         <Row label="Total tax" value={formatInr(result.totalTax)} emphasis />
         <Row label="Effective rate" value={`${formatPercent(result.effectiveRate)} of gross`} />

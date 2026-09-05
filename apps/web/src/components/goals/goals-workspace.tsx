@@ -7,13 +7,12 @@ import {
   swrMultiplier,
   type FireProjection,
 } from '@finmanager/core';
-import { useStatus } from '@powersync/react';
 import { Compass, Flag, PiggyBank, Route, Sailboat, Target } from 'lucide-react';
 import { useState } from 'react';
 
 import { Amount } from '@/components/amount';
-import { useInitialSkeleton, WorkspaceSkeleton } from '@/components/motion/skeleton';
-import { useAuth } from '@/components/providers';
+import { useInitialSkeleton } from '@/components/motion/skeleton';
+import { DataLoadingState, SyncDataBoundary } from '@/components/sync-data-boundary';
 import { Card, CardHeader, CardLabel, CardTitle } from '@/components/ui/card';
 import { useGoals } from '@/lib/goals';
 
@@ -21,20 +20,12 @@ import { FireSettingsForm } from './fire-settings-form';
 import { GoalsList } from './goals-list';
 import { RetirementSummary } from './retirement-summary';
 
-/**
- * Hold the workspace behind the skeleton until the first PowerSync sync
- * completes, then mount the data-querying content. The queries must not mount
- * during the initial connect: they would attach to an empty local DB and render
- * zeros, and the live queries do not re-emit the rows that stream in afterwards
- * (only a remount re-attaches them). Signed-out users skip the wait.
- */
 export function GoalsWorkspace() {
-  const status = useStatus();
-  const { session, loading: authLoading } = useAuth();
-  if (authLoading || (session !== null && !status.hasSynced)) {
-    return <WorkspaceSkeleton label="Loading goals" />;
-  }
-  return <GoalsWorkspaceContent />;
+  return (
+    <SyncDataBoundary label="Loading goals">
+      <GoalsWorkspaceContent />
+    </SyncDataBoundary>
+  );
 }
 
 function ProgressBar({ ratio }: { ratio: number }) {
@@ -103,7 +94,8 @@ function GoalsWorkspaceContent() {
   const [notice, setNotice] = useState<string | null>(null);
   const editingGoal = api.goals.find((goal) => goal.id === editing) ?? null;
 
-  if (api.loading || initialSkeleton) return <WorkspaceSkeleton label="Loading goals" />;
+  if (api.loading || initialSkeleton)
+    return <DataLoadingState label="Loading goals" failed={api.dataError} />;
 
   const fire = api.fireProjection;
 
