@@ -34,6 +34,10 @@ test('an unavailable first sync exposes recovery instead of zeros or endless ske
       (url) => url.host === syncHost,
       (socket) => socket.close(),
     );
+    // SharedWorker network traffic can bypass Playwright context routing.
+    // Block its script too, so this test cannot silently complete a real sync.
+    const syncWorker = '**/@powersync/worker/SharedSyncImplementation.umd.js*';
+    await context.route(syncWorker, (route) => route.abort());
     const page = await context.newPage();
     await page.goto('/dashboard');
     await expect(page.getByRole('link', { name: 'Open sync settings' })).toBeVisible();
@@ -52,6 +56,15 @@ test('an unavailable first sync exposes recovery instead of zeros or endless ske
     await page.getByRole('link', { name: 'Open sync settings' }).click();
     await expect(page.getByText('Sync health', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Retry sync', exact: true })).toBeVisible();
+
+    await context.unrouteAll();
+    await page.goto('/dashboard');
+    await expect(page.getByText('Total net worth', { exact: true })).toBeVisible({
+      timeout: 60_000,
+    });
+    await expect(page.getByText('Your data is not available yet.', { exact: false })).toHaveCount(
+      0,
+    );
   } finally {
     await context.close();
   }

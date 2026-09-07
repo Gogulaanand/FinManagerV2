@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient, type User } from 'npm:@supabase/supa
 
 import { publishableKey, secretKey } from '../_shared/keys.ts';
 import { summaryFor } from './summary.ts';
+import { verifyDeliveryReceipts, type DeliveryReceipt } from './receipts.ts';
 import { deliverOnce } from './delivery.ts';
 import { sendEmail } from '../_shared/resend.ts';
 import {
@@ -151,11 +152,14 @@ async function processUser(
   const inactiveDays = daysSince(activity);
   const { data: deliveries, error: deliveryError } = await admin
     .from('deadman_deliveries')
-    .select('kind,status,recipient,created_at,sent_at')
+    .select(
+      'delivery_key,kind,status,recipient,created_at,sent_at,provider_id,delivery_status,delivered_at',
+    )
     .eq('user_id', user.id)
     .eq('cycle_id', runtime!.cycle_id);
   if (deliveryError) throw deliveryError;
-  const events = (deliveries ?? []) as Event[];
+  const events = (deliveries ?? []) as (Event & DeliveryReceipt)[];
+  await verifyDeliveryReceipts(admin, events);
   const output: unknown[] = [];
   const contactNames = contacts.map((contact) => contact.name);
   const nextStage = user.email ? nextStageAfterGrace(settings, activity, events, user.email) : null;

@@ -76,6 +76,7 @@ create table public.deadman_deliveries (
   created_at timestamptz not null default clock_timestamp(),
   sent_at timestamptz,
   delivery_status text,
+  delivered_at timestamptz,
   last_error text
 );
 create index deadman_deliveries_user_cycle on public.deadman_deliveries(user_id,cycle_id);

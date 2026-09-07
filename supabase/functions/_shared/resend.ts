@@ -31,3 +31,18 @@ export async function sendEmail(message: EmailMessage, idempotencyKey?: string):
   if (typeof result.id !== 'string') throw new Error('Email provider returned no message ID.');
   return result.id;
 }
+
+/** Read-only delivery evidence; never interpret API acceptance as recipient-server delivery. */
+export async function emailDeliveryStatus(providerId: string): Promise<string> {
+  const apiKey = Deno.env.get('RESEND_API_KEY');
+  if (!apiKey) throw new Error('Email delivery is not configured.');
+  const response = await fetch(`https://api.resend.com/emails/${encodeURIComponent(providerId)}`, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error(`Email delivery verification returned ${response.status}.`);
+  const result = await response.json();
+  if (result.id !== providerId || typeof result.last_event !== 'string')
+    throw new Error('Email provider returned invalid delivery evidence.');
+  return result.last_event;
+}

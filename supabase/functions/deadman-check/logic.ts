@@ -62,6 +62,7 @@ export function nextStageAfterGrace(
   activity: string,
   events: readonly (DeadmanLogicEvent & {
     sent_at?: string | null;
+    delivered_at?: string | null;
     detail?: Record<string, unknown> | null;
   })[],
   ownerEmail: string,
@@ -82,7 +83,8 @@ export function nextStageAfterGrace(
         Date.parse(event.sent_at) > Date.parse(activity),
     );
     if (!sent) return kind;
-    if (now - Date.parse(sent.sent_at!) < 7 * 86_400_000) return null;
+    if (!sent.delivered_at || !Number.isFinite(Date.parse(sent.delivered_at))) return null;
+    if (now - Date.parse(sent.delivered_at) < 7 * 86_400_000) return null;
   }
   return null;
 }

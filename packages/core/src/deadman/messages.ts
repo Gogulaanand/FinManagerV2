@@ -158,7 +158,7 @@ export function buildReminderMessage(input: {
       ? 'today'
       : remaining === 1
         ? 'tomorrow'
-        : `in ${describeDays(remaining)}`;
+        : `in ${input.nextActionDays !== undefined ? 'at least ' : ''}${describeDays(remaining)}`;
   const what =
     input.stage === 'reminder_3'
       ? 'we will notify your trusted contacts'

@@ -150,8 +150,18 @@ describe('warning grace after missed runs', () => {
       recipient,
       created_at: '2026-09-06T00:00:00Z',
       sent_at: '2026-09-06T00:00:00Z',
+      delivered_at: '2026-09-06T00:00:00Z',
     };
     expect(nextStageAfterGrace(settings, activity, [event], recipient, now)).toBeNull();
+    expect(
+      nextStageAfterGrace(
+        settings,
+        activity,
+        [{ ...event, delivered_at: null }],
+        recipient,
+        now + 20 * 86400000,
+      ),
+    ).toBeNull();
     expect(nextStageAfterGrace(settings, activity, [event], recipient, now + 6 * 86400000)).toBe(
       'reminder_2',
     );

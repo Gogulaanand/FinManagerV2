@@ -127,7 +127,7 @@ export function DeadmanSettingsPanel() {
               </h2>
               <p className="mt-1 max-w-2xl font-body text-body-md text-foreground-muted">
                 {draft.isEnabled
-                  ? `Your reminder sequence starts after ${describeDays(draft.thresholdDays)} without synced activity. A synced check-in cancels it. Each sent warning grants seven more days.`
+                  ? `Your reminder sequence starts after ${describeDays(draft.thresholdDays)} without synced activity. A synced check-in cancels it. Each delivered warning grants at least seven more days.`
                   : 'No inactivity reminders or trusted-contact notices will be sent while the monitor is disabled.'}
               </p>
             </div>

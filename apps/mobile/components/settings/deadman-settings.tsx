@@ -145,7 +145,7 @@ export function DeadmanSettings() {
             <CardTitle>Requested setting: {draft.isEnabled ? 'enabled' : 'disabled'}</CardTitle>
             <Text className="mt-1 font-body text-body-md text-foreground-muted">
               {draft.isEnabled
-                ? `Reminders begin after ${describeDays(draft.thresholdDays)} without synced activity. A synced check-in cancels them. Each sent warning grants seven more days.`
+                ? `Reminders begin after ${describeDays(draft.thresholdDays)} without synced activity. A synced check-in cancels them. Each delivered warning grants at least seven more days.`
                 : 'No reminders or trusted-contact notices are sent while disabled.'}
             </Text>
           </View>

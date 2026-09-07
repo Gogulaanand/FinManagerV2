@@ -12,7 +12,7 @@
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
-    "test:server": "vitest run supabase/functions/deadman-check/logic.test.ts supabase/functions/deadman-check/delivery.test.ts apps/web/src/lib/beta-access.test.ts",
+    "test:server": "vitest run supabase/functions/deadman-check/logic.test.ts supabase/functions/deadman-check/delivery.test.ts supabase/functions/deadman-check/receipts.test.ts apps/web/src/lib/beta-access.test.ts",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "check": "turbo run build test lint typecheck",
