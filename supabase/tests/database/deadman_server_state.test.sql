@@ -1,0 +1,24 @@
+begin;
+set local search_path = extensions, public;
+select extensions.plan(9);
+insert into auth.users(id,email) values ('55555555-5555-4555-8555-555555555551','arm-test@example.invalid');
+insert into public.deadman_settings(user_id,is_enabled,threshold_days)
+values ('55555555-5555-4555-8555-555555555551',true,30);
+select extensions.ok((select armed_at is not null and last_check_in_at >= armed_at from public.deadman_runtime where user_id='55555555-5555-4555-8555-555555555551'), 'arming is confirmed by server time');
+create temporary table previous_state as select * from public.deadman_runtime where user_id='55555555-5555-4555-8555-555555555551';
+insert into public.activity_log(user_id,kind,platform,occurred_at) values ('55555555-5555-4555-8555-555555555551','app_open','web','2000-01-01');
+select extensions.ok((select r.last_check_in_at >= p.last_check_in_at and r.cycle_id <> p.cycle_id from public.deadman_runtime r join previous_state p using(user_id)), 'backdated offline activity starts a fresh server-confirmed cycle');
+select extensions.ok(not has_table_privilege('authenticated','public.deadman_runtime','UPDATE'), 'client cannot forge server check-in');
+select extensions.ok(not has_table_privilege('anon','public.deadman_runtime','SELECT'), 'anonymous cannot read runtime');
+update public.deadman_settings set is_enabled=false where user_id='55555555-5555-4555-8555-555555555551';
+select extensions.ok((select armed_at is null from public.deadman_runtime where user_id='55555555-5555-4555-8555-555555555551'), 'disable disarms on server');
+update public.deadman_settings set is_enabled=true where user_id='55555555-5555-4555-8555-555555555551';
+select extensions.ok((select r.armed_at > p.armed_at from public.deadman_runtime r join previous_state p using(user_id)), 're-enable grants a fresh inactivity interval');
+select extensions.ok(not has_function_privilege('authenticated','finmanager_internal.arm_deadman_from_settings()','EXECUTE'), 'client cannot directly call privileged trigger');
+truncate previous_state;
+insert into previous_state select * from public.deadman_runtime where user_id='55555555-5555-4555-8555-555555555551';
+insert into public.trusted_contacts(user_id,name,email) values ('55555555-5555-4555-8555-555555555551','Synthetic contact','contact@example.invalid');
+select extensions.ok((select r.cycle_id <> p.cycle_id from public.deadman_runtime r join previous_state p using(user_id)), 'new recipient restarts the warning sequence');
+select extensions.ok(not has_table_privilege('authenticated','public.deadman_deliveries','INSERT'), 'client cannot forge delivery confirmations');
+select * from extensions.finish();
+rollback;

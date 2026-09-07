@@ -99,9 +99,11 @@ select extensions.throws_ok(
   'the anonymous RPC validates email format without exposing table state'
 );
 
+reset role;
+
 select extensions.is(
-  (select count(*) from public.beta_access),
-  5::bigint,
+  (select count(*) from public.beta_access where email = 'duplicate@example.invalid'),
+  1::bigint,
   'duplicate requests do not create duplicate rows'
 );
 
@@ -133,9 +135,10 @@ select extensions.is(
 
 set local role anon;
 
-select extensions.is(
-  (select count(*) from public.beta_access),
-  0::bigint,
+select extensions.throws_ok(
+  $sql$select * from public.beta_access$sql$,
+  '42501',
+  null,
   'anonymous callers cannot read beta_access rows'
 );
 

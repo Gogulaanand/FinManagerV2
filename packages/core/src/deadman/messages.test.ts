@@ -77,9 +77,9 @@ describe('summary presentation', () => {
     ]);
   });
 
-  it('clamps a negative class to zero rather than subtracting from the total', () => {
+  it('preserves liabilities in the disclosed total', () => {
     expect(buildSummary([], [{ type: 'credit_card', value: -4_000 }])).toEqual([
-      { source: 'account', type: 'credit_card', value: 0 },
+      { source: 'account', type: 'credit_card', value: -4_000 },
     ]);
   });
 });

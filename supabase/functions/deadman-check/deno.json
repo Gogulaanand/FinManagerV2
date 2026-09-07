@@ -1,0 +1,17 @@
+{
+  "imports": {
+    "zod": "npm:zod@4.4.3",
+    "../../../packages/schema/src/money": "../../../packages/schema/src/money.ts",
+    "../../../packages/core/src/money.js": "../../../packages/core/src/money.ts",
+    "../../../packages/core/src/portfolio/xirr.js": "../../../packages/core/src/portfolio/xirr.ts",
+    "@finmanager/schema": "../../../packages/schema/src/index.ts",
+    "../../../packages/schema/src/portfolio": "../../../packages/schema/src/portfolio.ts",
+    "../../../packages/schema/src/insights": "../../../packages/schema/src/insights.ts",
+    "../../../packages/schema/src/csv": "../../../packages/schema/src/csv.ts",
+    "../../../packages/schema/src/goals": "../../../packages/schema/src/goals.ts",
+    "../../../packages/schema/src/timestamps": "../../../packages/schema/src/timestamps.ts",
+    "../../../packages/schema/src/index": "../../../packages/schema/src/index.ts",
+    "../../../packages/schema/src/expenses": "../../../packages/schema/src/expenses.ts",
+    "../../../packages/schema/src/deadman": "../../../packages/schema/src/deadman.ts"
+  }
+}

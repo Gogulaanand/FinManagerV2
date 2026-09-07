@@ -72,7 +72,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { session, loading } = useAuth();
   const isLandingRoute = pathname === '/';
-  const isPublicRoute = isLandingRoute || pathname === '/login' || pathname === '/privacy';
+  const isPublicRoute =
+    isLandingRoute ||
+    pathname === '/login' ||
+    pathname === '/privacy' ||
+    pathname === '/forgot-password' ||
+    pathname === '/reset-password';
 
   useEffect(() => {
     if (!loading && !session && !isPublicRoute) {
@@ -82,6 +87,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (!isPublicRoute && !session) return <RedirectingShell />;
   if (isLandingRoute) return <>{children}</>;
-  if (pathname === '/privacy') return <PublicShell>{children}</PublicShell>;
+  if (pathname === '/privacy' || pathname === '/forgot-password' || pathname === '/reset-password')
+    return <PublicShell>{children}</PublicShell>;
   return session ? <ProductShell>{children}</ProductShell> : <PublicShell>{children}</PublicShell>;
 }

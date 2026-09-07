@@ -231,6 +231,8 @@ const fire_settings = new Table(
   {
     user_id: column.text,
     annual_expenses: column.real,
+    investable_corpus: column.real,
+    expenses_confirmed: column.integer,
     withdrawal_rate: column.real,
     expected_return: column.real,
     inflation: column.real,

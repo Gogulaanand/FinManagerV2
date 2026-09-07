@@ -119,6 +119,9 @@ jobs:
             --file "$RUNNER_TEMP/restore/schema.sql" \
             --file "$RUNNER_TEMP/restore/data.sql"
 
+      - name: Verify all restored records against the backup
+        run: python3 scripts/verify_backup.py "$RUNNER_TEMP/restore/data.sql"
+
       - name: Record restore smoke evidence
         shell: bash
         run: |
@@ -140,7 +143,7 @@ jobs:
             echo "- Rehearsal run: $GITHUB_RUN_ID"
             echo "- Public table count: $table_count"
             echo "- Account row count: $account_row_count"
-            echo '- Encrypted artifact checksum and schema/data restore completed successfully.'
+            echo '- Encrypted checksum, schema/data restore and exact public-record comparison completed successfully.'
             echo '- roles.sql is retained in the encrypted artifact; managed Supabase roles are restored manually during a project-loss recovery.'
           } >> "$GITHUB_STEP_SUMMARY"
 

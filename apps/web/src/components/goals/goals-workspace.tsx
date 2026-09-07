@@ -123,83 +123,113 @@ function GoalsWorkspaceContent() {
       ) : null}
       {notice ? <p className="font-body text-caption text-foreground-muted">{notice}</p> : null}
 
-      {/* FIRE summary */}
-      <div className="grid gap-3 md:grid-cols-4">
-        <Card>
-          <CardLabel className="flex items-center gap-2">
-            <Flag aria-hidden="true" size={15} />
-            FIRE number
-          </CardLabel>
-          <Amount value={fire.fireNumber} size="section" />
-          <p className="mt-1 font-body text-caption text-foreground-muted">
-            {fire.fireNumber > 0
-              ? `${swrMultiplier(api.fireSettings.withdrawalRate).toFixed(0)}x annual expenses`
-              : 'Set expenses to compute'}
-          </p>
-        </Card>
-        <Card>
-          <CardLabel className="flex items-center gap-2">
-            <PiggyBank aria-hidden="true" size={15} />
-            Current corpus
-          </CardLabel>
-          <Amount value={fire.currentCorpus} size="section" />
-          <p className="mt-1 font-body text-caption text-foreground-muted">
-            {fire.fireNumber > 0 ? `${formatPercent(fire.progress, 0)} of FIRE` : 'Net worth today'}
-          </p>
-          <ProgressBar ratio={fire.progress} />
-        </Card>
-        <Card>
-          <CardLabel className="flex items-center gap-2">
-            <Compass aria-hidden="true" size={15} />
-            Monthly savings
-          </CardLabel>
-          <Amount value={api.monthlyContribution} size="section" />
-          <p className="mt-1 font-body text-caption text-foreground-muted">
-            {api.fireSettings.monthlyInvestment !== null
-              ? 'The monthly investment you set below'
-              : api.derivedMonthlySavings > 0
-                ? 'Recent income minus expenses, per month'
-                : 'No income logged yet; set a monthly investment below'}
-          </p>
-        </Card>
-        <Card>
-          <CardLabel className="flex items-center gap-2">
-            <Sailboat aria-hidden="true" size={15} />
-            Coast FIRE
-          </CardLabel>
-          <Amount value={fire.coastNumber} size="section" />
-          <p className="mt-1 font-body text-caption text-foreground-muted">
-            {fire.coastAchieved ? 'Reached: growth alone can coast' : 'Corpus needed to coast'}
-          </p>
-        </Card>
-      </div>
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Route aria-hidden="true" size={18} className="text-primary" />
-            Path to FIRE
-          </CardTitle>
-          <StatusPillFire projection={fire} />
-        </CardHeader>
-        <p className="font-body text-body-md text-foreground">{fireStatusLabel(fire)}</p>
-        {fire.fireNumber > 0 ? <RequiredInvestment projection={fire} /> : null}
-        <div className="mt-3 grid gap-3 md:grid-cols-3">
-          {fire.variants.map((variant) => (
-            <div key={variant.key} className="rounded-md border border-border/60 p-3">
-              <p className="font-body text-label text-foreground-muted capitalize">
-                {variant.key} FIRE
-              </p>
-              <p className="font-display text-title-md text-foreground">
-                {formatInr(variant.target)}
-              </p>
-              <p className="font-body text-caption text-foreground-muted">
-                {variant.achieved ? 'Reached' : `${formatPercent(variant.progress, 0)} funded`}
-              </p>
-              <ProgressBar ratio={variant.progress} />
-            </div>
-          ))}
-        </div>
+        <CardLabel>Total net worth (separate from FIRE)</CardLabel>
+        <Amount value={api.netWorth} size="section" />
+        <p className="font-body text-caption text-foreground-muted">
+          {api.portfolioComplete
+            ? 'Recorded portfolio valuations are complete.'
+            : 'Partial total: some holdings have missing valuations or FX.'}{' '}
+          The FIRE corpus below is your explicit manual amount; excluded assets are not
+          automatically selected or valued.
+        </p>
+        <p className="font-body text-caption text-foreground-muted">
+          Expense suggestion: {api.expenseCoverage.recordedMonths} of{' '}
+          {api.expenseCoverage.windowMonths} completed months have recorded debits (
+          {api.expenseCoverage.fromMonth} through {api.expenseCoverage.throughMonth}). Missing
+          months are unknown; recorded months may be partial. Review and confirm below.
+        </p>
       </Card>
+      {!api.fireReady ? (
+        <Card>
+          <p>
+            Set an investable corpus and confirm your expense baseline below to see FIRE
+            projections.
+          </p>
+        </Card>
+      ) : (
+        <>
+          {/* FIRE summary */}
+          <div className="grid gap-3 md:grid-cols-4">
+            <Card>
+              <CardLabel className="flex items-center gap-2">
+                <Flag aria-hidden="true" size={15} />
+                FIRE number
+              </CardLabel>
+              <Amount value={fire.fireNumber} size="section" />
+              <p className="mt-1 font-body text-caption text-foreground-muted">
+                {fire.fireNumber > 0
+                  ? `${swrMultiplier(api.fireSettings.withdrawalRate).toFixed(0)}x annual expenses`
+                  : 'Set expenses to compute'}
+              </p>
+            </Card>
+            <Card>
+              <CardLabel className="flex items-center gap-2">
+                <PiggyBank aria-hidden="true" size={15} />
+                Current corpus
+              </CardLabel>
+              <Amount value={fire.currentCorpus} size="section" />
+              <p className="mt-1 font-body text-caption text-foreground-muted">
+                {fire.fireNumber > 0
+                  ? `${formatPercent(fire.progress, 0)} of FIRE`
+                  : 'Explicit investable corpus'}
+              </p>
+              <ProgressBar ratio={fire.progress} />
+            </Card>
+            <Card>
+              <CardLabel className="flex items-center gap-2">
+                <Compass aria-hidden="true" size={15} />
+                Monthly savings
+              </CardLabel>
+              <Amount value={api.monthlyContribution} size="section" />
+              <p className="mt-1 font-body text-caption text-foreground-muted">
+                {api.fireSettings.monthlyInvestment !== null
+                  ? 'The monthly investment you set below'
+                  : api.derivedMonthlySavings > 0
+                    ? 'Recent income minus expenses, per month'
+                    : 'No income logged yet; set a monthly investment below'}
+              </p>
+            </Card>
+            <Card>
+              <CardLabel className="flex items-center gap-2">
+                <Sailboat aria-hidden="true" size={15} />
+                Coast FIRE
+              </CardLabel>
+              <Amount value={fire.coastNumber} size="section" />
+              <p className="mt-1 font-body text-caption text-foreground-muted">
+                {fire.coastAchieved ? 'Reached: growth alone can coast' : 'Corpus needed to coast'}
+              </p>
+            </Card>
+          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Route aria-hidden="true" size={18} className="text-primary" />
+                Path to FIRE
+              </CardTitle>
+              <StatusPillFire projection={fire} />
+            </CardHeader>
+            <p className="font-body text-body-md text-foreground">{fireStatusLabel(fire)}</p>
+            {fire.fireNumber > 0 ? <RequiredInvestment projection={fire} /> : null}
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              {fire.variants.map((variant) => (
+                <div key={variant.key} className="rounded-md border border-border/60 p-3">
+                  <p className="font-body text-label text-foreground-muted capitalize">
+                    {variant.key} FIRE
+                  </p>
+                  <p className="font-display text-title-md text-foreground">
+                    {formatInr(variant.target)}
+                  </p>
+                  <p className="font-body text-caption text-foreground-muted">
+                    {variant.achieved ? 'Reached' : `${formatPercent(variant.progress, 0)} funded`}
+                  </p>
+                  <ProgressBar ratio={variant.progress} />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </>
+      )}
 
       <GoalsList
         goals={api.projections}

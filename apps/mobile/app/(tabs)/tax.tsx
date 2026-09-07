@@ -72,7 +72,8 @@ export default function TaxScreen() {
           <View className="flex-1">
             <Text className="font-display text-headline-lg text-foreground">Tax</Text>
             <Text className="font-body text-body-md text-foreground-muted">
-              Old vs new regime. Computed on your device.
+              FY 2026–27 salary estimator based on CTC assumptions. Check against your payslip.
+              Excludes capital gains, rent and complete RSU/ESOP taxation; not a tax return.
             </Text>
           </View>
         </View>

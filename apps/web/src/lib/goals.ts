@@ -6,8 +6,7 @@ import {
   calculatePortfolioSummary,
   calculateRetirementCorpus,
   averageMonthlySavings,
-  monthlyExpenseTotals,
-  suggestAnnualExpenses,
+  expenseBaselineCoverage,
   type FireProjection,
   type GoalProjection,
   type RetirementCorpus,
@@ -62,6 +61,9 @@ export interface GoalsApi {
   readonly fireProjection: FireProjection;
   readonly retirement: RetirementCorpus;
   readonly netWorth: number;
+  readonly portfolioComplete: boolean;
+  readonly fireReady: boolean;
+  readonly expenseCoverage: ReturnType<typeof expenseBaselineCoverage>;
   readonly monthlyContribution: number;
   /** Savings rate implied by recent transactions, before any explicit override. */
   readonly derivedMonthlySavings: number;
@@ -123,15 +125,14 @@ export function useGoals(): GoalsApi {
     [fireResult.data],
   );
 
-  const netWorth = useMemo(
-    () => calculatePortfolioSummary(holdings, events, valuations, accounts).netWorth,
+  const portfolio = useMemo(
+    () => calculatePortfolioSummary(holdings, events, valuations, accounts),
     [holdings, events, valuations, accounts],
   );
 
-  const suggestedAnnualExpenses = useMemo(
-    () => suggestAnnualExpenses(monthlyExpenseTotals(transactions)),
-    [transactions],
-  );
+  const netWorth = portfolio.netWorth;
+  const expenseCoverage = useMemo(() => expenseBaselineCoverage(transactions), [transactions]);
+  const suggestedAnnualExpenses = expenseCoverage.suggestedAnnualExpenses;
   const derivedMonthlySavings = useMemo(() => averageMonthlySavings(transactions), [transactions]);
 
   const projections = useMemo(
@@ -158,14 +159,19 @@ export function useGoals(): GoalsApi {
   // rate derived from recent income-minus-expense transactions.
   const monthlyContribution = fireSettings.monthlyInvestment ?? derivedMonthlySavings;
 
+  const fireReady =
+    fireSettings.investableCorpus !== null &&
+    fireSettings.expensesConfirmed &&
+    (fireSettings.annualExpenses ?? 0) > 0;
+
   const fireProjection = useMemo(
     () =>
       calculateFireProjection({
-        settings: fireSettings,
-        currentCorpus: netWorth,
+        settings: fireReady ? fireSettings : { ...fireSettings, annualExpenses: null },
+        currentCorpus: fireSettings.investableCorpus ?? 0,
         monthlyContribution,
       }),
-    [fireSettings, netWorth, monthlyContribution],
+    [fireSettings, fireReady, monthlyContribution],
   );
 
   const saveGoal = useCallback(
@@ -198,6 +204,9 @@ export function useGoals(): GoalsApi {
     fireProjection,
     retirement,
     netWorth,
+    portfolioComplete: portfolio.isComplete,
+    fireReady,
+    expenseCoverage,
     monthlyContribution,
     derivedMonthlySavings,
     suggestedAnnualExpenses,

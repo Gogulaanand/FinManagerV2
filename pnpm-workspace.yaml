@@ -32,3 +32,18 @@ minimumReleaseAgeExclude:
   - '@tailwindcss/oxide@4.3.3'
   - '@tailwindcss/postcss@4.3.3'
   - tailwindcss@4.3.3
+
+# Security patches within the affected dependency lines. Keep native major upgrades separate.
+overrides:
+  'postcss@>=8 <8.5.23': '8.5.23'
+  'brace-expansion@>=1 <1.1.18': '1.1.18'
+  'brace-expansion@>=4 <5.0.9': '5.0.9'
+  'fast-uri@>=3 <3.1.6': '3.1.6'
+  'js-yaml@>=4 <4.3.1': '4.3.1'
+  'image-size@>=2 <2.0.3': '2.0.3'
+  'nanoid@>=3 <3.3.18': '3.3.18'
+  'decode-uri-component@>=0.4 <0.4.3': '0.4.3'
+  'browserslist@>=4 <4.28.7': '4.28.7'
+  '@xmldom/xmldom@>=0.8 <0.8.15': '0.8.15'
+  '@xmldom/xmldom@>=0.9 <0.9.12': '0.9.12'
+  'next>sharp': '0.35.0'

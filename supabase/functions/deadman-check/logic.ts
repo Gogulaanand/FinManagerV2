@@ -55,3 +55,34 @@ export function hasCurrentEvent(
     );
   });
 }
+
+/** Advance at most one stage; a missed cron never consumes the user's warning grace. */
+export function nextStageAfterGrace(
+  settings: DeadmanLogicSettings,
+  activity: string,
+  events: readonly (DeadmanLogicEvent & {
+    sent_at?: string | null;
+    detail?: Record<string, unknown> | null;
+  })[],
+  ownerEmail: string,
+  now = Date.now(),
+): Stage | null {
+  if (!Number.isFinite(Date.parse(activity)) || daysSince(activity, now) < settings.threshold_days)
+    return null;
+  for (let index = 0; index < stages.length; index++) {
+    const kind = stages[index]!.kind;
+    if (kind === 'disclosure') return kind;
+    const sent = events.find(
+      (event) =>
+        event.kind === kind &&
+        event.status === 'sent' &&
+        event.recipient === ownerEmail &&
+        event.detail?.simulation !== true &&
+        event.sent_at &&
+        Date.parse(event.sent_at) > Date.parse(activity),
+    );
+    if (!sent) return kind;
+    if (now - Date.parse(sent.sent_at!) < 7 * 86_400_000) return null;
+  }
+  return null;
+}

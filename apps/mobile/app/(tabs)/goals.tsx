@@ -131,69 +131,96 @@ function GoalsContent() {
           <Text className="font-body text-caption text-foreground-muted">{notice}</Text>
         ) : null}
 
-        {/* FIRE summary */}
-        <View className="gap-2">
-          <View className="flex-row gap-2">
-            <Card className="min-w-0 flex-1">
-              <CardLabel>FIRE number</CardLabel>
-              <Amount value={fire.fireNumber} size="tile" />
-            </Card>
-            <Card className="min-w-0 flex-1">
-              <CardLabel>Current corpus</CardLabel>
-              <Amount value={fire.currentCorpus} size="tile" />
-              <Text className="font-body text-caption text-foreground-muted">
-                {fire.fireNumber > 0 ? `${formatPercent(fire.progress, 0)} of FIRE` : 'Net worth'}
-              </Text>
-            </Card>
-          </View>
-          <View className="flex-row gap-2">
-            <Card className="min-w-0 flex-1">
-              <CardLabel>Monthly savings</CardLabel>
-              <Amount value={api.monthlyContribution} size="tile" />
-              <Text className="font-body text-caption text-foreground-muted">
-                {api.fireSettings.monthlyInvestment !== null
-                  ? 'You set this'
-                  : api.derivedMonthlySavings > 0
-                    ? 'Income − expenses'
-                    : 'Set it below'}
-              </Text>
-            </Card>
-            <Card className="min-w-0 flex-1">
-              <CardLabel>Coast FIRE</CardLabel>
-              <Amount value={fire.coastNumber} size="tile" />
-              <Text className="font-body text-caption text-foreground-muted">
-                {fire.coastAchieved ? 'Reached' : 'To coast'}
-              </Text>
-            </Card>
-          </View>
-        </View>
         <Card>
-          <View className="flex-row items-center gap-2">
-            <Ionicons name="navigate" size={18} color={scheme.primary} />
-            <CardTitle>Path to FIRE</CardTitle>
-          </View>
-          <Text className="mt-2 font-body text-body-md text-foreground">
-            {fireStatusText(fire)}
+          <CardLabel>Total net worth (separate from FIRE)</CardLabel>
+          <Amount value={api.netWorth} size="tile" />
+          <Text className="font-body text-caption text-foreground-muted">
+            {api.portfolioComplete
+              ? 'Recorded valuations complete.'
+              : 'Partial total: missing valuations or FX.'}{' '}
+            FIRE uses your manual investable amount, excluding assets you cannot spend.
           </Text>
-          {fire.fireNumber > 0 ? <RequiredInvestment projection={fire} /> : null}
-          <View className="mt-3 gap-2">
-            {fire.variants.map((variant) => (
-              <View key={variant.key} className="flex-row items-center justify-between">
-                <Text className="font-body text-body-md text-foreground capitalize">
-                  {variant.key} FIRE
-                </Text>
-                <View className="items-end">
-                  <Text className="font-display text-title-md text-foreground">
-                    {formatInr(variant.target)}
-                  </Text>
-                  <Text className="font-body text-caption text-foreground-muted">
-                    {variant.achieved ? 'Reached' : formatPercent(variant.progress, 0)}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
+          <Text className="font-body text-caption text-foreground-muted">
+            Expense suggestion: {api.expenseCoverage.recordedMonths}/12 completed months with
+            debits, {api.expenseCoverage.fromMonth} to {api.expenseCoverage.throughMonth}. Missing
+            months are unknown; recorded months may be partial.
+          </Text>
         </Card>
+        {!api.fireReady ? (
+          <Card>
+            <Text>
+              Set an investable corpus and confirm expenses below to see FIRE projections.
+            </Text>
+          </Card>
+        ) : (
+          <>
+            {/* FIRE summary */}
+            <View className="gap-2">
+              <View className="flex-row gap-2">
+                <Card className="min-w-0 flex-1">
+                  <CardLabel>FIRE number</CardLabel>
+                  <Amount value={fire.fireNumber} size="tile" />
+                </Card>
+                <Card className="min-w-0 flex-1">
+                  <CardLabel>Current corpus</CardLabel>
+                  <Amount value={fire.currentCorpus} size="tile" />
+                  <Text className="font-body text-caption text-foreground-muted">
+                    {fire.fireNumber > 0
+                      ? `${formatPercent(fire.progress, 0)} of FIRE`
+                      : 'Explicit investable corpus'}
+                  </Text>
+                </Card>
+              </View>
+              <View className="flex-row gap-2">
+                <Card className="min-w-0 flex-1">
+                  <CardLabel>Monthly savings</CardLabel>
+                  <Amount value={api.monthlyContribution} size="tile" />
+                  <Text className="font-body text-caption text-foreground-muted">
+                    {api.fireSettings.monthlyInvestment !== null
+                      ? 'You set this'
+                      : api.derivedMonthlySavings > 0
+                        ? 'Income − expenses'
+                        : 'Set it below'}
+                  </Text>
+                </Card>
+                <Card className="min-w-0 flex-1">
+                  <CardLabel>Coast FIRE</CardLabel>
+                  <Amount value={fire.coastNumber} size="tile" />
+                  <Text className="font-body text-caption text-foreground-muted">
+                    {fire.coastAchieved ? 'Reached' : 'To coast'}
+                  </Text>
+                </Card>
+              </View>
+            </View>
+            <Card>
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="navigate" size={18} color={scheme.primary} />
+                <CardTitle>Path to FIRE</CardTitle>
+              </View>
+              <Text className="mt-2 font-body text-body-md text-foreground">
+                {fireStatusText(fire)}
+              </Text>
+              {fire.fireNumber > 0 ? <RequiredInvestment projection={fire} /> : null}
+              <View className="mt-3 gap-2">
+                {fire.variants.map((variant) => (
+                  <View key={variant.key} className="flex-row items-center justify-between">
+                    <Text className="font-body text-body-md text-foreground capitalize">
+                      {variant.key} FIRE
+                    </Text>
+                    <View className="items-end">
+                      <Text className="font-display text-title-md text-foreground">
+                        {formatInr(variant.target)}
+                      </Text>
+                      <Text className="font-body text-caption text-foreground-muted">
+                        {variant.achieved ? 'Reached' : formatPercent(variant.progress, 0)}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </Card>
+          </>
+        )}
 
         {/* Goals */}
         <Card>

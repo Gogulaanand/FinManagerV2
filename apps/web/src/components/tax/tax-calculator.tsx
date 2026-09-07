@@ -76,7 +76,8 @@ export function TaxCalculator() {
           <div>
             <h1 className="font-display text-display-md text-foreground">Tax</h1>
             <p className="font-body text-body-md text-foreground-muted">
-              Old vs new regime for a salaried individual. Everything is computed on your device.
+              FY 2026–27 salary estimator based on CTC assumptions. Check against your payslip.
+              Excludes capital gains, rent and complete RSU/ESOP taxation; not a tax return.
             </p>
           </div>
         </div>

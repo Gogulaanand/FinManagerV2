@@ -61,6 +61,10 @@ export function ExpenseSetup({ api }: { readonly api: ExpensesApi }): React.JSX.
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="flex flex-col gap-4">
           <CardTitle>Accounts</CardTitle>
+          <p className="font-body text-caption text-foreground-muted">
+            Balances are manual snapshots. Adding transactions does not change them; reconcile
+            against your dated bank statement.
+          </p>
           <div className="grid gap-3 sm:grid-cols-3">
             <Field label="Account name">
               {(id) => (
@@ -78,14 +82,14 @@ export function ExpenseSetup({ api }: { readonly api: ExpensesApi }): React.JSX.
               options={accountTypes}
               onChange={setAccountType}
             />
-            <Field label="Current balance">
+            <Field label="Manual balance snapshot">
               {(id) => (
                 <Input
                   id={id}
                   type="number"
                   value={accountBalance || ''}
                   onChange={(event) => setAccountBalance(Number(event.target.value))}
-                  placeholder="Current balance"
+                  placeholder="Balance at reconciliation"
                 />
               )}
             </Field>

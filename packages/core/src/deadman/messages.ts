@@ -51,6 +51,7 @@ const HOLDING_LABELS: Readonly<Record<string, string>> = {
 };
 
 const ACCOUNT_LABELS: Readonly<Record<string, string>> = {
+  net_accounts: 'Net account balances after liabilities',
   bank: 'Bank accounts',
   broker: 'Broker accounts',
   wallet: 'Wallets',
@@ -121,7 +122,7 @@ export function buildSummary(
   };
   for (const row of holdings) add('holding', row.type, Number(row.value) || 0);
   for (const row of accounts) add('account', row.type, Number(row.value) || 0);
-  return [...totals.values()].map((entry) => ({ ...entry, value: Math.max(0, entry.value) }));
+  return [...totals.values()];
 }
 
 /**
@@ -136,7 +137,7 @@ export function presentableSummary(
   entries: readonly SummaryEntry[],
 ): { label: string; value: number }[] {
   return entries
-    .filter((entry) => entry.value > 0)
+    .filter((entry) => Number.isFinite(entry.value) && entry.value !== 0)
     .sort((a, b) => b.value - a.value)
     .map((entry) => ({ label: summaryLabel(entry), value: entry.value }));
 }
@@ -147,8 +148,11 @@ export function buildReminderMessage(input: {
   readonly inactiveDays: number;
   readonly thresholdDays: number;
   readonly contactNames: readonly string[];
+  readonly nextActionDays?: number;
 }): EmailMessage {
-  const remaining = daysUntilNextStage(input.thresholdDays, input.stage, input.inactiveDays);
+  const remaining =
+    input.nextActionDays ??
+    daysUntilNextStage(input.thresholdDays, input.stage, input.inactiveDays);
   const when =
     remaining === null || remaining === 0
       ? 'today'
@@ -193,4 +197,24 @@ export function buildDisclosureMessage(input: {
   const note = input.note?.trim() ? `Message from the user:\n${input.note.trim()}\n\n` : '';
   const text = `FinManager trusted-contact notice for ${input.userName}\n\n${body}\n\n${note}This message contains no transaction history. Please handle it sensitively.`;
   return { subject: 'FinManager trusted-contact notice', text, html: escapeHtml(text) };
+}
+
+/** Use exactly the portfolio's INR valuation, account deduplication and liability rules. */
+export function disclosureSummaryFromPortfolio(portfolio: {
+  readonly isComplete: boolean;
+  readonly currentValue: number;
+  readonly netWorth: number;
+  readonly allocation: readonly { readonly assetClass: string; readonly value: number }[];
+}): SummaryEntry[] {
+  if (!portfolio.isComplete)
+    throw new Error('Financial summary unavailable: complete valuations and FX rates first.');
+  return buildSummary(
+    portfolio.allocation.map((row) => ({ type: row.assetClass, value: row.value })),
+    [
+      {
+        type: 'net_accounts',
+        value: Math.round((portfolio.netWorth - portfolio.currentValue) * 100) / 100,
+      },
+    ],
+  );
 }

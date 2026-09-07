@@ -65,6 +65,21 @@ export function DeadmanSettingsPanel() {
   }, [settings]);
   const [contact, setContact] = useState<TrustedContact>(blankContact);
   const [message, setMessage] = useState('');
+  const [serverStatus, setServerStatus] = useState(
+    'Not checked. Save settings, wait for sync, then check server status.',
+  );
+  const checkServer = async () => {
+    try {
+      const state = await invoke({ action: 'status' });
+      setServerStatus(
+        state.armedAt && state.lastCheckInAt
+          ? `Server armed. Last confirmed check-in: ${new Date(state.lastCheckInAt).toLocaleString()}.`
+          : 'Server is not armed. Save enabled settings and wait for complete sync.',
+      );
+    } catch {
+      setServerStatus('Server status unavailable. Monitoring is not verified.');
+    }
+  };
   const [preview, setPreview] = useState<Array<{ recipient: string; scope: string; text: string }>>(
     [],
   );
@@ -103,12 +118,16 @@ export function DeadmanSettingsPanel() {
             </span>
             <div>
               <CardLabel>Safety status</CardLabel>
+              <p role="status">{serverStatus}</p>
+              <Button type="button" onClick={() => void checkServer()}>
+                Check server status
+              </Button>
               <h2 className="mt-1 font-display text-headline-md text-foreground">
-                Inactivity monitor {draft.isEnabled ? 'enabled' : 'disabled'}
+                Requested monitor setting: {draft.isEnabled ? 'enabled' : 'disabled'}
               </h2>
               <p className="mt-1 max-w-2xl font-body text-body-md text-foreground-muted">
                 {draft.isEnabled
-                  ? `Your reminder sequence starts after ${describeDays(draft.thresholdDays)} without synced activity. Opening FinManager cancels it.`
+                  ? `Your reminder sequence starts after ${describeDays(draft.thresholdDays)} without synced activity. A synced check-in cancels it. Each sent warning grants seven more days.`
                   : 'No inactivity reminders or trusted-contact notices will be sent while the monitor is disabled.'}
               </p>
             </div>
@@ -218,7 +237,8 @@ export function DeadmanSettingsPanel() {
           <Button
             onClick={async () => {
               await saveSettings(draft);
-              setMessage('Settings saved.');
+              setMessage('Settings saved locally. Wait for sync, then check server status.');
+              setServerStatus('Settings changed; server confirmation pending.');
             }}
           >
             <CheckCircle2 aria-hidden="true" size={16} />

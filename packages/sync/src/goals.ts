@@ -10,7 +10,7 @@ export const GOALS_QUERY = `
 
 export const FIRE_SETTINGS_QUERY = `
   SELECT id, user_id, annual_expenses, withdrawal_rate, expected_return, inflation, current_age,
-    retirement_age, lean_multiplier, fat_multiplier, monthly_investment, created_at, updated_at
+    retirement_age, lean_multiplier, fat_multiplier, monthly_investment, investable_corpus, expenses_confirmed, created_at, updated_at
   FROM fire_settings LIMIT 1`;
 
 interface RawRow {
@@ -104,6 +104,8 @@ export function mapFireSettingsRows(rows: readonly RawRow[]): FireSettings | nul
     id: String(row.id),
     userId: String(row.user_id),
     annualExpenses: numberValue(row.annual_expenses),
+    investableCorpus: numberValue(row.investable_corpus),
+    expensesConfirmed: row.expenses_confirmed === 1 || row.expenses_confirmed === true,
     withdrawalRate: numberValue(row.withdrawal_rate) ?? 4,
     expectedReturn: numberValue(row.expected_return),
     inflation: numberValue(row.inflation),
@@ -180,6 +182,8 @@ async function saveFireSettingsOn(
     settings.leanMultiplier,
     settings.fatMultiplier,
     settings.monthlyInvestment,
+    settings.investableCorpus,
+    settings.expensesConfirmed ? 1 : 0,
   ];
   // fire_settings is 1:1 per user (unique user_id). Branch on an explicit
   // existence check rather than the UPDATE's rowsAffected, which is not reliably
@@ -190,12 +194,12 @@ async function saveFireSettingsOn(
   ]);
   if (rowsOf(existing).length > 0) {
     await db.execute(
-      `UPDATE fire_settings SET annual_expenses = ?, withdrawal_rate = ?, expected_return = ?, inflation = ?, current_age = ?, retirement_age = ?, lean_multiplier = ?, fat_multiplier = ?, monthly_investment = ?, updated_at = ? WHERE user_id = ?`,
+      `UPDATE fire_settings SET annual_expenses = ?, withdrawal_rate = ?, expected_return = ?, inflation = ?, current_age = ?, retirement_age = ?, lean_multiplier = ?, fat_multiplier = ?, monthly_investment = ?, investable_corpus = ?, expenses_confirmed = ?, updated_at = ? WHERE user_id = ?`,
       [...fields, now, userId],
     );
   } else {
     await db.execute(
-      `INSERT INTO fire_settings (id, user_id, annual_expenses, withdrawal_rate, expected_return, inflation, current_age, retirement_age, lean_multiplier, fat_multiplier, monthly_investment, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO fire_settings (id, user_id, annual_expenses, withdrawal_rate, expected_return, inflation, current_age, retirement_age, lean_multiplier, fat_multiplier, monthly_investment, investable_corpus, expenses_confirmed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, userId, ...fields, now, now],
     );
   }

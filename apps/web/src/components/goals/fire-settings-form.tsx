@@ -28,6 +28,8 @@ export function FireSettingsForm({ initial, onSave }: FireSettingsFormProps) {
   const [monthlyExpenses, setMonthlyExpenses] = useState(
     initial.annualExpenses ? Math.round(initial.annualExpenses / 12) : 0,
   );
+  const [investableCorpus, setInvestableCorpus] = useState(String(initial.investableCorpus ?? ''));
+  const [confirmed, setConfirmed] = useState(initial.expensesConfirmed);
   const [withdrawalRate, setWithdrawalRate] = useState(String(initial.withdrawalRate));
   const [expectedReturn, setExpectedReturn] = useState(String(initial.expectedReturn ?? 10));
   const [inflation, setInflation] = useState(String(initial.inflation ?? 6));
@@ -42,7 +44,14 @@ export function FireSettingsForm({ initial, onSave }: FireSettingsFormProps) {
 
   async function submit() {
     try {
+      if (!confirmed || monthlyExpenses <= 0)
+        throw new Error('Confirm a positive expense baseline before saving.');
+      const corpus = investableCorpus.trim() ? Number(investableCorpus) : NaN;
+      if (!Number.isFinite(corpus) || corpus < 0)
+        throw new Error('Enter an investable corpus, including 0 if none.');
       await onSave({
+        investableCorpus: corpus,
+        expensesConfirmed: true,
         id: initial.id,
         userId: initial.userId,
         annualExpenses: monthlyExpenses > 0 ? monthlyExpenses * 12 : null,
@@ -67,11 +76,37 @@ export function FireSettingsForm({ initial, onSave }: FireSettingsFormProps) {
         <CardTitle>FIRE settings</CardTitle>
       </CardHeader>
       <div className="grid gap-4 md:grid-cols-2">
+        <Field
+          label="Investable FIRE corpus (₹)"
+          hint="Exclude your occupied home, emergency reserve, inaccessible funds and money committed to other goals. Net worth is shown separately."
+        >
+          {(id) => (
+            <Input
+              id={id}
+              type="number"
+              min="0"
+              step="any"
+              value={investableCorpus}
+              onChange={(event) => setInvestableCorpus(event.target.value)}
+            />
+          )}
+        </Field>
+        <label className="font-body text-body-md text-foreground">
+          <input
+            type="checkbox"
+            checked={confirmed}
+            onChange={(event) => setConfirmed(event.target.checked)}
+          />{' '}
+          I have reviewed and confirm the expense baseline
+        </label>
         <CurrencyField
           label="Monthly expenses (₹)"
           value={monthlyExpenses}
-          onChange={(value) => setMonthlyExpenses(value)}
-          hint="Auto-suggested from your recent spend; we annualise it (×12) for the FIRE number"
+          onChange={(value) => {
+            setMonthlyExpenses(value);
+            setConfirmed(false);
+          }}
+          hint="Review essential and irregular expenses; saving confirms this monthly baseline (×12 annually)."
         />
         <CurrencyField
           label="Monthly investment (₹)"

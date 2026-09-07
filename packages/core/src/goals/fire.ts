@@ -258,3 +258,29 @@ export function averageMonthlySavings(
 export function swrMultiplier(withdrawalRate: number): number {
   return withdrawalRate > 0 ? 100 / withdrawalRate : 0;
 }
+
+/** Last 12 completed local calendar months; missing months remain unknown, not zero. */
+export function expenseBaselineCoverage(
+  transactions: readonly Pick<Transaction, 'direction' | 'amount' | 'occurredOn'>[],
+  now = new Date(),
+) {
+  const start = new Date(now.getFullYear(), now.getMonth() - 12, 1);
+  const end = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthKey = (date: Date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  const fromMonth = monthKey(start);
+  const untilMonth = monthKey(end);
+  const totals = new Map<string, number>();
+  for (const tx of transactions) {
+    const month = tx.occurredOn.slice(0, 7);
+    if (tx.direction !== 'debit' || month < fromMonth || month >= untilMonth) continue;
+    totals.set(month, (totals.get(month) ?? 0) + tx.amount);
+  }
+  return {
+    fromMonth,
+    throughMonth: monthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1)),
+    recordedMonths: totals.size,
+    windowMonths: 12,
+    suggestedAnnualExpenses: suggestAnnualExpenses([...totals.values()]),
+  };
+}

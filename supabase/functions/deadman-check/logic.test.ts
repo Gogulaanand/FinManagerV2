@@ -1,14 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { daysSince, dueStages, hasCurrentEvent, nextStageAfterGrace } from './logic';
 import {
-  daysSince,
   daysUntilNextStage,
   describeDays,
-  dueStages,
-  hasCurrentEvent,
   presentableSummary,
   summaryLabel,
-} from './logic';
+} from '../../../packages/core/src/deadman/messages';
 
 const settings = { threshold_days: 30 };
 const activity = '2026-07-23T00:00:00.000Z';
@@ -100,10 +98,10 @@ describe('dead-man escalation logic', () => {
     const oneDay = { threshold_days: 1 };
     // At the moment reminder_1 fires, the next reminder is a week away - the
     // earlier copy said "in 8 days" here, which is the absolute threshold.
-    expect(daysUntilNextStage(oneDay, 'reminder_1', 1)).toBe(7);
-    expect(daysUntilNextStage(oneDay, 'reminder_2', 8)).toBe(7);
-    expect(daysUntilNextStage(oneDay, 'reminder_3', 15)).toBe(7);
-    expect(daysUntilNextStage(oneDay, 'disclosure', 22)).toBeNull();
+    expect(daysUntilNextStage(oneDay.threshold_days, 'reminder_1', 1)).toBe(7);
+    expect(daysUntilNextStage(oneDay.threshold_days, 'reminder_2', 8)).toBe(7);
+    expect(daysUntilNextStage(oneDay.threshold_days, 'reminder_3', 15)).toBe(7);
+    expect(daysUntilNextStage(oneDay.threshold_days, 'disclosure', 22)).toBeNull();
   });
 
   it('never leaks an internal namespacing key into a disclosure', () => {
@@ -136,7 +134,39 @@ describe('dead-man escalation logic', () => {
 
   it('never promises a deadline in the past when a reminder fires late', () => {
     // Cron missed a day: inactivity is already past the successor's threshold.
-    expect(daysUntilNextStage({ threshold_days: 1 }, 'reminder_1', 10)).toBe(0);
-    expect(daysUntilNextStage({ threshold_days: 30 }, 'reminder_1', 34)).toBe(3);
+    expect(daysUntilNextStage(1, 'reminder_1', 10)).toBe(0);
+    expect(daysUntilNextStage(30, 'reminder_1', 34)).toBe(3);
+  });
+});
+
+describe('warning grace after missed runs', () => {
+  it('starts only the first reminder after a long outage and waits seven actual days between successful reminders', () => {
+    const now = Date.parse('2026-09-07T00:00:00Z');
+    const activity = '2026-01-01T00:00:00Z';
+    expect(nextStageAfterGrace(settings, activity, [], recipient, now)).toBe('reminder_1');
+    const event = {
+      kind: 'reminder_1',
+      status: 'sent',
+      recipient,
+      created_at: '2026-09-06T00:00:00Z',
+      sent_at: '2026-09-06T00:00:00Z',
+    };
+    expect(nextStageAfterGrace(settings, activity, [event], recipient, now)).toBeNull();
+    expect(nextStageAfterGrace(settings, activity, [event], recipient, now + 6 * 86400000)).toBe(
+      'reminder_2',
+    );
+    expect(
+      nextStageAfterGrace(settings, '2026-09-07T00:00:00Z', [event], recipient, now),
+    ).toBeNull();
+    expect(nextStageAfterGrace(settings, 'invalid', [event], recipient, now)).toBeNull();
+    expect(
+      nextStageAfterGrace(
+        settings,
+        activity,
+        [{ ...event, detail: { simulation: true } }],
+        recipient,
+        now,
+      ),
+    ).toBe('reminder_1');
   });
 });
