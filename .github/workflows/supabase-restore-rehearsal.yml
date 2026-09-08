@@ -5,6 +5,11 @@ on:
     - cron: '23 3 1 * *'
   workflow_dispatch:
     inputs:
+      verify_only:
+        description: 'Compare a previously restored disposable database without importing again'
+        required: false
+        type: boolean
+        default: false
       backup_run_id:
         description: 'Successful supabase-backup run ID (blank uses the latest successful run)'
         required: false
@@ -109,6 +114,7 @@ jobs:
           rm -f "$passphrase_file" "$archive"
 
       - name: Restore schema and data into the disposable project
+        if: ${{ inputs.verify_only != true }}
         shell: bash
         run: |
           set -euo pipefail

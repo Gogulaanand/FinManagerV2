@@ -51,9 +51,9 @@ def verify(dump_path):
     tables = dump_tables(Path(dump_path).read_text())
     compared = 0
     for table, columns, expected in tables:
-        query = f"COPY (SELECT {', '.join(columns)} FROM {table}) TO STDOUT;"
-        result = subprocess.run(['psql', '--no-psqlrc', '--quiet', '--set=ON_ERROR_STOP=1', '--command', query],
-                                env={**os.environ, 'PGDATABASE': url, 'PGOPTIONS': '-c timezone=UTC -c DateStyle=ISO'},
+        query = f"SET timezone = 'UTC'; SET DateStyle = 'ISO'; COPY (SELECT {', '.join(columns)} FROM {table}) TO STDOUT;"
+        result = subprocess.run(['psql', '--dbname', url, '--no-psqlrc', '--quiet', '--set=ON_ERROR_STOP=1', '--command', query],
+                                env={key: value for key, value in os.environ.items() if key not in ('PGDATABASE', 'PGOPTIONS')},
                                 capture_output=True, text=True)
         if result.returncode:
             raise ValueError(f'Restored table could not be read: {table}')
