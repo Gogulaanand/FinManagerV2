@@ -49,3 +49,14 @@ Sole-record adoption and trusted inactivity handoff remain **No-Go** until these
 ## September 8 follow-up
 
 At e1fcb9b, CI build/test/lint/typecheck, fresh database contracts and the rerun authenticated critical paths passed. Preview E2E failed only the signed-out password-recovery test: the report shows Vercel login, because this independent browser context omitted deployment-protection bypass. The test now calls the existing bypass helper before opening the app login; application authentication remains absent and recovery requests stay intercepted. Focused local Playwright verification passed (1 test); protected preview verification is pending the new deployment.
+
+## September 8 recovery drill evidence
+
+The owner configured all three recovery secrets and corrected both database URLs to Session pooler connections, with the restore password URL-encoded. No secret values are recorded here.
+
+- Disposable target: `finmanager-restore-drill`, project `wabtzouamlyjygaqzflc`, sunfabb organization, Mumbai; provider creation quote $0/month. Verified zero public tables before the first restore.
+- Encrypted backup run 34176287224, attempt 2: success, retained encrypted artifact. Attempt 1 failed because the direct IPv6 endpoint was unreachable from the GitHub runner.
+- Restore run 34220114767: schema/data import succeeded transactionally; subsequent verifier connection failed. The workflow now prepares the custom `powersync_role` as NOLOGIN and uses transaction-local replica mode for import to avoid application-trigger side effects.
+- Verification run 34220487185: success against that restored database and the same encrypted backup. All 21 public tables and 2,868 rows matched exactly, including all backed-up field values and relationship IDs. This run deliberately skipped reimporting the already restored data.
+- These runs prove encrypted backup recovery and exact public-record preservation. They do not prove restored provider credentials, Vault decryption, deployed Edge Functions, or external email/sync services.
+- Workflow fixes are on PR #20; scheduled workflows still use main until merged. The disposable database now contains the restored data. A future full restore needs an explicitly prepared empty target; verification-only retries must use the matching backup. Recurring clean-target preparation remains pending and must not reset production.
