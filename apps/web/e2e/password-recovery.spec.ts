@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { establishVercelBypass } from './auth';
+
 // Intercept the recovery endpoint: these UI checks must never send real email.
 test('password recovery stays public and acknowledges without revealing account existence', async ({
   page,
@@ -13,6 +15,8 @@ test('password recovery stays public and acknowledges without revealing account 
     );
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
   });
+  // Pass deployment protection without signing into the application.
+  await establishVercelBypass(page);
   await page.goto('/login');
   await page.getByRole('link', { name: 'Forgot password?' }).click();
   await expect(page.getByRole('heading', { name: 'Reset your password' })).toBeVisible();

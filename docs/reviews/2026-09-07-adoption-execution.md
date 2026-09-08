@@ -45,3 +45,7 @@ The isolated local database lives at `/private/tmp/finmanager-adoption-db-202609
 6. Verify Sentry source-map upload and protected runtime event, approved/revoked hosted access, and any intended physical-device workflow. Existing wiring/local tests do not close these gates.
 
 Sole-record adoption and trusted inactivity handoff remain **No-Go** until these operational gates pass.
+
+## September 8 follow-up
+
+At e1fcb9b, CI build/test/lint/typecheck, fresh database contracts and the rerun authenticated critical paths passed. Preview E2E failed only the signed-out password-recovery test: the report shows Vercel login, because this independent browser context omitted deployment-protection bypass. The test now calls the existing bypass helper before opening the app login; application authentication remains absent and recovery requests stay intercepted. Focused local Playwright verification passed (1 test); protected preview verification is pending the new deployment.
