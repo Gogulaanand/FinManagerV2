@@ -112,11 +112,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Keep the replica connector unable to log in during a recovery drill.
+          cat > "$RUNNER_TEMP/restore/drill-roles.sql" <<'SQL'
+          DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'powersync_role') THEN
+              CREATE ROLE powersync_role NOLOGIN;
+            END IF;
+          END $$;
+          SQL
           psql \
             --dbname "$DISPOSABLE_SUPABASE_DB_URL" \
             --single-transaction \
             --variable ON_ERROR_STOP=1 \
+            --file "$RUNNER_TEMP/restore/drill-roles.sql" \
             --file "$RUNNER_TEMP/restore/schema.sql" \
+            --command "SET LOCAL session_replication_role = replica" \
             --file "$RUNNER_TEMP/restore/data.sql"
 
       - name: Verify all restored records against the backup
