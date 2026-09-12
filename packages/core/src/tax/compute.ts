@@ -66,7 +66,10 @@ export interface ChapterViABreakdown {
 
 export interface RegimeResult {
   readonly regime: Regime;
+  /** Cash gross used for take-home and effective rate. */
   readonly gross: number;
+  /** Salary including employer NPS, before exemptions and deductions. */
+  readonly taxableGross: number;
   readonly standardDeduction: number;
   readonly hraExempt: number;
   readonly professionalTaxDeducted: number;
@@ -304,13 +307,19 @@ function computeRegime(
 
   // The standard deduction cannot exceed salary itself, which matters only at
   // the very bottom of the range but is what the statute says.
-  const standardDeduction = roundToPaise(Math.min(rules.standardDeduction, salary.gross));
+  const standardDeduction = roundToPaise(Math.min(rules.standardDeduction, salary.taxableGross));
   const chapterViA = computeChapterViA(deductions, salary, rules, fyRules.caps);
 
+  // Employer NPS is salary income even though it is not cash paid to the
+  // employee. Include it once before applying the permitted NPS deduction.
   const taxableIncome = roundToPaise(
     Math.max(
       0,
-      salary.gross - hraExempt - standardDeduction - professionalTaxDeducted - chapterViA.total,
+      salary.taxableGross -
+        hraExempt -
+        standardDeduction -
+        professionalTaxDeducted -
+        chapterViA.total,
     ),
   );
 
@@ -326,6 +335,7 @@ function computeRegime(
   return {
     regime,
     gross: salary.gross,
+    taxableGross: salary.taxableGross,
     standardDeduction,
     hraExempt,
     professionalTaxDeducted,

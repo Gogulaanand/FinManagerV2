@@ -86,7 +86,7 @@ export function ExpenseSetupSections({
             onChange={(value) => setAccountType(value as Account['type'])}
           />
           <TextField
-            label="Current balance"
+            label="Manual balance snapshot (transactions do not update it)"
             value={accountBalance}
             onChangeText={setAccountBalance}
             placeholder="₹ amount"

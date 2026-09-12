@@ -43,10 +43,12 @@ export interface SalaryStructure {
   readonly employerNps: number;
   readonly gratuity: number;
   /**
-   * Gross salary: CTC less the employer's own contributions, which never
-   * reach the employee's payslip.
+   * Cash gross: basic, HRA and special allowance, before employee deductions.
+   * Excludes employer contributions and gratuity accrual.
    */
   readonly gross: number;
+  /** Salary before tax deductions, including the employer NPS contribution. */
+  readonly taxableGross: number;
   /** Employee PF, mirrored from the employer rate. Reduces take-home. */
   readonly employeePf: number;
   readonly cityClass: CityClass;
@@ -105,6 +107,7 @@ export function decomposeSalary(input: SalaryStructureInput): SalaryStructure {
     employerNps,
     gratuity,
     gross,
+    taxableGross: roundToPaise(gross + employerNps),
     employeePf,
     cityClass,
   };

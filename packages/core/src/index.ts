@@ -1,3 +1,4 @@
+export { localDateIso } from './calendar.js';
 export { roundToPaise } from './money.js';
 export {
   budgetRatio,
@@ -139,6 +140,7 @@ export {
   DEFAULT_WITHDRAWAL_RATE,
   RETIREMENT_HOLDING_TYPES,
   calculateFireProjection,
+  expenseBaselineCoverage,
   averageMonthlySavings,
   monthlyExpenseTotals,
   calculateGoalProjection,
@@ -180,6 +182,7 @@ export {
   buildDisclosureMessage,
   buildReminderMessage,
   buildSummary,
+  disclosureSummaryFromPortfolio,
   daysUntilNextStage,
   describeDays,
   presentableSummary,

@@ -103,7 +103,9 @@ test('dead-man settings hydrate and preview an unsaved draft without sending ema
   });
 
   await page.goto('/settings');
-  await expect(page.getByText('Inactivity monitor enabled')).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Requested monitor setting: enabled' }),
+  ).toBeVisible();
   await expect(page.getByLabel('Inactivity threshold')).toHaveValue('30');
   await expect(page.getByText('E2E Trusted Contact')).toBeVisible();
 

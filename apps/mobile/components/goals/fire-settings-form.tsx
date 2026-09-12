@@ -30,6 +30,8 @@ export function MobileFireSettingsForm({
   const [monthlyExpenses, setMonthlyExpenses] = useState(
     initial.annualExpenses ? Math.round(initial.annualExpenses / 12) : 0,
   );
+  const [investableCorpus, setInvestableCorpus] = useState(String(initial.investableCorpus ?? ''));
+  const [confirmed, setConfirmed] = useState(initial.expensesConfirmed);
   const [withdrawalRate, setWithdrawalRate] = useState(String(initial.withdrawalRate));
   const [expectedReturn, setExpectedReturn] = useState(String(initial.expectedReturn ?? 10));
   const [inflation, setInflation] = useState(String(initial.inflation ?? 6));
@@ -44,7 +46,14 @@ export function MobileFireSettingsForm({
 
   async function submit() {
     try {
+      if (!confirmed || monthlyExpenses <= 0)
+        throw new Error('Confirm a positive expense baseline before saving.');
+      const corpus = investableCorpus.trim() ? Number(investableCorpus) : NaN;
+      if (!Number.isFinite(corpus) || corpus < 0)
+        throw new Error('Enter an investable corpus, including 0 if none.');
       await onSave({
+        investableCorpus: corpus,
+        expensesConfirmed: true,
         id: initial.id,
         userId: initial.userId,
         annualExpenses: monthlyExpenses > 0 ? monthlyExpenses * 12 : null,
@@ -67,11 +76,34 @@ export function MobileFireSettingsForm({
     <Card>
       <CardTitle>FIRE settings</CardTitle>
       <View className="mt-3 gap-3">
+        <Field
+          label="Investable FIRE corpus (₹)"
+          hint="Exclude your home, emergency reserve, inaccessible funds and other goals. Net worth is separate."
+        >
+          <TextInput
+            value={investableCorpus}
+            onChangeText={setInvestableCorpus}
+            keyboardType="decimal-pad"
+            className={inputClass}
+          />
+        </Field>
+        <Pressable
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: confirmed }}
+          onPress={() => setConfirmed(!confirmed)}
+        >
+          <Text className="font-body text-body-md text-foreground">
+            {confirmed ? '☑' : '☐'} I have reviewed and confirm the expense baseline
+          </Text>
+        </Pressable>
         <CurrencyField
           label="Monthly expenses (₹)"
           value={monthlyExpenses}
-          onChange={(value) => setMonthlyExpenses(value)}
-          hint="Auto-suggested from recent spend; annualised (×12) for FIRE"
+          onChange={(value) => {
+            setMonthlyExpenses(value);
+            setConfirmed(false);
+          }}
+          hint="Review essential and irregular expenses; confirm this baseline (×12 annually)."
         />
         <CurrencyField
           label="Monthly investment (₹)"

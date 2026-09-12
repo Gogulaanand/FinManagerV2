@@ -1,5 +1,6 @@
 'use client';
 
+import { localDateIso } from '@finmanager/core';
 import {
   RecurrenceFrequencySchema,
   TransactionSchema,
@@ -47,9 +48,7 @@ export function TransactionForm({
   const [categoryId, setCategoryId] = useState(
     initialTransaction?.categoryId ?? firstExpense?.id ?? '',
   );
-  const [occurredOn, setOccurredOn] = useState(
-    initialTransaction?.occurredOn ?? new Date().toISOString().slice(0, 10),
-  );
+  const [occurredOn, setOccurredOn] = useState(initialTransaction?.occurredOn ?? localDateIso());
   const [merchant, setMerchant] = useState(initialTransaction?.merchant ?? '');
   const [note, setNote] = useState(initialTransaction?.note ?? '');
   const [isRecurring, setIsRecurring] = useState(initialTransaction?.isRecurring ?? false);

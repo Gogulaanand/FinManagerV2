@@ -134,6 +134,8 @@ describe('goal repositories', () => {
     const db = fakeDb([{ id: goalId }]);
     const settings: FireSettings = {
       userId,
+      investableCorpus: 2_500_000,
+      expensesConfirmed: true,
       annualExpenses: 1_200_000,
       withdrawalRate: 4,
       expectedReturn: 10,
@@ -145,7 +147,18 @@ describe('goal repositories', () => {
       monthlyInvestment: 45_000,
     };
     await saveFireSettings(db, userId, settings);
-    expect(db.statements.some((s) => s.sql.startsWith('UPDATE fire_settings'))).toBe(true);
+    const update = db.statements.find((s) => s.sql.startsWith('UPDATE fire_settings'))!;
+    expect(update.params.slice(9, 11)).toEqual([2_500_000, 1]);
+    expect(
+      mapFireSettingsRows([
+        {
+          id: goalId,
+          user_id: userId,
+          investable_corpus: update.params[9],
+          expenses_confirmed: update.params[10],
+        },
+      ]),
+    ).toMatchObject({ investableCorpus: 2_500_000, expensesConfirmed: true });
     expect(db.statements.some((s) => s.sql.startsWith('INSERT'))).toBe(false);
   });
 
@@ -153,6 +166,8 @@ describe('goal repositories', () => {
     const db = fakeDb([]);
     const settings: FireSettings = {
       userId,
+      investableCorpus: null,
+      expensesConfirmed: false,
       annualExpenses: null,
       withdrawalRate: 4,
       expectedReturn: null,

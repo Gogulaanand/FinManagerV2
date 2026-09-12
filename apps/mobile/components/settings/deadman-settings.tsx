@@ -1,6 +1,7 @@
+import { usePortfolio } from '../../lib/portfolio';
 import {
   buildDisclosureMessage,
-  buildSummary,
+  disclosureSummaryFromPortfolio,
   describeDays,
   STAGE_OFFSETS,
 } from '@finmanager/core';
@@ -9,8 +10,6 @@ import { color } from '@finmanager/tokens';
 import { Ionicons } from '@expo/vector-icons';
 import {
   DEADMAN_SETTINGS_QUERY,
-  DEADMAN_SUMMARY_ACCOUNTS_QUERY,
-  DEADMAN_SUMMARY_HOLDINGS_QUERY,
   ESCALATION_EVENTS_QUERY,
   TRUSTED_CONTACTS_QUERY,
   deleteTrustedContact,
@@ -52,23 +51,13 @@ export function DeadmanSettings() {
     [contactRows.data],
   );
   const events = useMemo(() => mapEscalationEventRows(records(eventRows.data)), [eventRows.data]);
-  // Built on-device so the preview reflects the unsaved draft and still works
-  // offline; the server renders the same message from the same module.
-  const holdingRows = useQuery<Record<string, unknown>>(DEADMAN_SUMMARY_HOLDINGS_QUERY);
-  const accountRows = useQuery<Record<string, unknown>>(DEADMAN_SUMMARY_ACCOUNTS_QUERY);
+  const portfolio = usePortfolio();
   const summary = useMemo(
     () =>
-      buildSummary(
-        records(holdingRows.data).map((row) => ({
-          type: String(row.type ?? ''),
-          value: Number(row.current_value ?? 0),
-        })),
-        records(accountRows.data).map((row) => ({
-          type: String(row.type ?? ''),
-          value: Number(row.current_balance ?? 0),
-        })),
-      ),
-    [holdingRows.data, accountRows.data],
+      portfolio.loading || !portfolio.summary.isComplete
+        ? []
+        : disclosureSummaryFromPortfolio(portfolio.summary),
+    [portfolio.loading, portfolio.summary],
   );
   const [draft, setDraft] = useState<DeadmanSettings>(settings);
   // useState only captures the first value, and on the first render the
@@ -88,11 +77,27 @@ export function DeadmanSettings() {
     setDraft(settings);
   }, [settings]);
   const [notice, setNotice] = useState('');
+  const [serverStatus, setServerStatus] = useState(
+    'Server status not checked. Save settings and wait for sync.',
+  );
+  const checkServer = async () => {
+    const { data, error } = await supabase.functions.invoke('deadman-check', {
+      body: { action: 'status' },
+    });
+    setServerStatus(
+      error
+        ? 'Server status unavailable. Monitoring is not verified.'
+        : data?.armedAt && data?.lastCheckInAt
+          ? `Server armed. Last check-in: ${new Date(data.lastCheckInAt).toLocaleString()}.`
+          : 'Server not armed. Save enabled settings and wait for sync.',
+    );
+  };
   const [preview, setPreview] = useState('');
   const saveSettings = useCallback(async () => {
     if (!session) return;
     await saveDeadmanSettings(db, session.user.id, draft);
-    setNotice('Settings saved.');
+    setNotice('Settings saved locally. Wait for sync, then check server status.');
+    setServerStatus('Settings changed; server confirmation pending.');
   }, [db, draft, session]);
   const showPreview = useCallback(() => {
     setPreview(
@@ -133,10 +138,14 @@ export function DeadmanSettings() {
           </View>
           <View className="flex-1">
             <CardLabel>Safety status</CardLabel>
-            <CardTitle>Monitor {draft.isEnabled ? 'enabled' : 'disabled'}</CardTitle>
+            <Text>{serverStatus}</Text>
+            <Pressable accessibilityRole="button" onPress={() => void checkServer()}>
+              <Text>Check server status</Text>
+            </Pressable>
+            <CardTitle>Requested setting: {draft.isEnabled ? 'enabled' : 'disabled'}</CardTitle>
             <Text className="mt-1 font-body text-body-md text-foreground-muted">
               {draft.isEnabled
-                ? `Reminders begin after ${describeDays(draft.thresholdDays)} without synced activity. Opening FinManager cancels them.`
+                ? `Reminders begin after ${describeDays(draft.thresholdDays)} without synced activity. A synced check-in cancels them. Each delivered warning grants at least seven more days.`
                 : 'No reminders or trusted-contact notices are sent while disabled.'}
             </Text>
           </View>

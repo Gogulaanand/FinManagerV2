@@ -49,6 +49,7 @@ export function Field({ label, hint, children, className }: FieldProps) {
 
 export interface CurrencyFieldProps {
   label: string;
+  currency?: string;
   value: number;
   onChange: (value: number) => void;
   hint?: ReactNode | undefined;
@@ -57,7 +58,7 @@ export interface CurrencyFieldProps {
 }
 
 /**
- * A rupee input.
+ * A source-currency input, defaulting to INR.
  *
  * Holds a `number`, not a string, so the engine never receives NaN: an empty
  * or unparseable box reads as zero. The ₹ sits inside the control rather than
@@ -65,6 +66,7 @@ export interface CurrencyFieldProps {
  */
 export function CurrencyField({
   label,
+  currency = 'INR',
   value,
   onChange,
   hint,
@@ -79,7 +81,7 @@ export function CurrencyField({
             aria-hidden="true"
             className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-body text-body-md text-foreground-muted"
           >
-            ₹
+            {currency === 'INR' ? '₹' : currency}
           </span>
           <Input
             id={id}
@@ -93,7 +95,7 @@ export function CurrencyField({
               const next = Number.parseFloat(e.target.value);
               onChange(Number.isFinite(next) && next >= 0 ? next : 0);
             }}
-            className="tabular pl-7"
+            className={cn('tabular', currency === 'INR' ? 'pl-7' : 'pl-14')}
           />
         </div>
       )}

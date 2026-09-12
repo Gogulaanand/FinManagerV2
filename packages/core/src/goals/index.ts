@@ -19,6 +19,7 @@ export {
   DEFAULT_LEAN_MULTIPLIER,
   DEFAULT_WITHDRAWAL_RATE,
   calculateFireProjection,
+  expenseBaselineCoverage,
   averageMonthlySavings,
   monthlyExpenseTotals,
   suggestAnnualExpenses,

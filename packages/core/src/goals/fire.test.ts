@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   averageMonthlySavings,
+  expenseBaselineCoverage,
   calculateFireProjection,
   monthlyExpenseTotals,
   suggestAnnualExpenses,
@@ -11,6 +12,8 @@ import {
 
 function makeSettings(overrides: Partial<FireSettings> = {}): FireSettings {
   return {
+    investableCorpus: null,
+    expensesConfirmed: false,
     annualExpenses: 1_200_000,
     withdrawalRate: 4,
     expectedReturn: null,
@@ -209,5 +212,28 @@ describe('monthly expense and savings helpers', () => {
   it('converts a withdrawal rate to its FIRE multiplier', () => {
     expect(swrMultiplier(4)).toBe(25);
     expect(swrMultiplier(0)).toBe(0);
+  });
+});
+
+describe('expenseBaselineCoverage', () => {
+  it('excludes current and old months and exposes sparse coverage without inventing zero months', () => {
+    const result = expenseBaselineCoverage(
+      [
+        { direction: 'debit', amount: 10_000, occurredOn: '2026-07-15' },
+        { direction: 'debit', amount: 20_000, occurredOn: '2026-08-15' },
+        { direction: 'debit', amount: 900_000, occurredOn: '2026-09-01' },
+        { direction: 'debit', amount: 900_000, occurredOn: '2025-08-31' },
+        { direction: 'credit', amount: 900_000, occurredOn: '2026-08-15' },
+      ],
+      new Date(2026, 8, 7),
+    );
+    expect(result).toEqual({
+      fromMonth: '2025-09',
+      throughMonth: '2026-08',
+      recordedMonths: 2,
+      windowMonths: 12,
+      suggestedAnnualExpenses: 180_000,
+    });
+    expect(expenseBaselineCoverage([], new Date(2026, 8, 7)).suggestedAnnualExpenses).toBeNull();
   });
 });

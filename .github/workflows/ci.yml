@@ -32,6 +32,18 @@ jobs:
       - name: Test
         run: pnpm turbo run test
 
+      - name: Independent inactivity watchdog tests
+        run: node --test scripts/check-deadman-health.test.mjs
+
+      - name: Backup verification tests
+        run: python3 scripts/test_verify_backup.py
+
+      - name: Edge Function typecheck
+        run: pnpm dlx deno@2.9.6 check --config supabase/functions/deadman-check/deno.json supabase/functions/deadman-check/index.ts
+
+      - name: Server and access helper tests
+        run: pnpm test:server
+
       - name: Lint
         run: pnpm turbo run lint
 
@@ -86,3 +98,25 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report/
           retention-days: 14
+
+  database:
+    name: Fresh migrations and database contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.109.1
+      - name: Start isolated local Supabase
+        run: supabase start
+      - name: Rebuild from migrations
+        run: node scripts/test-l3-1-fresh-migration.mjs
+      - name: Verify database behavior and tenant isolation
+        run: supabase test db --local
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup

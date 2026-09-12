@@ -19,9 +19,12 @@ export interface DashboardApi {
   readonly loading: boolean;
   /** True once the user has any account, holding or transaction at all. */
   readonly hasData: boolean;
-  readonly netWorth: number;
-  readonly invested: number;
-  readonly monthSpend: number;
+  readonly netWorth: number | null;
+  readonly portfolioComplete: boolean;
+  readonly missingValuations: number;
+  readonly missingFx: number;
+  readonly invested: number | null;
+  readonly monthSpend: number | null;
   /** Change against the previous month, or null when not comparable. */
   readonly monthSpendChange: number | null;
   readonly monthLabel: string;
@@ -47,6 +50,9 @@ export function useDashboard(): DashboardApi {
   // FIRE is only meaningful once a target exists; a zero target would render as
   // a full progress bar, which reads as "achieved" rather than "not set up".
   const fire =
+    !goals.loading &&
+    !portfolio.loading &&
+    portfolio.summary.isComplete &&
     goals.fireProjection.fireNumber > 0
       ? {
           progress: goals.fireProjection.progress,
@@ -61,10 +67,15 @@ export function useDashboard(): DashboardApi {
       portfolio.accounts.length > 0 ||
       portfolio.holdings.length > 0 ||
       expenses.transactions.length > 0,
-    netWorth: portfolio.summary.netWorth,
-    invested: portfolio.summary.investedValue,
-    monthSpend: expenses.summary.debit,
-    monthSpendChange: spendChangeRatio(expenses.monthlyTrend, expenses.month),
+    netWorth: portfolio.loading ? null : portfolio.summary.netWorth,
+    portfolioComplete: portfolio.summary.isComplete,
+    missingValuations: portfolio.summary.unvaluedHoldingCount,
+    missingFx: portfolio.summary.missingFxCount,
+    invested: portfolio.loading ? null : portfolio.summary.investedValue,
+    monthSpend: expenses.loading ? null : expenses.summary.debit,
+    monthSpendChange: expenses.loading
+      ? null
+      : spendChangeRatio(expenses.monthlyTrend, expenses.month),
     monthLabel: expenses.month,
     fire,
     recentActivity,

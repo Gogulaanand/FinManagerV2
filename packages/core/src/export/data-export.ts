@@ -281,6 +281,8 @@ function validateDomainRow(collection: DataExportCollection, index: number, row:
         id: requiredString(row, 'id'),
         userId: requiredString(row, 'user_id'),
         annualExpenses: numberValue(row.annual_expenses),
+        investableCorpus: numberValue(row.investable_corpus),
+        expensesConfirmed: row.expenses_confirmed === true || row.expenses_confirmed === 1,
         withdrawalRate: numberValue(row.withdrawal_rate, 4),
         expectedReturn: numberValue(row.expected_return),
         inflation: numberValue(row.inflation),

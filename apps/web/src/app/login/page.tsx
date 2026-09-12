@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -127,6 +128,9 @@ export default function LoginPage() {
             {busy ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'}
           </Button>
         </form>
+        <Link href="/forgot-password" className="font-body text-caption text-primary">
+          Forgot password?
+        </Link>
 
         <div className="flex items-center gap-3">
           <span className="h-px flex-1 bg-border" />

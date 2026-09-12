@@ -1,6 +1,11 @@
 'use client';
 
-import { buildFinancialDigest, computeTax, createAnthropicSseParser } from '@finmanager/core';
+import {
+  buildFinancialDigest,
+  computeTax,
+  createAnthropicSseParser,
+  monthNow,
+} from '@finmanager/core';
 import {
   AiInsightsErrorSchema,
   type Account,
@@ -54,7 +59,7 @@ function rows<T>(value: readonly T[] | undefined): readonly Record<string, unkno
 }
 
 function currentMonth(): string {
-  return new Date().toISOString().slice(0, 7);
+  return monthNow();
 }
 
 async function responseError(response: Response): Promise<Error> {

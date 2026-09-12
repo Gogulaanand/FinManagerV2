@@ -5,6 +5,11 @@ on:
     - cron: '23 3 1 * *'
   workflow_dispatch:
     inputs:
+      verify_only:
+        description: 'Compare a previously restored disposable database without importing again'
+        required: false
+        type: boolean
+        default: false
       backup_run_id:
         description: 'Successful supabase-backup run ID (blank uses the latest successful run)'
         required: false
@@ -109,15 +114,29 @@ jobs:
           rm -f "$passphrase_file" "$archive"
 
       - name: Restore schema and data into the disposable project
+        if: ${{ inputs.verify_only != true }}
         shell: bash
         run: |
           set -euo pipefail
+          # Keep the replica connector unable to log in during a recovery drill.
+          cat > "$RUNNER_TEMP/restore/drill-roles.sql" <<'SQL'
+          DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'powersync_role') THEN
+              CREATE ROLE powersync_role NOLOGIN;
+            END IF;
+          END $$;
+          SQL
           psql \
             --dbname "$DISPOSABLE_SUPABASE_DB_URL" \
             --single-transaction \
             --variable ON_ERROR_STOP=1 \
+            --file "$RUNNER_TEMP/restore/drill-roles.sql" \
             --file "$RUNNER_TEMP/restore/schema.sql" \
+            --command "SET LOCAL session_replication_role = replica" \
             --file "$RUNNER_TEMP/restore/data.sql"
+
+      - name: Verify all restored records against the backup
+        run: python3 scripts/verify_backup.py "$RUNNER_TEMP/restore/data.sql"
 
       - name: Record restore smoke evidence
         shell: bash
@@ -140,7 +159,7 @@ jobs:
             echo "- Rehearsal run: $GITHUB_RUN_ID"
             echo "- Public table count: $table_count"
             echo "- Account row count: $account_row_count"
-            echo '- Encrypted artifact checksum and schema/data restore completed successfully.'
+            echo '- Encrypted checksum, schema/data restore and exact public-record comparison completed successfully.'
             echo '- roles.sql is retained in the encrypted artifact; managed Supabase roles are restored manually during a project-loss recovery.'
           } >> "$GITHUB_STEP_SUMMARY"
 

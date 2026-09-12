@@ -29,7 +29,7 @@ const STATUS_DESCRIPTIONS: Record<SyncHealthStatus, string> = {
   synced: 'Your local changes are up to date.',
   syncing: 'FinManager is exchanging changes with the server.',
   offline: 'Changes stay on this device until a connection is available.',
-  'action-required': 'Some queued changes need attention before they can sync.',
+  'action-required': 'The connection or queued changes need attention before sync can complete.',
 };
 
 function StatusIcon({ status }: { status: SyncHealthStatus }) {
@@ -111,7 +111,12 @@ export function SyncHealthPanel() {
     unresolvedFailures: snapshot?.unresolvedFailures ?? 0,
   });
   const canRetry = Boolean(
-    session && (snapshot?.unresolvedFailures || flow.uploadError || flow.downloadError),
+    session &&
+    (!status.hasSynced ||
+      !status.connected ||
+      snapshot?.unresolvedFailures ||
+      flow.uploadError ||
+      flow.downloadError),
   );
 
   async function retry() {
@@ -130,7 +135,7 @@ export function SyncHealthPanel() {
   }
 
   return (
-    <Card className="flex flex-col gap-3">
+    <Card id="sync-health" className="flex flex-col gap-3">
       <CardHeader className="mb-0">
         <div>
           <CardTitle>Sync health</CardTitle>

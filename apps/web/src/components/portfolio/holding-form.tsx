@@ -1,7 +1,7 @@
 'use client';
 
 import { HoldingMetadataSchema, type Holding, type HoldingType } from '@finmanager/schema';
-import { fxRateToInrForCurrency } from '@finmanager/core';
+import { fxRateToInrForCurrency, localDateIso } from '@finmanager/core';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -48,12 +48,12 @@ function metadataFor(
   if (type === 'rsu' || type === 'esop')
     return {
       kind: type,
-      grantDate: new Date().toISOString().slice(0, 10),
+      grantDate: localDateIso(),
       grantPrice: avgCost ?? 0,
       sourceCurrency: 'USD',
       vestSchedule: [
         {
-          date: new Date().toISOString().slice(0, 10),
+          date: localDateIso(),
           quantity: Math.max(quantity, 0.000001),
           vested: true,
         },
@@ -184,7 +184,7 @@ export function HoldingForm({ initial = null, onSave, onCancel }: HoldingFormPro
             />
           )}
         </Field>
-        <Field label="Average cost (₹)">
+        <Field label={`Average cost (${currency})`}>
           {(id) => (
             <Input
               id={id}
@@ -196,7 +196,7 @@ export function HoldingForm({ initial = null, onSave, onCancel }: HoldingFormPro
             />
           )}
         </Field>
-        <Field label="Manual price override (₹)">
+        <Field label={`Manual price override (${currency})`}>
           {(id) => (
             <Input
               id={id}
@@ -208,7 +208,7 @@ export function HoldingForm({ initial = null, onSave, onCancel }: HoldingFormPro
             />
           )}
         </Field>
-        <Field label="Manual total value (₹)" hint="Takes precedence over all quotes">
+        <Field label={`Manual total value (${currency})`} hint="Takes precedence over all quotes">
           {(id) => (
             <Input
               id={id}
@@ -221,7 +221,10 @@ export function HoldingForm({ initial = null, onSave, onCancel }: HoldingFormPro
           )}
         </Field>
         {currency !== 'INR' ? (
-          <Field label="Manual FX to INR" hint="Required for non-INR manual values">
+          <Field
+            label={`INR per 1 ${currency}`}
+            hint="Leave blank if unknown; INR totals remain incomplete."
+          >
             {(id) => (
               <Input
                 id={id}

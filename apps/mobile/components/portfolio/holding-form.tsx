@@ -1,4 +1,4 @@
-import { fxRateToInrForCurrency } from '@finmanager/core';
+import { fxRateToInrForCurrency, localDateIso } from '@finmanager/core';
 import {
   HoldingMetadataSchema,
   type Holding,
@@ -23,12 +23,12 @@ function metadataFor(
   if (type === 'rsu' || type === 'esop')
     return {
       kind: type,
-      grantDate: new Date().toISOString().slice(0, 10),
+      grantDate: localDateIso(),
       grantPrice: avgCost ?? 0,
       sourceCurrency: 'USD',
       vestSchedule: [
         {
-          date: new Date().toISOString().slice(0, 10),
+          date: localDateIso(),
           quantity: Math.max(quantity, 0.000001),
           vested: true,
         },
@@ -176,7 +176,7 @@ export function MobileHoldingForm({
             className="h-11 rounded-md border border-border bg-background px-3 font-body text-body-md text-foreground"
           />
         </Field>
-        <Field label="Manual value (₹)">
+        <Field label={`Manual value (${currency})`}>
           <TextInput
             value={value}
             onChangeText={setValue}
@@ -185,7 +185,10 @@ export function MobileHoldingForm({
           />
         </Field>
         {currency !== 'INR' ? (
-          <Field label="Manual FX to INR">
+          <Field
+            label={`INR per 1 ${currency}`}
+            hint="Leave blank if unknown; INR totals remain incomplete."
+          >
             <TextInput
               value={fxRate}
               onChangeText={setFxRate}

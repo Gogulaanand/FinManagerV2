@@ -40,6 +40,8 @@ export const FireSettingsSchema = z
     userId: Uuid.optional(),
     // Annual expenses baseline in today's rupees; auto-suggested from Phase 4 data.
     annualExpenses: NonNegative.nullable().default(null),
+    investableCorpus: NonNegative.nullable().default(null),
+    expensesConfirmed: z.boolean().default(false),
     // Safe withdrawal rate as a whole percentage (default 4% -> 25x expenses).
     withdrawalRate: z.number().finite().positive().max(100).default(4),
     expectedReturn: Percentage.nullable().default(null),

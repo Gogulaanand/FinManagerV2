@@ -1,14 +1,16 @@
 import { createClient, type SupabaseClient, type User } from 'npm:@supabase/supabase-js@2.110.7';
 
 import { publishableKey, secretKey } from '../_shared/keys.ts';
+import { summaryFor } from './summary.ts';
+import { verifyDeliveryReceipts, type DeliveryReceipt } from './receipts.ts';
+import { deliverOnce } from './delivery.ts';
 import { sendEmail } from '../_shared/resend.ts';
 import {
   buildDisclosureMessage,
   buildReminderMessage,
-  buildSummary,
   type SummaryEntry,
 } from '../../../packages/core/src/deadman/messages.ts';
-import { daysSince, dueStages, hasCurrentEvent, type Stage } from './logic.ts';
+import { daysSince, dueStages, hasCurrentEvent, nextStageAfterGrace, type Stage } from './logic.ts';
 
 type Scope = 'existence' | 'summary';
 type Contact = {
@@ -32,6 +34,7 @@ type Event = {
   status: string;
   recipient: string | null;
   created_at: string;
+  sent_at: string | null;
   detail: Record<string, unknown> | null;
 };
 
@@ -55,7 +58,14 @@ function reminderContent(
   thresholdDays: number,
   contactNames: string[],
 ): { subject: string; text: string; html: string } {
-  return buildReminderMessage({ userName, stage: kind, inactiveDays, thresholdDays, contactNames });
+  return buildReminderMessage({
+    userName,
+    stage: kind,
+    inactiveDays,
+    thresholdDays,
+    contactNames,
+    nextActionDays: 7,
+  });
 }
 function disclosureContent(
   userName: string,
@@ -66,35 +76,18 @@ function disclosureContent(
   return buildDisclosureMessage({ userName, scope, note, summary });
 }
 
-async function latestActivity(admin: SupabaseClient, userId: string): Promise<string | null> {
+async function runtimeFor(admin: SupabaseClient, userId: string) {
   const { data, error } = await admin
-    .from('activity_log')
-    .select('occurred_at')
+    .from('deadman_runtime')
+    .select('armed_at,last_check_in_at,cycle_id')
     .eq('user_id', userId)
-    .order('occurred_at', { ascending: false })
-    .limit(1)
     .maybeSingle();
   if (error) throw error;
-  return data?.occurred_at ?? null;
-}
-async function summaryFor(admin: SupabaseClient, userId: string): Promise<SummaryEntry[]> {
-  const [holdings, accounts] = await Promise.all([
-    admin.from('holdings').select('type,current_value').eq('user_id', userId).eq('is_active', true),
-    admin
-      .from('accounts')
-      .select('type,current_balance')
-      .eq('user_id', userId)
-      .eq('is_active', true),
-  ]);
-  if (holdings.error) throw holdings.error;
-  if (accounts.error) throw accounts.error;
-  return buildSummary(
-    (holdings.data ?? []).map((row) => ({ type: row.type, value: Number(row.current_value ?? 0) })),
-    (accounts.data ?? []).map((row) => ({
-      type: row.type,
-      value: Number(row.current_balance ?? 0),
-    })),
-  );
+  return data as {
+    armed_at: string | null;
+    last_check_in_at: string | null;
+    cycle_id: string;
+  } | null;
 }
 async function settingsFor(admin: SupabaseClient, userId: string): Promise<Settings | null> {
   const { data, error } = await admin
@@ -115,15 +108,6 @@ async function contactsFor(admin: SupabaseClient, userId: string): Promise<Conta
     .order('name');
   if (error) throw error;
   return (data ?? []) as Contact[];
-}
-async function eventsFor(admin: SupabaseClient, userId: string): Promise<Event[]> {
-  const { data, error } = await admin
-    .from('escalation_events')
-    .select('id,kind,status,recipient,created_at,detail')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as Event[];
 }
 async function deliverStage(
   admin: SupabaseClient,
@@ -157,51 +141,72 @@ async function deliverStage(
 async function processUser(
   admin: SupabaseClient,
   user: User,
-  simulatedDays?: number,
 ): Promise<{ events: unknown[]; inactiveDays: number }> {
   const settings = await settingsFor(admin, user.id);
-  if (!settings?.is_enabled && simulatedDays === undefined) return { events: [], inactiveDays: 0 };
+  if (!settings?.is_enabled) return { events: [], inactiveDays: 0 };
   const contacts = await contactsFor(admin, user.id);
-  const activity = await latestActivity(admin, user.id);
-  const inactiveDays = simulatedDays ?? (activity ? daysSince(activity) : Number.MAX_SAFE_INTEGER);
-  const events = await eventsFor(admin, user.id);
-  if (
-    activity &&
-    events.some(
-      (event) => event.kind !== 'cancelled' && new Date(event.created_at) < new Date(activity),
-    ) &&
-    !hasCurrentEvent(events, 'cancelled', user.email ?? null, activity)
-  ) {
-    await admin.from('escalation_events').insert({
-      user_id: user.id,
-      kind: 'cancelled',
-      status: 'sent',
-      recipient: user.email,
-      detail: { reason: 'app_open' },
-      sent_at: new Date().toISOString(),
-    });
-  }
+  const runtime = await runtimeFor(admin, user.id);
+  const activity = runtime?.armed_at ? runtime.last_check_in_at : null;
+  if (!activity || !Number.isFinite(Date.parse(activity)))
+    throw new Error('Server-confirmed activity is required before inactivity processing.');
+  const inactiveDays = daysSince(activity);
+  const { data: deliveries, error: deliveryError } = await admin
+    .from('deadman_deliveries')
+    .select(
+      'delivery_key,kind,status,recipient,created_at,sent_at,provider_id,delivery_status,delivered_at',
+    )
+    .eq('user_id', user.id)
+    .eq('cycle_id', runtime!.cycle_id);
+  if (deliveryError) throw deliveryError;
+  const events = (deliveries ?? []) as (Event & DeliveryReceipt)[];
+  await verifyDeliveryReceipts(admin, events);
   const output: unknown[] = [];
   const contactNames = contacts.map((contact) => contact.name);
-  for (const kind of dueStages(settings ?? ({ threshold_days: 30 } as Settings), inactiveDays)) {
+  const nextStage = user.email ? nextStageAfterGrace(settings, activity, events, user.email) : null;
+  for (const kind of nextStage ? [nextStage] : []) {
     if (kind === 'disclosure') {
-      const summary = await summaryFor(admin, user.id);
+      const currentSettings = await settingsFor(admin, user.id);
+      const currentActivity = (await runtimeFor(admin, user.id))?.last_check_in_at;
+      if (!currentSettings?.is_enabled || currentActivity !== activity)
+        return { events: output, inactiveDays };
+      const summary = contacts.some((contact) => contact.disclosure_scope === 'summary')
+        ? await summaryFor(admin, user.id)
+        : [];
       for (const contact of contacts) {
-        if (!contact.email || hasCurrentEvent(events, kind, contact.email, activity)) continue;
+        if (
+          !contact.email ||
+          hasCurrentEvent(
+            events.filter((event) => event.status === 'sent'),
+            kind,
+            contact.email,
+            activity,
+          )
+        )
+          continue;
         const message = disclosureContent(
           user.user_metadata?.full_name ?? user.email ?? 'your FinManager account',
           contact.disclosure_scope,
           settings?.disclosure_note ?? null,
           summary,
         );
-        await deliverStage(admin, user.id, kind, contact.email, message, {
-          scope: contact.disclosure_scope,
-          simulation: simulatedDays !== undefined,
-          contactId: contact.id,
+        const result = await deliverOnce(admin, {
+          userId: user.id,
+          cycleId: runtime!.cycle_id,
+          stage: kind,
+          recipient: contact.email,
+          message,
         });
-        output.push({ kind, recipient: contact.email });
+        if (result === 'sent') output.push({ kind, recipient: contact.email });
       }
-    } else if (user.email && !hasCurrentEvent(events, kind, user.email, activity)) {
+    } else if (
+      user.email &&
+      !hasCurrentEvent(
+        events.filter((event) => event.status === 'sent'),
+        kind,
+        user.email,
+        activity,
+      )
+    ) {
       const message = reminderContent(
         user.user_metadata?.full_name ?? user.email,
         kind,
@@ -209,10 +214,14 @@ async function processUser(
         settings?.threshold_days ?? 30,
         contactNames,
       );
-      await deliverStage(admin, user.id, kind, user.email, message, {
-        simulation: simulatedDays !== undefined,
+      const result = await deliverOnce(admin, {
+        userId: user.id,
+        cycleId: runtime!.cycle_id,
+        stage: kind,
+        recipient: user.email,
+        message,
       });
-      output.push({ kind, recipient: user.email });
+      if (result === 'sent') output.push({ kind, recipient: user.email });
     }
   }
   return { events: output, inactiveDays };
@@ -347,10 +356,20 @@ Deno.serve(async (request) => {
     return json({ error: 'invalid_request', message: 'The request body must be valid JSON.' }, 400);
   }
   const action = body.action;
+  if (action === 'status') {
+    const state = await runtimeFor(admin, user.id);
+    return json({
+      armedAt: state?.armed_at ?? null,
+      lastCheckInAt: state?.last_check_in_at ?? null,
+    });
+  }
   if (action === 'preview' || action === 'test_send') {
     const settings = await settingsFor(admin, user.id);
     const contacts = await contactsFor(admin, user.id);
-    const summary = action === 'preview' ? await summaryFor(admin, user.id) : [];
+    const summary =
+      action === 'preview' && contacts.some((contact) => contact.disclosure_scope === 'summary')
+        ? await summaryFor(admin, user.id)
+        : [];
     const previews = contacts
       .filter((contact) => contact.email)
       .map((contact) => ({
@@ -385,7 +404,7 @@ Deno.serve(async (request) => {
   }
   if (action === 'simulate') {
     const days = body.simulateInactiveDays;
-    if (!Number.isInteger(days) || days < 0 || days > 3650)
+    if (typeof days !== 'number' || !Number.isInteger(days) || days < 0 || days > 3650)
       return json(
         {
           error: 'invalid_request',
@@ -393,7 +412,17 @@ Deno.serve(async (request) => {
         },
         400,
       );
-    return json({ mode: 'simulate', ...(await processUser(admin, user, days)) });
+    const settings = await settingsFor(admin, user.id);
+    const plannedStages = settings?.is_enabled ? dueStages(settings, days!) : [];
+    return json({
+      mode: 'simulate',
+      dryRun: true,
+      inactiveDays: days,
+      plannedStages,
+      events: [],
+      message:
+        'Hypothetical schedule only. No email, activity or escalation records were written. Delivery remains subject to server-confirmed arming and warning grace.',
+    });
   }
   return json(
     { error: 'invalid_request', message: 'Choose preview, test_send, or simulate.' },

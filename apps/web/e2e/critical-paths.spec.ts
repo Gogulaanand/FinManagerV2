@@ -18,7 +18,11 @@ test('seeded account exposes the scale, portfolio, and goals fixtures', async ({
   await page.goto('/goals');
   await expect(page.getByRole('heading', { name: 'Goals & FIRE' })).toBeVisible();
   await expect(page.getByText('E2E Education Goal')).toBeVisible();
-  await expect(page.getByText('FIRE number', { exact: true })).toBeVisible();
+  // Legacy settings must not turn total net worth into an implicitly confirmed corpus.
+  await expect(
+    page.getByText(/Set an investable corpus and confirm your expense baseline/),
+  ).toBeVisible();
+  await expect(page.getByText('FIRE number', { exact: true })).not.toBeVisible();
 });
 
 test('month navigation and seeded overspend remain visible at scale', async ({ page }) => {

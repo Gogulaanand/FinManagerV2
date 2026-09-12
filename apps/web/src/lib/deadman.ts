@@ -1,15 +1,15 @@
 'use client';
 
+import { usePortfolio } from '@/lib/portfolio';
+
 import {
   DeadmanSettingsSchema,
   type DeadmanSettings,
   type TrustedContact,
 } from '@finmanager/schema';
-import { buildSummary } from '@finmanager/core';
+import { disclosureSummaryFromPortfolio } from '@finmanager/core';
 import {
   DEADMAN_SETTINGS_QUERY,
-  DEADMAN_SUMMARY_ACCOUNTS_QUERY,
-  DEADMAN_SUMMARY_HOLDINGS_QUERY,
   ESCALATION_EVENTS_QUERY,
   TRUSTED_CONTACTS_QUERY,
   deleteTrustedContact,
@@ -47,23 +47,13 @@ export function useDeadman() {
     () => mapEscalationEventRows(records(eventsResult.data)),
     [eventsResult.data],
   );
-  // Built on-device so the preview reflects the unsaved draft and still works
-  // offline; the server renders the same message from the same module.
-  const holdingsResult = useQuery<Record<string, unknown>>(DEADMAN_SUMMARY_HOLDINGS_QUERY);
-  const accountsResult = useQuery<Record<string, unknown>>(DEADMAN_SUMMARY_ACCOUNTS_QUERY);
+  const portfolio = usePortfolio();
   const summary = useMemo(
     () =>
-      buildSummary(
-        records(holdingsResult.data).map((row) => ({
-          type: String(row.type ?? ''),
-          value: Number(row.current_value ?? 0),
-        })),
-        records(accountsResult.data).map((row) => ({
-          type: String(row.type ?? ''),
-          value: Number(row.current_balance ?? 0),
-        })),
-      ),
-    [holdingsResult.data, accountsResult.data],
+      portfolio.loading || !portfolio.summary.isComplete
+        ? []
+        : disclosureSummaryFromPortfolio(portfolio.summary),
+    [portfolio.loading, portfolio.summary],
   );
   const saveSettings = useCallback(
     async (input: DeadmanSettings) => (userId ? saveDeadmanSettings(db, userId, input) : null),
@@ -83,6 +73,8 @@ export function useDeadman() {
     const { data, error } = await supabase.functions.invoke('deadman-check', { body });
     if (error) throw error;
     return data as {
+      armedAt?: string | null;
+      lastCheckInAt?: string | null;
       previews?: Array<{
         contactId: string;
         recipient: string;

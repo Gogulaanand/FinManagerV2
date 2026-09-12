@@ -1,4 +1,9 @@
-import { EVENT_KIND_LABELS, allowedEventKinds, fxRateToInrForCurrency } from '@finmanager/core';
+import {
+  EVENT_KIND_LABELS,
+  allowedEventKinds,
+  fxRateToInrForCurrency,
+  localDateIso,
+} from '@finmanager/core';
 import type { Holding, HoldingEvent, HoldingEventKind } from '@finmanager/schema';
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
@@ -20,12 +25,11 @@ export function MobileHoldingEventForm({
   const [amount, setAmount] = useState('');
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [occurredOn, setOccurredOn] = useState(new Date().toISOString().slice(0, 10));
+  const [occurredOn, setOccurredOn] = useState(localDateIso());
   const [quantity, setQuantity] = useState('');
   const [price, setPrice] = useState('');
-  const [fxRate, setFxRate] = useState(
-    String(holding.manualFxRateToInr ?? holding.automaticPriceFxRateToInr ?? 1),
-  );
+  // A new dated record needs its own rate; blank keeps its INR value incomplete.
+  const [fxRate, setFxRate] = useState('');
   const [error, setError] = useState<string | null>(null);
   async function submit() {
     const absolute = Math.abs(Number(amount) || 0);
@@ -80,7 +84,10 @@ export function MobileHoldingEventForm({
               Amount: {holding.currency} {amount || '0'}
             </Text>
             {holding.currency !== 'INR' ? (
-              <Field label="FX rate to INR">
+              <Field
+                label={`INR per 1 ${holding.currency}`}
+                hint={`Rate for ${occurredOn}. Leave blank if unknown; INR totals remain incomplete.`}
+              >
                 <TextInput
                   value={fxRate}
                   onChangeText={setFxRate}
@@ -115,7 +122,7 @@ export function MobileHoldingEventForm({
                     className="h-11 rounded-md border border-border bg-background px-3 text-foreground"
                   />
                 </Field>
-                <Field label="Price">
+                <Field label={`Price (${holding.currency})`}>
                   <TextInput
                     value={price}
                     onChangeText={setPrice}

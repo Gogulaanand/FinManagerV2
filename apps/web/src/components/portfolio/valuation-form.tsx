@@ -1,6 +1,6 @@
 'use client';
 
-import { fxRateToInrForCurrency } from '@finmanager/core';
+import { fxRateToInrForCurrency, localDateIso } from '@finmanager/core';
 import type { Holding, Valuation } from '@finmanager/schema';
 import { useState } from 'react';
 
@@ -15,11 +15,10 @@ export function ValuationForm({
   readonly holding: Holding;
   readonly onSave: (valuation: Valuation) => Promise<void>;
 }) {
-  const [asOf, setAsOf] = useState(new Date().toISOString().slice(0, 10));
+  const [asOf, setAsOf] = useState(localDateIso());
   const [value, setValue] = useState(0);
-  const [fxRate, setFxRate] = useState(
-    String(holding.manualFxRateToInr ?? holding.automaticPriceFxRateToInr ?? 1),
-  );
+  // A new dated record needs its own rate; blank keeps its INR value incomplete.
+  const [fxRate, setFxRate] = useState('');
   const [error, setError] = useState<string | null>(null);
   async function submit() {
     try {
@@ -43,7 +42,12 @@ export function ValuationForm({
         <CardTitle>Update value</CardTitle>
       </CardHeader>
       <div className="grid gap-4 md:grid-cols-2">
-        <CurrencyField label="Value" value={value} onChange={setValue} />
+        <CurrencyField
+          label={`Value (${holding.currency})`}
+          currency={holding.currency}
+          value={value}
+          onChange={setValue}
+        />
         <Field label="As of">
           {(id) => (
             <Input
@@ -59,7 +63,10 @@ export function ValuationForm({
             <Field label="Currency">
               {(id) => <Input id={id} value={holding.currency} disabled />}
             </Field>
-            <Field label="FX rate to INR">
+            <Field
+              label={`INR per 1 ${holding.currency}`}
+              hint={`Rate for ${asOf}. Leave blank if unknown; INR totals remain incomplete.`}
+            >
               {(id) => (
                 <Input
                   id={id}
